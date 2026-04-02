@@ -76,7 +76,13 @@ export default function GamePage() {
 
     async function doLoad(coords: { latitude: number; longitude: number }) {
       if (cancelled) return;
-      await loadWeather(coords);
+      try {
+        await loadWeather(coords);
+      } catch (err) {
+        console.warn("Meteo indisponible, mode simulation:", err);
+        setWeatherStatus("error");
+        setWeatherLoading(false);
+      }
     }
 
     // Try to load GPS coords from cache first
