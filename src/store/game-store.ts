@@ -1,0 +1,1964 @@
+import { create } from "zustand";
+import {
+  type PlantState,
+  type AlertData,
+  type WeatherData,
+  PLANTS,
+  WEATHER_TYPES,
+  createInitialPlantState,
+  simulateDay,
+  applyWatering,
+  applyFertilizer,
+  applyTreatment,
+  getSeason,
+  getSeasonEmoji,
+  getSeasonLabel,
+  generateWeatherForMonth,
+  getMonthFromDay,
+  getSeasonalPlantingAdvice,
+  getDayDate,
+  getTodayDayOfYear,
+  getRealDateDisplay,
+  getRealDateFull,
+  simulateDayWithRealWeather,
+  type RealWeatherParams,
+  isTransplantSeason,
+  PLANT_SPACING,
+} from "@/lib/ai-engine";
+import {
+  type RealWeatherData,
+  type GPSCoords,
+  getRealEnvironment,
+  getZonePrecipitation,
+  ZONE_MODIFIERS,
+  loadGPSCoords,
+  saveGPSCoords,
+  isFrostRisk,
+} from "@/lib/weather-service";
+import {
+  getEnvironmentForMonth,
+  getEnvironmentWithDailyVariation,
+} from "@/lib/ai-engine";
+
+// ═══ Pepiniere Stages (réalistes, basés sur données réelles) ═══
+// Sources: jardinamel.fr, lepotagerminimaliste.fr, lepotagerdesante.com
+//
+// Stades mini serre / pépinière:
+//   0 = Graine semée (la graine est dans la terre)
+//   1 = Monticule / Levée (germination, petit monticule, levée)
+//   2 = Petite plantule (cotylédons ouverts, petite pousse)
+//   3 = Premières feuilles (2-4 vraies feuilles, plante encore petite)
+//   4 = Prêt à transplanter (4-8 feuilles, plant robuste)
+//
+// Les seuils sont SPECIFIQUES à chaque plante car la germination varie:
+//   Tomate:  4-6j germ. (abri), 120j récolte
+//   Carotte: 5-8j germ. (abri), 90-150j récolte
+//   Laitue:  3-5j germ. (abri), 60j récolte
+//   Fraise:  14-21j germ., récolte longue durée
+//   Basilic: 6-9j germ., 90j récolte
+//   Piment:  7-12j germ. (abri), 130j récolte
+
+export const PEPINIERE_STAGE_NAMES = [
+  "Graine semée",
+  "Monticule / Levée",
+  "Petite plantule",
+  "Premières feuilles",
+  "Prêt à transplanter",
+];
+
+export const PEPINIERE_STAGE_IMAGES = [
+  "/stages/pepiniere/stage0-graine.png",
+  "/stages/pepiniere/stage1-monticule.png",
+  "/stages/pepiniere/stage2-plantule.png",
+  "/stages/pepiniere/stage3-feuilles.png",
+  "/stages/pepiniere/stage4-pret.png",
+];
+
+// Seuils par plante (jours) : [J0→stage1, J→stage2, J→stage3, J→stage4]
+// Basés sur données réelles de germination et croissance en pépinière/mini serre
+export const PEPINIERE_PLANT_THRESHOLDS: Record<string, number[]> = {
+  tomato:      [5, 10, 21, 45],   // germ. 4-6j, plantule 2-3sem, prêt ~6-8sem
+  carrot:      [8, 14, 25, 50],   // germ. 5-8j, croissance lente, prêt ~7sem
+  lettuce:     [4, 8,  15, 25],   // germ. 3-5j, croissance rapide, prêt ~4sem
+  strawberry:  [14, 22, 35, 55],  // germ. 14-21j, très lent au début, prêt ~8sem
+  basil:       [6, 10, 18, 30],   // germ. 6-9j, croissance moyenne, prêt ~4sem
+  pepper:      [9, 16, 28, 55],   // germ. 7-12j, lent, prêt ~8sem
+};
+
+// Seuils par défaut (si plante non dans la table)
+const DEFAULT_PEPINIERE_THRESHOLDS = [7, 14, 25, 45];
+
+export const PEPINIERE_STAGES = [
+  { name: "Graine semée", minDays: 0, maxDays: 7 },
+  { name: "Monticule / Levée", minDays: 7, maxDays: 14 },
+  { name: "Petite plantule", minDays: 14, maxDays: 25 },
+  { name: "Premières feuilles", minDays: 25, maxDays: 45 },
+  { name: "Prêt à transplanter", minDays: 45, maxDays: Infinity },
+];
+
+export function getPepiniereStage(daysSincePlanting: number, plantDefId?: string): number {
+  const thresholds = plantDefId
+    ? (PEPINIERE_PLANT_THRESHOLDS[plantDefId] || DEFAULT_PEPINIERE_THRESHOLDS)
+    : DEFAULT_PEPINIERE_THRESHOLDS;
+
+  if (daysSincePlanting >= thresholds[3]) return 4;
+  if (daysSincePlanting >= thresholds[2]) return 3;
+  if (daysSincePlanting >= thresholds[1]) return 2;
+  if (daysSincePlanting >= thresholds[0]) return 1;
+  return 0;
+}
+
+export function getPepiniereTransplantDay(plantDefId: string): number {
+  return (PEPINIERE_PLANT_THRESHOLDS[plantDefId] || DEFAULT_PEPINIERE_THRESHOLDS)[3];
+}
+
+// ═══ Garden Grid Cell (legacy) ═══
+
+export interface GardenCell {
+  plant: PlantState | null;
+  plantDefId: string | null;
+  hasSerre: boolean;
+}
+
+// ═══ Realistic Garden (cm-based) ═══
+
+export const DEFAULT_GARDEN_WIDTH_CM = 1000;  // 10m
+export const DEFAULT_GARDEN_HEIGHT_CM = 500;   // 5m = 50m²
+export const MAX_GARDEN_WIDTH_CM = 2500;
+export const MAX_GARDEN_HEIGHT_CM = 2000;
+export const GRID_UNIT_CM = 5;
+
+export interface GardenPlant {
+  id: string;
+  plantDefId: string;
+  x: number;  // position in cm from left
+  y: number;  // position in cm from top
+  plant: PlantState;
+}
+
+export interface SerreZone {
+  id: string;
+  x: number;  // cm
+  y: number;  // cm
+  width: number;  // cm
+  height: number; // cm
+}
+
+// ═══ Mini Serre (6×4 = 24 slots) ═══
+
+export const MINI_SERRE_ROWS = 6;
+export const MINI_SERRE_COLS = 4;
+export const MINI_SERRE_PRICE = 150;
+export const MINI_SERRE_WIDTH_CM = 20;
+export const MINI_SERRE_DEPTH_CM = 32.5;
+
+// ═══ Chambre de Culture ═══
+
+export interface ChambreModel {
+  id: string;
+  name: string;
+  widthCm: number;
+  heightCm: number;
+  depthCm: number;
+  maxMiniSerres: number;
+  price: number;
+  image: string;
+  emoji: string;
+  description: string;
+  color: string;
+}
+
+export const CHAMBRE_CATALOG: ChambreModel[] = [
+  {
+    id: "chambre-small",
+    name: "Chambre 60×60",
+    widthCm: 60,
+    heightCm: 140,
+    depthCm: 60,
+    maxMiniSerres: 2,
+    price: 250,
+    image: "/cards/card-chambre-small.png",
+    emoji: "🏠",
+    description: "Chambre de culture compacte idéale pour débuter. 60×60×140cm. Accueille 2 mini serres.",
+    color: "from-green-100 to-emerald-100",
+  },
+  {
+    id: "chambre-medium",
+    name: "Chambre 80×80",
+    widthCm: 80,
+    heightCm: 160,
+    depthCm: 80,
+    maxMiniSerres: 4,
+    price: 400,
+    image: "/cards/card-chambre-medium.png",
+    emoji: "🏭",
+    description: "Chambre de culture intermédiaire pour jardiniers confirmés. 80×80×160cm. Accueille 4 mini serres.",
+    color: "from-emerald-100 to-teal-100",
+  },
+  {
+    id: "chambre-large",
+    name: "Chambre 120×120",
+    widthCm: 120,
+    heightCm: 200,
+    depthCm: 120,
+    maxMiniSerres: 6,
+    price: 650,
+    image: "/cards/card-chambre-large.png",
+    emoji: "🏗️",
+    description: "Chambre de culture professionnelle. 120×120×200cm. Accueille 6 mini serres pour production intensive.",
+    color: "from-teal-100 to-cyan-100",
+  },
+];
+
+export interface MiniSerre {
+  id: string;
+  slots: (PlantState | null)[][]; // 6 rows × 4 cols
+}
+
+function createEmptyMiniSerre(): MiniSerre {
+  return {
+    id: uid(),
+    slots: Array.from({ length: MINI_SERRE_ROWS }, () =>
+      Array.from({ length: MINI_SERRE_COLS }, () => null)
+    ),
+  };
+}
+
+// ═══ Seed Shop System (multi-shop varieties) ═══
+
+export interface SeedShop {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  borderColor: string;
+  image: string;
+  description: string;
+}
+
+export interface SeedVariety {
+  id: string;
+  plantDefId: string;
+  shopId: string;
+  name: string;
+  emoji: string;
+  price: number;
+  grams: number;
+  description: string;
+  image: string;
+  unlocked: boolean;
+  stageDurations: [number, number, number, number];
+  realDaysToHarvest: number;
+  optimalTemp: [number, number];
+  waterNeed: number;
+  lightNeed: number;
+}
+
+export const SEED_SHOPS: SeedShop[] = [
+  {
+    id: "vilmorin",
+    name: "Vilmorin",
+    emoji: "🌱",
+    color: "from-red-50 to-orange-50",
+    borderColor: "border-red-200",
+    image: "/cards/card-shop-vilmorin.png",
+    description: "Jardinier depuis 1814 — Leader français des semences potagères et fleurs",
+  },
+  {
+    id: "clause",
+    name: "Clause",
+    emoji: "🌺",
+    color: "from-purple-50 to-pink-50",
+    borderColor: "border-purple-200",
+    image: "/cards/card-shop-clause.png",
+    description: "Semences et plants potagers — Qualité professionnelle",
+  },
+];
+
+export const SEED_VARIETIES: SeedVariety[] = [
+  {
+    id: "tomato-cocktail",
+    plantDefId: "tomato",
+    shopId: "vilmorin",
+    name: "Tomate Cocktail",
+    emoji: "🍅",
+    price: 40,
+    grams: 0.5,
+    description: "Variété précoce, fruits de 80-100g, saveur sucrée et juteuse. Idéale en salade et grignotage. Très productive.",
+    image: "/cards/card-tomato-cocktail.png",
+    unlocked: true,
+    stageDurations: [8, 22, 20, 45],
+    realDaysToHarvest: 95,
+    optimalTemp: [16, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "tomato-aneas",
+    plantDefId: "tomato",
+    shopId: "vilmorin",
+    name: "Tomate Anéas",
+    emoji: "🍅",
+    price: 55,
+    grams: 0.3,
+    description: "Variété allongée type Roma, fruits de 120-150g, chair dense et peu de graines. Parfaite pour sauces et conserves.",
+    image: "/cards/card-tomato-aneas.png",
+    unlocked: true,
+    stageDurations: [10, 25, 25, 55],
+    realDaysToHarvest: 115,
+    optimalTemp: [18, 28],
+    waterNeed: 5.5,
+    lightNeed: 8,
+  },
+];
+
+// ═══ Seed shop items (legacy flat catalog) ═══
+
+export interface SeedItem {
+  plantDefId: string;
+  name: string;
+  emoji: string;
+  price: number;
+  realDaysToHarvest: number;
+  optimalMonths: number[];
+}
+
+export const SEED_CATALOG: SeedItem[] = [
+  { plantDefId: "tomato", name: "Graine Tomate", emoji: "🍅", price: 50, realDaysToHarvest: 109, optimalMonths: [2, 3, 4] },
+  { plantDefId: "carrot", name: "Graine Carotte", emoji: "🥕", price: 40, realDaysToHarvest: 114, optimalMonths: [2, 3, 4, 5, 8, 9] },
+  { plantDefId: "strawberry", name: "Graine Fraise", emoji: "🍓", price: 60, realDaysToHarvest: 123, optimalMonths: [2, 3, 4, 8, 9] },
+  { plantDefId: "lettuce", name: "Graine Salade", emoji: "🥬", price: 30, realDaysToHarvest: 49, optimalMonths: [1, 2, 3, 4, 8, 9, 10] },
+  { plantDefId: "basil", name: "Graine Basilic", emoji: "🌿", price: 45, realDaysToHarvest: 88, optimalMonths: [3, 4, 5] },
+  { plantDefId: "pepper", name: "Graine Piment", emoji: "🌶️", price: 55, realDaysToHarvest: 130, optimalMonths: [1, 2, 3, 4] },
+];
+
+export interface PlantuleItem {
+  plantDefId: string;
+  name: string;
+  emoji: string;
+  price: number;
+}
+
+export const PLANTULE_CATALOG: PlantuleItem[] = [
+  { plantDefId: "tomato", name: "Plantule Tomate", emoji: "🍅", price: 80 },
+  { plantDefId: "carrot", name: "Plantule Carotte", emoji: "🥕", price: 65 },
+  { plantDefId: "strawberry", name: "Plantule Fraise", emoji: "🍓", price: 85 },
+  { plantDefId: "lettuce", name: "Plantule Salade", emoji: "🥬", price: 50 },
+  { plantDefId: "basil", name: "Plantule Basilic", emoji: "🌿", price: 70 },
+  { plantDefId: "pepper", name: "Plantule Piment", emoji: "🌶️", price: 75 },
+];
+
+// ═══ Custom cards loader (from admin panel) ═══
+export async function loadCustomCards(): Promise<{
+  customShops: SeedShop[];
+  customVarieties: SeedVariety[];
+  customPlantules: PlantuleItem[];
+  customSeeds: SeedItem[];
+}> {
+  try {
+    const res = await fetch("/data/custom-cards.json?t=" + Date.now());
+    if (!res.ok) throw new Error("Not found");
+    const data = await res.json();
+    return {
+      customShops: (data.shops || []) as SeedShop[],
+      customVarieties: (data.varieties || []) as SeedVariety[],
+      customPlantules: (data.plantules || []) as PlantuleItem[],
+      customSeeds: (data.seeds || []) as SeedItem[],
+    };
+  } catch {
+    return { customShops: [], customVarieties: [], customPlantules: [], customSeeds: [] };
+  }
+}
+
+// ═══ Game state ═══
+
+export interface GameState {
+  // Jardin (coordinate-based, cm)
+  gardenWidthCm: number;
+  gardenHeightCm: number;
+  gardenPlants: GardenPlant[];
+  gardenSerreZones: SerreZone[];
+
+  // Pépinière (seedling nursery)
+  pepiniere: PlantState[];
+
+  // Mini Serres in Chambre de Culture
+  miniSerres: MiniSerre[];
+
+  // Chambre de Culture
+  ownedChambres: Record<string, number>; // modelId -> count owned
+  activeChambreId: string | null;
+
+  // Serre tile inventory
+  serreTiles: number;
+
+  // Seed collection
+  seedCollection: Record<string, number>;
+
+  // Plantule collection
+  plantuleCollection: Record<string, number>;
+
+  // Seed varieties collection
+  seedVarieties: Record<string, number>; // varietyId -> count owned
+
+  // Weather
+  day: number;
+  season: string;
+  weather: WeatherData;
+  realWeather: RealWeatherData | null;
+  gpsCoords: GPSCoords | null;
+  weatherLoading: boolean;
+  weatherError: string | null;
+
+  // Economy
+  coins: number;
+
+  // Game controls
+  speed: number;
+  isPaused: boolean;
+  alerts: AlertData[];
+  harvested: number;
+  showConsole: boolean;
+  score: number;
+  bestScore: number;
+  adminOpen: boolean;
+  adminMode: boolean;
+  diseasesEnabled: boolean;
+  showGardenSerre: boolean;
+  showSerreView: boolean;
+  activeTab: string;
+  pendingTransplant: { serreId: string; row: number; col: number; plantDefId: string; plantName: string; plantEmoji: string } | null;
+
+  // Actions
+  initGame: () => void;
+  buySeeds: (plantDefId: string) => boolean;
+  buyPlantule: (plantDefId: string) => boolean;
+  buySeedVariety: (varietyId: string) => boolean;
+  unlockSeedVariety: (varietyId: string) => boolean;
+  buySerreTile: () => boolean;
+  buyMiniSerre: () => boolean;
+  buyChambreDeCulture: (modelId: string) => boolean;
+  setActiveChambre: (modelId: string | null) => void;
+  placeSeedInPepiniere: (plantDefId: string) => boolean;
+  placePlantuleInPepiniere: (plantDefId: string) => boolean;
+  placePlantInGarden: (plantDefId: string, x: number, y: number, pepIndex?: number) => boolean;
+  placeRowInGarden: (plantDefId: string, startX: number, startY: number, endX: number, endY: number, pepIndices?: number[]) => number;
+  removePlantFromGarden: (plantId: string) => void;
+  waterPlantGarden: (plantId: string) => void;
+  treatPlantGarden: (plantId: string) => void;
+  fertilizePlantGarden: (plantId: string) => void;
+  harvestPlantGarden: (plantId: string) => void;
+  waterAllGarden: () => void;
+  addSerreZone: (x: number, y: number, width: number, height: number) => void;
+  buySerreZone: () => boolean;
+  removeSerreZone: (zoneId: string) => void;
+  expandGarden: (direction: 'width' | 'height') => boolean;
+  waterPlantPepiniere: (index: number) => void;
+  treatPlantPepiniere: (index: number) => void;
+  fertilizePlantPepiniere: (index: number) => void;
+  removePlantPepiniere: (index: number) => void;
+  // Mini Serre actions
+  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => boolean;
+  placePlantuleInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => boolean;
+  waterMiniSerrePlant: (serreId: string, row: number, col: number) => void;
+  treatMiniSerrePlant: (serreId: string, row: number, col: number) => void;
+  fertilizeMiniSerrePlant: (serreId: string, row: number, col: number) => void;
+  removeMiniSerrePlant: (serreId: string, row: number, col: number) => void;
+  waterAllMiniSerre: (serreId: string) => void;
+  removeMiniSerre: (serreId: string) => void;
+  fillMiniSerre: (serreId: string, plantDefId: string) => boolean;
+  plantInMiniSerreAtDate: (serreId: string, row: number, col: number, plantDefId: string, daysSincePlanting: number) => boolean;
+
+  // Internal seed helpers (unified inventory)
+  _getSeedCount: (plantDefId: string) => number;
+  _consumeSeed: (plantDefId: string) => { source: 'variety' | 'classic'; newVarieties: Record<string, number> | null; newCollection: Record<string, number> | null } | null;
+
+  togglePause: () => void;
+  setSpeed: (speed: number) => void;
+  toggleConsole: () => void;
+  dismissAlert: (alertId: string) => void;
+  toggleAdminMode: () => void;
+  toggleDiseases: () => void;
+  toggleGardenSerre: () => void;
+  toggleSerreView: () => void;
+  setActiveTab: (tab: string) => void;
+  setPendingTransplant: (data: { serreId: string; row: number; col: number; plantDefId: string; plantName: string; plantEmoji: string } | null) => void;
+  transplantFromMiniSerreToGarden: (serreId: string, row: number, col: number, gardenX: number, gardenY: number) => boolean;
+  tick: () => void;
+  addScore: (points: number) => void;
+
+  // Weather
+  setRealWeather: (data: RealWeatherData) => void;
+  setGPSCoords: (coords: GPSCoords) => void;
+  setWeatherLoading: (loading: boolean) => void;
+  setWeatherError: (error: string | null) => void;
+}
+
+function uid(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// ═══ Persistence ═══
+
+function loadCoins(): number {
+  if (typeof window === "undefined") return 200;
+  try {
+    return parseInt(localStorage.getItem("jardin-culture-coins") || "200", 10);
+  } catch {
+    return 200;
+  }
+}
+
+function saveCoins(coins: number) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-coins", String(coins));
+  } catch {
+    // ignore
+  }
+}
+
+function loadSeedCollection(): Record<string, number> {
+  const defaults = { tomato: 3, carrot: 2, strawberry: 2, lettuce: 3, basil: 2, pepper: 1 };
+  if (typeof window === "undefined") return { ...defaults };
+  try {
+    const stored = localStorage.getItem("jardin-culture-seeds");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === "object") {
+        // Remove any keys with value <= 0
+        for (const key of Object.keys(parsed)) {
+          if ((parsed as Record<string, number>)[key] <= 0) {
+            delete (parsed as Record<string, number>)[key];
+          }
+        }
+        const total = Object.values(parsed).reduce((a: number, b: number) => a + b, 0);
+        if (total > 0) return parsed;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { ...defaults };
+}
+
+function saveSeedCollection(collection: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-seeds", JSON.stringify(collection));
+  } catch {
+    // ignore
+  }
+}
+
+function loadPlantuleCollection(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = localStorage.getItem("jardin-culture-plantules");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+function savePlantuleCollection(collection: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-plantules", JSON.stringify(collection));
+  } catch {
+    // ignore
+  }
+}
+
+function loadBestScore(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    return parseInt(localStorage.getItem("jardin-culture-best-score") || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+function saveBestScore(score: number) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-best-score", String(score));
+  } catch {
+    // ignore
+  }
+}
+
+function loadSerreTiles(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    return parseInt(localStorage.getItem("jardin-culture-serre-tiles") || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+function saveSerreTiles(count: number) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-serre-tiles", String(count));
+  } catch {
+    // ignore
+  }
+}
+
+function loadOwnedChambres(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = localStorage.getItem("jardin-culture-chambres");
+    if (stored) return JSON.parse(stored);
+  } catch { }
+  return {};
+}
+
+function saveOwnedChambres(chambres: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("jardin-culture-chambres", JSON.stringify(chambres)); } catch { }
+}
+
+function loadActiveChambre(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem("jardin-culture-active-chambre") || null;
+  } catch { }
+  return null;
+}
+
+function saveActiveChambre(id: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (id) localStorage.setItem("jardin-culture-active-chambre", id);
+    else localStorage.removeItem("jardin-culture-active-chambre");
+  } catch { }
+}
+
+function loadGardenDimensions(): { widthCm: number; heightCm: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-garden-dims");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveGardenDimensions(widthCm: number, heightCm: number) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("jardin-culture-garden-dims", JSON.stringify({ widthCm, heightCm })); } catch { }
+}
+
+function loadGardenPlants(): GardenPlant[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-garden-plants");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveGardenPlants(plants: GardenPlant[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("jardin-culture-garden-plants", JSON.stringify(plants)); } catch { }
+}
+
+function loadGardenSerreZones(): SerreZone[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-garden-serres");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveGardenSerreZones(zones: SerreZone[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("jardin-culture-garden-serres", JSON.stringify(zones)); } catch { }
+}
+
+function loadPepiniere(): PlantState[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-pepiniere");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function savePepiniere(pepiniere: PlantState[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-pepiniere", JSON.stringify(pepiniere));
+  } catch {
+    // ignore
+  }
+}
+
+function loadMiniSerres(): MiniSerre[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-mini-serres");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveMiniSerres(miniSerres: MiniSerre[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-mini-serres", JSON.stringify(miniSerres));
+  } catch {
+    // ignore
+  }
+}
+
+function loadSeedVarieties(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = localStorage.getItem("jardin-culture-seed-varieties");
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+function saveSeedVarieties(varieties: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-seed-varieties", JSON.stringify(varieties));
+  } catch {
+    // ignore
+  }
+}
+
+// ═══ Helpers ═══
+
+const MAX_PEPINIERE_SLOTS = 8;
+const EXPAND_COST = 100;
+
+// ═══ Store ═══
+
+export const useGameStore = create<GameState>((set, get) => ({
+  gardenWidthCm: DEFAULT_GARDEN_WIDTH_CM,
+  gardenHeightCm: DEFAULT_GARDEN_HEIGHT_CM,
+  gardenPlants: [],
+  gardenSerreZones: [],
+  pepiniere: [],
+  miniSerres: [],
+  ownedChambres: {},
+  activeChambreId: null,
+  serreTiles: 0,
+  seedCollection: { tomato: 3, carrot: 2, strawberry: 2, lettuce: 3, basil: 2, pepper: 1 },
+  plantuleCollection: {},
+  seedVarieties: {},
+
+  day: getTodayDayOfYear(),
+  season: getSeason(getTodayDayOfYear()),
+  weather: WEATHER_TYPES["sunny"],
+  realWeather: null,
+  gpsCoords: null,
+  weatherLoading: false,
+  weatherError: null,
+
+  coins: 200,
+  speed: 1,
+  isPaused: false,
+  alerts: [],
+  harvested: 0,
+  showConsole: true,
+  score: 0,
+  bestScore: 0,
+  adminOpen: false,
+  adminMode: false,
+  diseasesEnabled: true,
+  showGardenSerre: false,
+  showSerreView: false,
+  activeTab: "jardin",
+  pendingTransplant: null,
+
+  initGame: (freshStart = false) => {
+    const today = getTodayDayOfYear();
+    const todaySeason = getSeason(today);
+
+    // If fresh start, clear all saved data
+    if (freshStart) {
+      const keysToRemove = [
+        "jardin-culture-coins",
+        "jardin-culture-seeds",
+        "jardin-culture-plantules",
+        "jardin-culture-seed-varieties",
+        "jardin-culture-garden-plants",
+        "jardin-culture-garden-serres",
+        "jardin-culture-garden-dims",
+        "jardin-culture-pepiniere",
+        "jardin-culture-mini-serres",
+        "jardin-culture-serre-tiles",
+        "jardin-culture-chambres",
+        "jardin-culture-active-chambre",
+        "jardin-culture-best-score",
+        "jardin-culture-garden",
+      ];
+      keysToRemove.forEach((k) => { try { localStorage.removeItem(k); } catch { /* ignore */ } });
+    }
+
+    const savedGardenDims = loadGardenDimensions();
+    const savedGardenPlants = loadGardenPlants();
+    const savedGardenSerreZones = loadGardenSerreZones();
+    const savedPepiniere = loadPepiniere();
+    const savedMiniSerres = loadMiniSerres();
+
+    // Clear old grid data
+    try { localStorage.removeItem("jardin-culture-garden"); } catch { /* ignore */ }
+
+    set({
+      gardenWidthCm: savedGardenDims?.widthCm || DEFAULT_GARDEN_WIDTH_CM,
+      gardenHeightCm: savedGardenDims?.heightCm || DEFAULT_GARDEN_HEIGHT_CM,
+      gardenPlants: savedGardenPlants || [],
+      gardenSerreZones: savedGardenSerreZones || [],
+      pepiniere: savedPepiniere || [],
+      miniSerres: savedMiniSerres || [],
+      serreTiles: loadSerreTiles(),
+      ownedChambres: loadOwnedChambres(),
+      activeChambreId: loadActiveChambre(),
+      seedCollection: loadSeedCollection(),
+      plantuleCollection: loadPlantuleCollection(),
+      seedVarieties: loadSeedVarieties(),
+      day: today,
+      season: todaySeason,
+      weather: generateWeatherForMonth(getMonthFromDay(today)),
+      alerts: [],
+      harvested: 0,
+      isPaused: false,
+      speed: 1,
+      score: 0,
+      bestScore: loadBestScore(),
+      coins: loadCoins(),
+    });
+  },
+
+  // ── Shop ──
+
+  buySeeds: (plantDefId: string) => {
+    const state = get();
+    const item = SEED_CATALOG.find((s) => s.plantDefId === plantDefId);
+    if (!item) return false;
+    if (state.coins < item.price) return false;
+
+    const newCollection = { ...state.seedCollection };
+    newCollection[plantDefId] = (newCollection[plantDefId] || 0) + 3; // Packet of 3
+    const newCoins = state.coins - item.price;
+
+    saveCoins(newCoins);
+    saveSeedCollection(newCollection);
+
+    set({ coins: newCoins, seedCollection: newCollection });
+    return true;
+  },
+
+  buyPlantule: (plantDefId: string) => {
+    const state = get();
+    const item = PLANTULE_CATALOG.find((p) => p.plantDefId === plantDefId);
+    if (!item) return false;
+    if (state.coins < item.price) return false;
+
+    const newCollection = { ...state.plantuleCollection };
+    newCollection[plantDefId] = (newCollection[plantDefId] || 0) + 1;
+    const newCoins = state.coins - item.price;
+
+    saveCoins(newCoins);
+    savePlantuleCollection(newCollection);
+
+    set({ coins: newCoins, plantuleCollection: newCollection });
+    return true;
+  },
+
+  buySeedVariety: (varietyId: string) => {
+    const state = get();
+    const variety = SEED_VARIETIES.find((v) => v.id === varietyId);
+    if (!variety) return false;
+    if (!variety.unlocked) return false;
+    if (state.coins < variety.price) return false;
+
+    const newVarieties = { ...state.seedVarieties };
+    newVarieties[varietyId] = (newVarieties[varietyId] || 0) + 1;
+    const newCoins = state.coins - variety.price;
+
+    // Also add to seedCollection so the seed is usable in mini serres & jardin
+    const newCollection = { ...state.seedCollection };
+    newCollection[variety.plantDefId] = (newCollection[variety.plantDefId] || 0) + 1;
+    saveSeedCollection(newCollection);
+
+    saveCoins(newCoins);
+    saveSeedVarieties(newVarieties);
+
+    set({ coins: newCoins, seedVarieties: newVarieties, seedCollection: newCollection });
+    return true;
+  },
+
+  unlockSeedVariety: (varietyId: string) => {
+    const variety = SEED_VARIETIES.find((v) => v.id === varietyId);
+    if (!variety) return false;
+    if (variety.unlocked) return true;
+
+    variety.unlocked = true;
+    return true;
+  },
+
+  buySerreTile: () => {
+    const state = get();
+    if (state.coins < 50) return false;
+
+    const newCoins = state.coins - 50;
+    const newCount = state.serreTiles + 1;
+
+    saveCoins(newCoins);
+    saveSerreTiles(newCount);
+
+    set({ coins: newCoins, serreTiles: newCount });
+    return true;
+  },
+
+  buyMiniSerre: () => {
+    const state = get();
+    if (state.coins < MINI_SERRE_PRICE) return false;
+
+    const newCoins = state.coins - MINI_SERRE_PRICE;
+    const newMiniSerre = createEmptyMiniSerre();
+    const newMiniSerres = [...state.miniSerres, newMiniSerre];
+
+    saveCoins(newCoins);
+    saveMiniSerres(newMiniSerres);
+
+    set({ coins: newCoins, miniSerres: newMiniSerres });
+    return true;
+  },
+
+  buyChambreDeCulture: (modelId: string) => {
+    const state = get();
+    const model = CHAMBRE_CATALOG.find((m) => m.id === modelId);
+    if (!model) return false;
+    if (state.coins < model.price) return false;
+
+    const newCoins = state.coins - model.price;
+    const newOwned = { ...state.ownedChambres };
+    newOwned[modelId] = (newOwned[modelId] || 0) + 1;
+
+    saveCoins(newCoins);
+    saveOwnedChambres(newOwned);
+
+    // Auto-set as active if first purchase
+    const newActive = state.activeChambreId || modelId;
+    saveActiveChambre(newActive);
+
+    set({ coins: newCoins, ownedChambres: newOwned, activeChambreId: newActive });
+    return true;
+  },
+
+  setActiveChambre: (modelId: string | null) => {
+    saveActiveChambre(modelId);
+    set({ activeChambreId: modelId });
+  },
+
+  // ── Pépinière Actions ──
+
+  placeSeedInPepiniere: (plantDefId: string) => {
+    const state = get();
+    if (state.pepiniere.length >= MAX_PEPINIERE_SLOTS) return false;
+    const count = state.seedCollection[plantDefId] || 0;
+    if (count <= 0) return false;
+
+    const newCollection = { ...state.seedCollection };
+    newCollection[plantDefId] = count - 1;
+    if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
+    saveSeedCollection(newCollection);
+
+    const newPlant: PlantState = createInitialPlantState(plantDefId);
+    const newPepiniere = [...state.pepiniere, newPlant];
+    savePepiniere(newPepiniere);
+
+    set({ pepiniere: newPepiniere, seedCollection: newCollection });
+    return true;
+  },
+
+  placePlantuleInPepiniere: (plantDefId: string) => {
+    const state = get();
+    if (state.pepiniere.length >= MAX_PEPINIERE_SLOTS) return false;
+    const count = state.plantuleCollection[plantDefId] || 0;
+    if (count <= 0) return false;
+
+    const newCollection = { ...state.plantuleCollection };
+    newCollection[plantDefId] = count - 1;
+    if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
+    savePlantuleCollection(newCollection);
+
+    const newPlant: PlantState = {
+      ...createInitialPlantState(plantDefId),
+      stage: 1,
+      growthProgress: 60,
+      daysSincePlanting: 20,
+      daysInCurrentStage: 10,
+    };
+    const newPepiniere = [...state.pepiniere, newPlant];
+    savePepiniere(newPepiniere);
+
+    set({ pepiniere: newPepiniere, plantuleCollection: newCollection });
+    return true;
+  },
+
+  waterPlantPepiniere: (index: number) => {
+    set((s) => {
+      const newPep = [...s.pepiniere];
+      if (newPep[index]) {
+        newPep[index] = applyWatering(newPep[index]);
+        savePepiniere(newPep);
+      }
+      return { pepiniere: newPep };
+    });
+  },
+
+  treatPlantPepiniere: (index: number) => {
+    set((s) => {
+      const newPep = [...s.pepiniere];
+      if (newPep[index]) {
+        newPep[index] = applyTreatment(newPep[index]);
+        savePepiniere(newPep);
+      }
+      return { pepiniere: newPep };
+    });
+  },
+
+  fertilizePlantPepiniere: (index: number) => {
+    set((s) => {
+      const newPep = [...s.pepiniere];
+      if (newPep[index]) {
+        newPep[index] = applyFertilizer(newPep[index]);
+        savePepiniere(newPep);
+      }
+      return { pepiniere: newPep };
+    });
+  },
+
+  removePlantPepiniere: (index: number) => {
+    set((s) => {
+      const newPep = s.pepiniere.filter((_, i) => i !== index);
+      savePepiniere(newPep);
+      return { pepiniere: newPep };
+    });
+  },
+
+  // ── Mini Serre Actions ──
+
+  /** Get total seed count for a plant type across both inventories */
+  _getSeedCount: (plantDefId: string): number => {
+    const state = get();
+    const classicCount = state.seedCollection[plantDefId] || 0;
+    const varietyCount = SEED_VARIETIES
+      .filter((v) => v.plantDefId === plantDefId)
+      .reduce((sum, v) => sum + (state.seedVarieties[v.id] || 0), 0);
+    return classicCount + varietyCount;
+  },
+
+  /** Consume one seed from the best available source (variety first, then classic) */
+  _consumeSeed: (plantDefId: string) => {
+    const state = get();
+    // Try variety first (most specific)
+    const matchingVarieties = SEED_VARIETIES.filter((v) => v.plantDefId === plantDefId);
+    for (const v of matchingVarieties) {
+      if ((state.seedVarieties[v.id] || 0) > 0) {
+        const newVarieties = { ...state.seedVarieties };
+        newVarieties[v.id] = (newVarieties[v.id] || 0) - 1;
+        if (newVarieties[v.id] <= 0) delete newVarieties[v.id];
+        saveSeedVarieties(newVarieties);
+        return { source: 'variety' as const, newVarieties, newCollection: null as Record<string, number> | null };
+      }
+    }
+    // Fall back to classic seedCollection
+    const count = state.seedCollection[plantDefId] || 0;
+    if (count > 0) {
+      const newCollection = { ...state.seedCollection };
+      newCollection[plantDefId] = count - 1;
+      if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
+      saveSeedCollection(newCollection);
+      return { source: 'classic' as const, newVarieties: null, newCollection };
+    }
+    return null;
+  },
+
+  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => {
+    const state = get();
+    const serreIdx = state.miniSerres.findIndex((s) => s.id === serreId);
+    if (serreIdx < 0) return false;
+    const serre = state.miniSerres[serreIdx];
+    if (serre.slots[row]?.[col] !== null) return false;
+
+    const consumed = state._consumeSeed(plantDefId);
+    if (!consumed) return false;
+
+    const newPlant: PlantState = createInitialPlantState(plantDefId);
+    const newMiniSerres = state.miniSerres.map((s, i) => {
+      if (i !== serreIdx) return s;
+      const newSlots = s.slots.map((r) => r.map((c) => c));
+      newSlots[row][col] = newPlant;
+      return { ...s, slots: newSlots };
+    });
+    saveMiniSerres(newMiniSerres);
+
+    const updates: Record<string, unknown> = { miniSerres: newMiniSerres };
+    if (consumed.newCollection) updates.seedCollection = consumed.newCollection;
+    if (consumed.newVarieties) updates.seedVarieties = consumed.newVarieties;
+    set(updates);
+    return true;
+  },
+
+  placePlantuleInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => {
+    const state = get();
+    const serreIdx = state.miniSerres.findIndex((s) => s.id === serreId);
+    if (serreIdx < 0) return false;
+    const serre = state.miniSerres[serreIdx];
+    if (serre.slots[row]?.[col] !== null) return false;
+    const count = state.plantuleCollection[plantDefId] || 0;
+    if (count <= 0) return false;
+
+    const newCollection = { ...state.plantuleCollection };
+    newCollection[plantDefId] = count - 1;
+    if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
+    savePlantuleCollection(newCollection);
+
+    const newPlant: PlantState = {
+      ...createInitialPlantState(plantDefId),
+      stage: 1,
+      growthProgress: 60,
+      daysSincePlanting: 20,
+      daysInCurrentStage: 10,
+    };
+
+    const newMiniSerres = state.miniSerres.map((s, i) => {
+      if (i !== serreIdx) return s;
+      const newSlots = s.slots.map((r) => r.map((c) => c));
+      newSlots[row][col] = newPlant;
+      return { ...s, slots: newSlots };
+    });
+    saveMiniSerres(newMiniSerres);
+
+    set({ miniSerres: newMiniSerres, plantuleCollection: newCollection });
+    return true;
+  },
+
+  waterMiniSerrePlant: (serreId: string, row: number, col: number) => {
+    set((s) => {
+      const newMiniSerres = s.miniSerres.map((serre) => {
+        if (serre.id !== serreId) return serre;
+        const plant = serre.slots[row]?.[col];
+        if (!plant) return serre;
+        const newSlots = serre.slots.map((r) => r.map((c) => c));
+        newSlots[row][col] = applyWatering(plant);
+        return { ...serre, slots: newSlots };
+      });
+      saveMiniSerres(newMiniSerres);
+      return { miniSerres: newMiniSerres };
+    });
+  },
+
+  treatMiniSerrePlant: (serreId: string, row: number, col: number) => {
+    set((s) => {
+      const newMiniSerres = s.miniSerres.map((serre) => {
+        if (serre.id !== serreId) return serre;
+        const plant = serre.slots[row]?.[col];
+        if (!plant) return serre;
+        const newSlots = serre.slots.map((r) => r.map((c) => c));
+        newSlots[row][col] = applyTreatment(plant);
+        return { ...serre, slots: newSlots };
+      });
+      saveMiniSerres(newMiniSerres);
+      return { miniSerres: newMiniSerres };
+    });
+  },
+
+  fertilizeMiniSerrePlant: (serreId: string, row: number, col: number) => {
+    set((s) => {
+      const newMiniSerres = s.miniSerres.map((serre) => {
+        if (serre.id !== serreId) return serre;
+        const plant = serre.slots[row]?.[col];
+        if (!plant) return serre;
+        const newSlots = serre.slots.map((r) => r.map((c) => c));
+        newSlots[row][col] = applyFertilizer(plant);
+        return { ...serre, slots: newSlots };
+      });
+      saveMiniSerres(newMiniSerres);
+      return { miniSerres: newMiniSerres };
+    });
+  },
+
+  removeMiniSerrePlant: (serreId: string, row: number, col: number) => {
+    set((s) => {
+      const newMiniSerres = s.miniSerres.map((serre) => {
+        if (serre.id !== serreId) return serre;
+        if (!serre.slots[row]?.[col]) return serre;
+        const newSlots = serre.slots.map((r) => r.map((c) => c));
+        newSlots[row][col] = null;
+        return { ...serre, slots: newSlots };
+      });
+      saveMiniSerres(newMiniSerres);
+      return { miniSerres: newMiniSerres };
+    });
+  },
+
+  waterAllMiniSerre: (serreId: string) => {
+    set((s) => {
+      const newMiniSerres = s.miniSerres.map((serre) => {
+        if (serre.id !== serreId) return serre;
+        const newSlots = serre.slots.map((r) => r.map((c) => {
+          if (c) return applyWatering(c);
+          return c;
+        }));
+        return { ...serre, slots: newSlots };
+      });
+      saveMiniSerres(newMiniSerres);
+      return { miniSerres: newMiniSerres };
+    });
+  },
+
+  removeMiniSerre: (serreId: string) => {
+    set((s) => {
+      const newMiniSerres = s.miniSerres.filter((s) => s.id !== serreId);
+      saveMiniSerres(newMiniSerres);
+      return { miniSerres: newMiniSerres };
+    });
+  },
+
+  fillMiniSerre: (serreId: string, plantDefId: string) => {
+    const state = get();
+    const serreIdx = state.miniSerres.findIndex((s) => s.id === serreId);
+    if (serreIdx < 0) return false;
+    const serre = state.miniSerres[serreIdx];
+
+    // Count empty slots
+    let emptySlots = 0;
+    serre.slots.forEach((row) => row.forEach((c) => { if (!c) emptySlots++; }));
+
+    // Count total seeds across both inventories
+    const totalSeeds = state._getSeedCount(plantDefId);
+    const toFill = Math.min(emptySlots, totalSeeds);
+    if (toFill <= 0) return false;
+
+    // Consume seeds from both sources
+    let remaining = toFill;
+    const newVarieties = { ...state.seedVarieties };
+    const matchingVarieties = SEED_VARIETIES.filter((v) => v.plantDefId === plantDefId);
+    for (const v of matchingVarieties) {
+      if (remaining <= 0) break;
+      const available = newVarieties[v.id] || 0;
+      const use = Math.min(available, remaining);
+      if (use > 0) {
+        newVarieties[v.id] = available - use;
+        if (newVarieties[v.id] <= 0) delete newVarieties[v.id];
+        remaining -= use;
+      }
+    }
+    const newCollection = { ...state.seedCollection };
+    if (remaining > 0) {
+      const classicAvail = newCollection[plantDefId] || 0;
+      const classicUse = Math.min(classicAvail, remaining);
+      newCollection[plantDefId] = classicAvail - classicUse;
+      if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
+    }
+    saveSeedCollection(newCollection);
+    saveSeedVarieties(newVarieties);
+
+    const newMiniSerres = state.miniSerres.map((s, i) => {
+      if (i !== serreIdx) return s;
+      const newSlots = s.slots.map((r) => r.map((c) => c));
+      let placed = 0;
+      for (let r = 0; r < newSlots.length && placed < toFill; r++) {
+        for (let c = 0; c < newSlots[r].length && placed < toFill; c++) {
+          if (!newSlots[r][c]) {
+            newSlots[r][c] = createInitialPlantState(plantDefId);
+            placed++;
+          }
+        }
+      }
+      return { ...s, slots: newSlots };
+    });
+    saveMiniSerres(newMiniSerres);
+    set({ miniSerres: newMiniSerres, seedCollection: newCollection, seedVarieties: newVarieties });
+    return true;
+  },
+
+  plantInMiniSerreAtDate: (serreId: string, row: number, col: number, plantDefId: string, daysSincePlanting: number) => {
+    const state = get();
+    const serreIdx = state.miniSerres.findIndex((s) => s.id === serreId);
+    if (serreIdx < 0) return false;
+    const serre = state.miniSerres[serreIdx];
+    if (serre.slots[row]?.[col] !== null) return false;
+
+    const consumed = state._consumeSeed(plantDefId);
+    if (!consumed) return false;
+
+    // Create plant with custom daysSincePlanting to simulate planting at a past date
+    const newPlant: PlantState = {
+      ...createInitialPlantState(plantDefId),
+      daysSincePlanting: daysSincePlanting,
+    };
+
+    // Calculate correct stage & growthProgress using the plant's actual stageDurations
+    const plantDef = PLANTS[plantDefId];
+    if (plantDef) {
+      let remaining = daysSincePlanting;
+      let targetStage = 0;
+      let daysInStage = 0;
+      for (let s = 0; s < 4; s++) {
+        const dur = plantDef.stageDurations[s];
+        if (remaining <= dur) {
+          targetStage = s;
+          daysInStage = remaining;
+          break;
+        }
+        remaining -= dur;
+        if (s === 3) {
+          // Plant has completed all stages
+          targetStage = 3;
+          daysInStage = dur;
+        }
+      }
+      newPlant.stage = targetStage;
+      newPlant.daysInCurrentStage = daysInStage;
+      // growthProgress = percentage through current stage
+      const stageDur = plantDef.stageDurations[targetStage];
+      newPlant.growthProgress = stageDur > 0 ? Math.round((daysInStage / stageDur) * 100) : 100;
+      // Cap at 100
+      if (newPlant.growthProgress >= 100) {
+        newPlant.growthProgress = 99;
+        // If it's the last stage, mark as harvestable
+        if (targetStage === 3) newPlant.isHarvestable = true;
+      }
+    } else {
+      // Fallback if plant definition not found — use simple pepiniere thresholds
+      newPlant.daysInCurrentStage = Math.min(daysSincePlanting, 10);
+      if (daysSincePlanting >= 45) {
+        newPlant.stage = 3; newPlant.growthProgress = 85;
+      } else if (daysSincePlanting >= 30) {
+        newPlant.stage = 2; newPlant.growthProgress = 60;
+      } else if (daysSincePlanting >= 15) {
+        newPlant.stage = 1; newPlant.growthProgress = 35;
+      } else if (daysSincePlanting >= 5) {
+        newPlant.stage = 1; newPlant.growthProgress = 15;
+      }
+    }
+
+    const newMiniSerres = state.miniSerres.map((s, i) => {
+      if (i !== serreIdx) return s;
+      const newSlots = s.slots.map((r) => r.map((c) => c));
+      newSlots[row][col] = newPlant;
+      return { ...s, slots: newSlots };
+    });
+    saveMiniSerres(newMiniSerres);
+    const updates: Record<string, unknown> = { miniSerres: newMiniSerres };
+    if (consumed.newCollection) updates.seedCollection = consumed.newCollection;
+    if (consumed.newVarieties) updates.seedVarieties = consumed.newVarieties;
+    set(updates);
+    return true;
+  },
+
+  // ── Jardin Actions (coordinate-based) ──
+
+  placePlantInGarden: (plantDefId: string, x: number, y: number, pepIndex?: number) => {
+    const state = get();
+    const spacing = PLANT_SPACING[plantDefId];
+    if (!spacing) return false;
+
+    // Check bounds
+    if (x < 0 || y < 0 || x + spacing.plantSpacingCm > state.gardenWidthCm || y + spacing.rowSpacingCm > state.gardenHeightCm) return false;
+
+    // Check for overlap with existing plants
+    const overlaps = state.gardenPlants.some((gp) => {
+      const s = PLANT_SPACING[gp.plantDefId];
+      if (!s) return false;
+      return x < gp.x + s.plantSpacingCm && x + spacing.plantSpacingCm > gp.x &&
+             y < gp.y + s.rowSpacingCm && y + spacing.rowSpacingCm > gp.y;
+    });
+    if (overlaps) return false;
+
+    let newPlant: PlantState;
+    let newPepiniere = state.pepiniere;
+    let newSeedCollection = state.seedCollection;
+
+    if (pepIndex !== undefined && pepIndex >= 0) {
+      // Transplant from pepiniere
+      const seedling = state.pepiniere[pepIndex];
+      if (!seedling) return false;
+      // Check frost risk if not in serre zone
+      const inSerre = state.gardenSerreZones.some(z =>
+        x >= z.x && y >= z.y && x <= z.x + z.width && y <= z.y + z.height
+      );
+      if (!state.adminMode && !inSerre && state.realWeather && isFrostRisk(state.realWeather)) return false;
+      newPlant = seedling;
+      newPepiniere = state.pepiniere.filter((_, i) => i !== pepIndex);
+      savePepiniere(newPepiniere);
+    } else {
+      // Direct placement (from seed/plantule inventory)
+      // Check seed availability
+      const count = state.seedCollection[plantDefId] || 0;
+      if (count <= 0) return false;
+
+      // Check frost risk if not in serre zone
+      const inSerre = state.gardenSerreZones.some(z =>
+        x >= z.x && y >= z.y && x <= z.x + z.width && y <= z.y + z.height
+      );
+      if (!state.adminMode && !inSerre && state.realWeather && isFrostRisk(state.realWeather)) return false;
+
+      // Consume the seed
+      newSeedCollection = { ...state.seedCollection };
+      newSeedCollection[plantDefId] = count - 1;
+      if (newSeedCollection[plantDefId] <= 0) delete newSeedCollection[plantDefId];
+      saveSeedCollection(newSeedCollection);
+
+      newPlant = createInitialPlantState(plantDefId);
+    }
+
+    const newGardenPlant: GardenPlant = {
+      id: uid(),
+      plantDefId,
+      x: Math.round(x),
+      y: Math.round(y),
+      plant: newPlant,
+    };
+
+    const newGardenPlants = [...state.gardenPlants, newGardenPlant];
+    saveGardenPlants(newGardenPlants);
+
+    set({ gardenPlants: newGardenPlants, pepiniere: newPepiniere, seedCollection: newSeedCollection });
+    return true;
+  },
+
+  placeRowInGarden: (plantDefId: string, startX: number, startY: number, endX: number, endY: number, pepIndices?: number[]) => {
+    const state = get();
+    const spacing = PLANT_SPACING[plantDefId];
+    if (!spacing) return 0;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    if (length < spacing.plantSpacingCm) return 0;
+
+    const dirX = dx / length;
+    const dirY = dy / length;
+    const count = Math.floor(length / spacing.plantSpacingCm);
+
+    let placed = 0;
+    const newPlants: GardenPlant[] = [];
+    const usedPepIndices = pepIndices ? [...pepIndices] : [];
+
+    for (let i = 0; i <= count; i++) {
+      const px = Math.round(startX + dirX * i * spacing.plantSpacingCm);
+      const py = Math.round(startY + dirY * i * spacing.plantSpacingCm);
+
+      // Check bounds
+      if (px < 0 || py < 0 || px + spacing.plantSpacingCm > state.gardenWidthCm || py + spacing.rowSpacingCm > state.gardenHeightCm) continue;
+
+      // Check overlap
+      const overlaps = state.gardenPlants.some((gp) => {
+        const s = PLANT_SPACING[gp.plantDefId];
+        if (!s) return false;
+        return px < gp.x + s.plantSpacingCm && px + spacing.plantSpacingCm > gp.x &&
+               py < gp.y + s.rowSpacingCm && py + spacing.rowSpacingCm > gp.y;
+      }) || newPlants.some((gp) => {
+        return px < gp.x + spacing.plantSpacingCm && px + spacing.plantSpacingCm > gp.x &&
+               py < gp.y + spacing.rowSpacingCm && py + spacing.rowSpacingCm > gp.y;
+      });
+      if (overlaps) continue;
+
+      let plantState: PlantState;
+      if (usedPepIndices.length > 0) {
+        const pepIdx = usedPepIndices.shift()!;
+        const seedling = state.pepiniere[pepIdx];
+        if (!seedling) continue;
+        plantState = seedling;
+      } else {
+        plantState = createInitialPlantState(plantDefId);
+      }
+
+      newPlants.push({
+        id: uid(),
+        plantDefId,
+        x: px,
+        y: py,
+        plant: plantState,
+      });
+      placed++;
+    }
+
+    if (placed === 0) return 0;
+
+    const newGardenPlants = [...state.gardenPlants, ...newPlants];
+    saveGardenPlants(newGardenPlants);
+
+    if (usedPepIndices.length < (pepIndices?.length || 0)) {
+      // Some pepiniere plants were used
+      const remainingIndices = usedPepIndices;
+      const newPepiniere = state.pepiniere.filter((_, i) => !pepIndices!.includes(i) || remainingIndices.includes(i));
+      savePepiniere(newPepiniere);
+      set({ gardenPlants: newGardenPlants, pepiniere: newPepiniere });
+    } else {
+      set({ gardenPlants: newGardenPlants });
+    }
+
+    return placed;
+  },
+
+  removePlantFromGarden: (plantId: string) => {
+    set((s) => {
+      const newGardenPlants = s.gardenPlants.filter((p) => p.id !== plantId);
+      saveGardenPlants(newGardenPlants);
+      return { gardenPlants: newGardenPlants };
+    });
+  },
+
+  waterPlantGarden: (plantId: string) => {
+    set((s) => {
+      const newGardenPlants = s.gardenPlants.map((gp) => {
+        if (gp.id !== plantId) return gp;
+        return { ...gp, plant: applyWatering(gp.plant) };
+      });
+      saveGardenPlants(newGardenPlants);
+      return { gardenPlants: newGardenPlants };
+    });
+  },
+
+  treatPlantGarden: (plantId: string) => {
+    set((s) => {
+      const newGardenPlants = s.gardenPlants.map((gp) => {
+        if (gp.id !== plantId) return gp;
+        return { ...gp, plant: applyTreatment(gp.plant) };
+      });
+      saveGardenPlants(newGardenPlants);
+      return { gardenPlants: newGardenPlants };
+    });
+  },
+
+  fertilizePlantGarden: (plantId: string) => {
+    set((s) => {
+      const newGardenPlants = s.gardenPlants.map((gp) => {
+        if (gp.id !== plantId) return gp;
+        return { ...gp, plant: applyFertilizer(gp.plant) };
+      });
+      saveGardenPlants(newGardenPlants);
+      return { gardenPlants: newGardenPlants };
+    });
+  },
+
+  harvestPlantGarden: (plantId: string) => {
+    const state = get();
+    const gp = state.gardenPlants.find((p) => p.id === plantId);
+    if (!gp) return;
+
+    const plantDef = PLANTS[gp.plantDefId];
+    const harvestReward = plantDef ? Math.round(plantDef.realDaysToHarvest * 0.5 + 20) : 50;
+    const newScore = state.score + 100 + harvestReward;
+    const newCoins = state.coins + harvestReward;
+    const newBest = Math.max(state.bestScore, newScore);
+    if (newBest > state.bestScore) saveBestScore(newBest);
+    saveCoins(newCoins);
+
+    const newGardenPlants = state.gardenPlants.filter((p) => p.id !== plantId);
+    saveGardenPlants(newGardenPlants);
+
+    set({
+      gardenPlants: newGardenPlants,
+      harvested: state.harvested + 1,
+      score: newScore,
+      bestScore: newBest,
+      coins: newCoins,
+      alerts: [
+        ...state.alerts.slice(-25),
+        {
+          id: `harvest-reward-${Date.now()}`,
+          type: "harvest" as const,
+          message: `${plantDef?.harvestEmoji || "🌿"} Récolte ! +${harvestReward} 🪙 pièces`,
+          emoji: "💰", cellX: 0, cellY: 0,
+          timestamp: Date.now(), severity: "info" as const,
+        },
+      ],
+    });
+  },
+
+  waterAllGarden: () => {
+    set((s) => {
+      const newGardenPlants = s.gardenPlants.map((gp) => ({
+        ...gp,
+        plant: applyWatering(gp.plant),
+      }));
+      saveGardenPlants(newGardenPlants);
+      return { gardenPlants: newGardenPlants };
+    });
+  },
+
+  addSerreZone: (x: number, y: number, width: number, height: number) => {
+    const state = get();
+    const newZone: SerreZone = {
+      id: uid(),
+      x: Math.round(x),
+      y: Math.round(y),
+      width: Math.round(width),
+      height: Math.round(height),
+    };
+    const newZones = [...state.gardenSerreZones, newZone];
+    saveGardenSerreZones(newZones);
+    set({ gardenSerreZones: newZones, showGardenSerre: true });
+  },
+
+  buySerreZone: () => {
+    const state = get();
+    if (state.coins < 200) return false;
+    // Create a default 6m x 4m (600cm x 400cm) serre zone
+    const w = 600;
+    const h = 400;
+    // Place at right side of garden, stacked if multiple serres
+    const offsetX = state.gardenSerreZones.length * 20;
+    const x = Math.min(state.gardenWidthCm - w - 20, 20 + offsetX);
+    const y = 20;
+    get().addSerreZone(x, y, w, h);
+    const newCoins = state.coins - 200;
+    saveCoins(newCoins);
+    set({ coins: newCoins });
+    return true;
+  },
+
+  removeSerreZone: (zoneId: string) => {
+    const state = get();
+    const zone = state.gardenSerreZones.find((z) => z.id === zoneId);
+    if (!zone) return;
+    const newZones = state.gardenSerreZones.filter((z) => z.id !== zoneId);
+    saveGardenSerreZones(newZones);
+    set({ gardenSerreZones: newZones });
+  },
+
+  expandGarden: (direction: 'width' | 'height') => {
+    const state = get();
+    if (state.coins < EXPAND_COST) return false;
+    const increment = 200; // +200cm = +2m per expansion
+
+    if (direction === 'width') {
+      if (state.gardenWidthCm >= MAX_GARDEN_WIDTH_CM) return false;
+      const newWidth = Math.min(MAX_GARDEN_WIDTH_CM, state.gardenWidthCm + increment);
+      const newCoins = state.coins - EXPAND_COST;
+      saveCoins(newCoins);
+      saveGardenDimensions(newWidth, state.gardenHeightCm);
+      set({ gardenWidthCm: newWidth, coins: newCoins });
+    } else {
+      if (state.gardenHeightCm >= MAX_GARDEN_HEIGHT_CM) return false;
+      const newHeight = Math.min(MAX_GARDEN_HEIGHT_CM, state.gardenHeightCm + increment);
+      const newCoins = state.coins - EXPAND_COST;
+      saveCoins(newCoins);
+      saveGardenDimensions(state.gardenWidthCm, newHeight);
+      set({ gardenHeightCm: newHeight, coins: newCoins });
+    }
+    return true;
+  },
+
+  // ── Game Controls ──
+
+  togglePause: () => set((s) => ({ isPaused: !s.isPaused })),
+  setSpeed: (speed) => set({ speed }),
+  toggleAdminMode: () => set((s) => ({ adminMode: !s.adminMode })),
+  toggleDiseases: () => set((s) => ({ diseasesEnabled: !s.diseasesEnabled })),
+  toggleGardenSerre: () => set((s) => ({ showGardenSerre: !s.showGardenSerre })),
+  toggleSerreView: () => set((s) => ({ showSerreView: !s.showSerreView })),
+  setActiveTab: (tab: string) => set({ activeTab: tab }),
+  setPendingTransplant: (data: { serreId: string; row: number; col: number; plantDefId: string; plantName: string; plantEmoji: string } | null) => {
+    set({ pendingTransplant: data });
+  },
+  transplantFromMiniSerreToGarden: (serreId: string, row: number, col: number, gardenX: number, gardenY: number) => {
+    const state = get();
+    const serreIdx = state.miniSerres.findIndex((s) => s.id === serreId);
+    if (serreIdx < 0) return false;
+    const serre = state.miniSerres[serreIdx];
+    const plant = serre.slots[row]?.[col];
+    if (!plant) return false;
+
+    const plantDef = PLANTS[plant.plantDefId];
+    if (!plantDef) return false;
+    const spacing = PLANT_SPACING[plant.plantDefId];
+    if (!spacing) return false;
+
+    // Check garden bounds
+    if (gardenX < 0 || gardenY < 0 || gardenX + spacing.plantSpacingCm > state.gardenWidthCm || gardenY + spacing.rowSpacingCm > state.gardenHeightCm) return false;
+
+    // Check for overlap
+    const overlaps = state.gardenPlants.some((gp) => {
+      const s = PLANT_SPACING[gp.plantDefId];
+      if (!s) return false;
+      return gardenX < gp.x + s.plantSpacingCm && gardenX + spacing.plantSpacingCm > gp.x &&
+             gardenY < gp.y + s.rowSpacingCm && gardenY + spacing.rowSpacingCm > gp.y;
+    });
+    if (overlaps) return false;
+
+    // Check frost risk if not in serre zone and not admin mode
+    const inSerre = state.gardenSerreZones.some(z =>
+      gardenX >= z.x && gardenY >= z.y && gardenX <= z.x + z.width && gardenY <= z.y + z.height
+    );
+    if (!state.adminMode && !inSerre && state.realWeather && isFrostRisk(state.realWeather)) return false;
+
+    // Remove from mini serre
+    const newMiniSerres = state.miniSerres.map((s, i) => {
+      if (i !== serreIdx) return s;
+      const newSlots = s.slots.map((r) => r.map((c) => c));
+      newSlots[row][col] = null;
+      return { ...s, slots: newSlots };
+    });
+    saveMiniSerres(newMiniSerres);
+
+    // Add to garden
+    const newGardenPlant: GardenPlant = {
+      id: uid(),
+      plantDefId: plant.plantDefId,
+      x: gardenX,
+      y: gardenY,
+      plant: { ...plant }, // copy the plant state
+    };
+    const newGardenPlants = [...state.gardenPlants, newGardenPlant];
+    saveGardenPlants(newGardenPlants);
+
+    set({ miniSerres: newMiniSerres, gardenPlants: newGardenPlants });
+    return true;
+  },
+  toggleConsole: () => set((s) => ({ showConsole: !s.showConsole })),
+  dismissAlert: (aid) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== aid) })),
+
+  addScore: (points: number) => {
+    const state = get();
+    const newScore = state.score + points;
+    const newBest = Math.max(state.bestScore, newScore);
+    if (newBest > state.bestScore) saveBestScore(newBest);
+    set({ score: newScore, bestScore: newBest });
+  },
+
+  setRealWeather: (data: RealWeatherData) => set({ realWeather: data, weatherError: null }),
+  setGPSCoords: (coords: GPSCoords) => {
+    saveGPSCoords(coords);
+    set({ gpsCoords: coords });
+  },
+  setWeatherLoading: (loading: boolean) => set({ weatherLoading: loading }),
+  setWeatherError: (error: string | null) => set({ weatherError: error }),
+
+  // ── Tick ──
+
+  tick: () => {
+    const state = get();
+    if (state.isPaused) return;
+
+    const newDay = state.day + 1;
+    const newMonth = getMonthFromDay(newDay);
+    const newSeason = getSeason(newDay);
+    const newAlerts: AlertData[] = [...state.alerts.slice(-30)];
+    let scoreGain = 0;
+
+    // Season change alert
+    if (newSeason !== state.season) {
+      newAlerts.push({
+        id: `season-${Date.now()}`,
+        type: "season",
+        message: `${getSeasonEmoji(newSeason)} Nouvelle saison : ${getSeasonLabel(newSeason)} ! ${getSeasonalPlantingAdvice(newSeason)}`,
+        emoji: getSeasonEmoji(newSeason), cellX: 0, cellY: 0,
+        timestamp: Date.now(), severity: "info",
+      });
+    }
+
+    // Pepiniere environment params (shared for pepiniere + mini serres)
+    const pepEnv: RealWeatherParams = {
+      temperature: 20,
+      humidity: 65,
+      sunlightHours: 4.8,
+      precipitation: 0,
+      windSpeed: 0,
+      uvIndex: 2,
+      gameWeather: WEATHER_TYPES["sunny"],
+      soilQuality: 75,
+    };
+
+    // ═══ TICK PÉPINIÈRE ═══
+    const newPepiniere = state.pepiniere.map((plant) => {
+      const plantDef = PLANTS[plant.plantDefId];
+      if (!plantDef) return plant;
+
+      const result = simulateDayWithRealWeather(plantDef, plant, pepEnv, "pepiniere", 0);
+
+      newAlerts.push(...result.alerts.filter(
+        (a) => a.type === "stage" || a.type === "harvest" || a.severity === "critical"
+      ));
+
+      return result.newState;
+    });
+    savePepiniere(newPepiniere);
+
+    // ═══ TICK MINI SERRES ═══
+    const newMiniSerres = state.miniSerres.map((serre) => {
+      const newSlots = serre.slots.map((row) =>
+        row.map((plant) => {
+          if (!plant) return null;
+          const plantDef = PLANTS[plant.plantDefId];
+          if (!plantDef) return plant;
+
+          const result = simulateDayWithRealWeather(plantDef, plant, pepEnv, "pepiniere", 0);
+          newAlerts.push(...result.alerts.filter(
+            (a) => a.type === "stage" || a.type === "harvest" || a.severity === "critical"
+          ));
+          return result.newState;
+        })
+      );
+      return { ...serre, slots: newSlots };
+    });
+    saveMiniSerres(newMiniSerres);
+
+    // Count mini serre plants for scoring
+    let miniSerrePlantCount = 0;
+    newMiniSerres.forEach((serre) => {
+      serre.slots.forEach((row) => {
+        row.forEach((plant) => {
+          if (plant) miniSerrePlantCount++;
+        });
+      });
+    });
+
+    // ═══ TICK JARDIN ═══
+    let livingPlants = 0;
+    const newGardenPlants = state.gardenPlants.map((gp) => {
+      const plantDef = PLANTS[gp.plantDefId];
+      if (!plantDef) return gp;
+
+      livingPlants++;
+      let newPlant = { ...gp.plant };
+      const inSerre = state.gardenSerreZones.some(z =>
+        gp.x >= z.x && gp.y >= z.y && gp.x < z.x + z.width && gp.y < z.y + z.height
+      );
+
+      // Frost check for plants NOT in serre (bypassed in admin mode)
+      if (!state.adminMode && !inSerre && state.realWeather && isFrostRisk(state.realWeather)) {
+        if (state.realWeather.current.temperature < 2) {
+          newPlant.health = Math.max(5, newPlant.health - 5);
+          newAlerts.push({
+            id: `frost-jardin-${Date.now()}-${Math.random()}`,
+            type: "weather",
+            message: `🥶 Gel sur ${plantDef.emoji} ${plantDef.name} ! Croissance stoppée.`,
+            emoji: "🥶", cellX: 0, cellY: 0,
+            timestamp: Date.now(), severity: "warning",
+          });
+          newPlant.waterLevel = Math.max(0, newPlant.waterLevel - 2);
+          return { ...gp, plant: newPlant };
+        }
+      }
+
+      if (state.realWeather) {
+        const effectiveZoneId = inSerre ? "serre_tile" : "garden";
+        const env = getRealEnvironment(state.realWeather, effectiveZoneId);
+        const precipitation = getZonePrecipitation(state.realWeather, effectiveZoneId);
+        const weatherType = WEATHER_TYPES[state.realWeather.current.gameWeather] || WEATHER_TYPES["sunny"];
+
+        const realParams: RealWeatherParams = {
+          temperature: env.temperature,
+          humidity: env.humidity,
+          sunlightHours: env.sunlightHours,
+          precipitation,
+          windSpeed: state.realWeather.current.windSpeed,
+          uvIndex: state.realWeather.today.uvIndex,
+          gameWeather: weatherType,
+          soilQuality: env.soilQuality,
+        };
+
+        const result = simulateDayWithRealWeather(plantDef, newPlant, realParams, effectiveZoneId, 0);
+        newAlerts.push(...result.alerts.filter(
+          (a) => a.type === "stage" || a.type === "harvest" || a.type === "water" || a.type === "health" || a.type === "pest" || a.type === "disease" || a.severity === "critical"
+        ));
+
+        if (result.newState.isHarvestable && !newPlant.isHarvestable) scoreGain += 200;
+        newPlant = result.newState;
+      } else {
+        const newWeather = generateWeatherForMonth(newMonth);
+        const baseEnv = getEnvironmentWithDailyVariation(getEnvironmentForMonth(newMonth));
+        const result = simulateDay(plantDef, newPlant, baseEnv, newWeather, newSeason, 0);
+        newAlerts.push(...result.alerts.filter(
+          (a) => a.type === "stage" || a.type === "harvest" || a.type === "water" || a.type === "health" || a.type === "pest" || a.type === "disease" || a.severity === "critical"
+        ));
+
+        if (result.newState.isHarvestable && !newPlant.isHarvestable) scoreGain += 200;
+        newPlant = result.newState;
+      }
+
+      return { ...gp, plant: newPlant };
+    });
+    saveGardenPlants(newGardenPlants);
+
+    // Score per living plant per day
+    scoreGain += livingPlants;
+    scoreGain += newPepiniere.length;
+    scoreGain += miniSerrePlantCount;
+
+    const newWeather = state.realWeather
+      ? (WEATHER_TYPES[state.realWeather.current.gameWeather] || WEATHER_TYPES["sunny"])
+      : generateWeatherForMonth(newMonth);
+
+    const newScore = state.score + scoreGain;
+    const newBest = Math.max(state.bestScore, newScore);
+    if (newBest > state.bestScore) saveBestScore(newBest);
+
+    // Admin: diseases toggle — strip all diseases/pests if disabled
+    let finalGarden = newGardenPlants;
+    let finalPepiniere = newPepiniere;
+    let finalMiniSerres = newMiniSerres;
+    if (!get().diseasesEnabled) {
+      finalGarden = newGardenPlants.map(gp => ({
+        ...gp,
+        plant: { ...gp.plant, hasDisease: false, hasPest: false, diseaseDays: 0, pestDays: 0 }
+      }));
+      finalPepiniere = newPepiniere.map(p => ({
+        ...p, hasDisease: false, hasPest: false, diseaseDays: 0, pestDays: 0
+      }));
+      finalMiniSerres = newMiniSerres.map(serre => ({
+        ...serre,
+        slots: serre.slots.map(row => row.map(p => p ? {
+          ...p, hasDisease: false, hasPest: false, diseaseDays: 0, pestDays: 0
+        } : null)),
+      }));
+    }
+
+    set({
+      gardenPlants: finalGarden,
+      pepiniere: finalPepiniere,
+      miniSerres: finalMiniSerres,
+      day: newDay,
+      season: newSeason,
+      weather: newWeather,
+      alerts: newAlerts,
+      score: newScore,
+      bestScore: newBest,
+    });
+  },
+}));
+
+// ═══ Serre Tile Zone Modifier ═══
+if (!ZONE_MODIFIERS["serre_tile"]) {
+  (ZONE_MODIFIERS as Record<string, typeof ZONE_MODIFIERS.garden>)["serre_tile"] = {
+    label: "Tuile Serre",
+    emoji: "🏡",
+    tempMin: null,
+    tempMax: null,
+    tempMod: 1.15,
+    rainMod: 0.3,
+    sunlightMod: 1.15,
+    humidityMod: 0.9,
+    description: "Protection serre: +5°C, -70% pluie, +15% lumière",
+  };
+}
