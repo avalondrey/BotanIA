@@ -449,7 +449,7 @@ export interface GameState {
   fertilizePlantGarden: (plantId: string) => void;
   harvestPlantGarden: (plantId: string) => void;
   waterAllGarden: () => void;
-  addSerreZone: (x: number, y: number, width: number, height: number) => void;
+  addSerreZone: (x: number, y: number, width: number, height: number, price?: number) => boolean;
   buySerreZone: () => boolean;
   removeSerreZone: (zoneId: string) => void;
   expandGarden: (direction: 'width' | 'height') => boolean;
@@ -1606,8 +1606,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
-  addSerreZone: (x: number, y: number, width: number, height: number) => {
+  addSerreZone: (x: number, y: number, width: number, height: number, price: number = 200) => {
     const state = get();
+    if (price > 0 && state.coins < price) return false;
     const newZone: SerreZone = {
       id: uid(),
       x: Math.round(x),
@@ -1617,7 +1618,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     };
     const newZones = [...state.gardenSerreZones, newZone];
     saveGardenSerreZones(newZones);
-    set({ gardenSerreZones: newZones, showGardenSerre: true });
+    const newCoins = price > 0 ? state.coins - price : state.coins;
+    if (price > 0) saveCoins(newCoins);
+    set({ gardenSerreZones: newZones, showGardenSerre: true, coins: newCoins });
+    return true;
   },
 
   buySerreZone: () => {
@@ -1630,10 +1634,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     const offsetX = state.gardenSerreZones.length * 20;
     const x = Math.min(state.gardenWidthCm - w - 20, 20 + offsetX);
     const y = 20;
-    get().addSerreZone(x, y, w, h);
+    // Call with price=0 (we handle coins here to avoid double deduction)
+    const newZone: SerreZone = {
+      id: uid(),
+      x: Math.round(x),
+      y: Math.round(y),
+      width: Math.round(w),
+      height: Math.round(h),
+    };
+    const newZones = [...state.gardenSerreZones, newZone];
+    saveGardenSerreZones(newZones);
     const newCoins = state.coins - 200;
     saveCoins(newCoins);
-    set({ coins: newCoins });
+    set({ gardenSerreZones: newZones, coins: newCoins, showGardenSerre: true });
     return true;
   },
 
