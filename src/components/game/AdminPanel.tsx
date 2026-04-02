@@ -285,7 +285,7 @@ ${ceId}: {
 ${ceId}: { plantSpacingCm: ${cePlantSpacingCm}, rowSpacingCm: ${ceRowSpacingCm}, color: "#888888", label: "${cePlantSpacingCm}×${ceRowSpacingCm}cm" },
 
 // 3. Ajouter dans ai-engine.ts → STAGE_IMAGES :
-${ceId}: ["/stages/${ceId}-0.png", "/stages/${ceId}-1.png", "/stages/${ceId}-2.png", "/stages/${ceId}-3.png"],
+${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.png", "/stages/${ceId}/3.png", "/stages/${ceId}/4.png", "/stages/${ceId}/5.png"],
 
 // 4. Ajouter dans game-store.ts → SEED_CATALOG :
 { plantDefId: "${ceId}", name: "Graine ${ceName}", emoji: "${ceEmoji}", price: ${cePrice}, realDaysToHarvest: ${ceRealDaysToHarvest}, optimalMonths: [${months.join(", ")}] },
@@ -294,11 +294,12 @@ ${ceId}: ["/stages/${ceId}-0.png", "/stages/${ceId}-1.png", "/stages/${ceId}-2.p
 { plantDefId: "${ceId}", name: "Plantule ${ceName}", emoji: "${ceEmoji}", price: ${Math.round(cePrice * 1.5)} },
 
 // 6. Images à générer (via admin image gen) :
-// z-ai-generate -p "${ceName} seed packet illustration, manga style, white background, no text" -o "./public/cards/card-${ceId}.png"
-// z-ai-generate -p "${ceName} growth stage 1 germination, manga style, white background" -o "./public/stages/${ceId}-0.png"
-// z-ai-generate -p "${ceName} growth stage 2 seedling, manga style, white background" -o "./public/stages/${ceId}-1.png"
-// z-ai-generate -p "${ceName} growth stage 3 flowering, manga style, white background" -o "./public/stages/${ceId}-2.png"
-// z-ai-generate -p "${ceName} growth stage 4 fruit, manga style, white background" -o "./public/stages/${ceId}-3.png"`;
+// z-ai-generate -p "Manga cel-shaded cross-hatching ${ceName} dirt mound in terracotta pot, white background" -o "./public/stages/${ceId}/0.png"
+// z-ai-generate -p "Manga cel-shaded cross-hatching ${ceName} seedling 1 leaf in terracotta pot, white background" -o "./public/stages/${ceId}/1.png"
+// z-ai-generate -p "Manga cel-shaded cross-hatching ${ceName} seedling 2 leaves in terracotta pot, white background" -o "./public/stages/${ceId}/2.png"
+// z-ai-generate -p "Manga cel-shaded cross-hatching ${ceName} seedling 3 leaves slightly bigger in terracotta pot, white background" -o "./public/stages/${ceId}/3.png"
+// z-ai-generate -p "Manga cel-shaded cross-hatching ${ceName} seedling 4 leaves in terracotta pot, white background" -o "./public/stages/${ceId}/4.png"
+// z-ai-generate -p "Manga cel-shaded cross-hatching ${ceName} seedling 5 leaves ready to transplant in terracotta pot, white background" -o "./public/stages/${ceId}/5.png"`;
     } else if (ceType === "chambre") {
       script = `// ═══ Nouvelle carte Chambre de Culture : ${ceName} ═══
 // 1. Ajouter dans game-store.ts → CHAMBRE_CATALOG :

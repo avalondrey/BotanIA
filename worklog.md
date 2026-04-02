@@ -115,3 +115,27 @@ Stage Summary:
 - Admin reset now properly clears ALL state including seedVarieties from localStorage
 - TypeScript compilation fixed for seed helper methods
 - Buying Vilmorin varieties now correctly populates both inventories
+
+---
+Task ID: 7-1
+Agent: Main Agent
+Task: Regenerate ALL growth stage images for ALL 6 plants with new 6-stage system (stages 0-5)
+
+Work Log:
+- Generated 36 new stage images (6 plants x 6 stages) in manga cel-shaded cross-hatching style
+- Plants: tomato, carrot, lettuce, basil, pepper, strawberry
+- Each stage follows user specifications: 0=dirt mound, 1=1 leaf, 2=2 leaves, 3=slightly bigger, 4=~4 leaves, 5=5+ leaves
+- All images saved to /stages/{plant}/0.png through /stages/{plant}/5.png
+- Also copied to flat paths /stages/{plant}-{i}.png for backward compatibility
+- Updated ai-engine.ts: STAGE_IMAGES now 6 stages with subfolder paths, STAGE_NAMES updated to match pepiniere stages
+- Updated Boutique.tsx: seed and plantule images now use subfolder paths
+- Updated AdminPanel.tsx: code generation templates for 6 stages, manga cel-shaded prompts
+- Updated admin/page.tsx: STAGE_NAMES updated, generation loop 4->6 stages, prompts updated, subfolder paths
+- Fixed extra closing brace in game-store.ts that broke compilation
+
+Stage Summary:
+- 36 new growth stage images generated in manga cel-shaded cross-hatching style
+- 6-stage system (0-5) fully implemented across all code files
+- All image paths unified to /stages/{plant}/{stage}.png subfolder format
+- Admin panel updated to generate 6 stages with correct prompts
+- No new TypeScript compilation errors introduced

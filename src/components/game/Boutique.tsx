@@ -396,7 +396,7 @@ export function Boutique() {
                     <div className="relative h-20 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
                       {plantDef && (
                         <Image
-                          src={`/stages/${item.plantDefId}-0.png`}
+                          src={`/stages/${item.plantDefId}/0.png`}
                           alt={item.name}
                           width={56}
                           height={56}
@@ -482,7 +482,7 @@ export function Boutique() {
                 <div className="relative h-28 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
                   {plantDef && (
                     <Image
-                      src={`/stages/${item.plantDefId}-1.png`}
+                      src={`/stages/${item.plantDefId}/1.png`}
                       alt={item.name}
                       width={80}
                       height={80}

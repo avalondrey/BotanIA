@@ -186,7 +186,7 @@ export function SerreJardinView() {
         row.forEach((plant) => {
           if (plant) {
             total++;
-            if (getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 4) ready++;
+            if (getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5) ready++;
           }
         });
       });
@@ -482,7 +482,7 @@ export function SerreJardinView() {
                                   key={i}
                                   className={`aspect-square rounded-[2px] ${
                                     plant
-                                      ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 4
+                                      ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5
                                         ? "bg-green-200"
                                         : "bg-green-100"
                                       : "bg-stone-100"
@@ -920,7 +920,7 @@ function MiniSerresDetail({
       {/* Mini serre cards */}
       {miniSerres.map((serre, serreIdx) => {
         const allPlants = serre.slots.flat().filter(p => p);
-        const readyPlants = allPlants.filter(p => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 4);
+        const readyPlants = allPlants.filter(p => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 5);
 
         return (
           <div
@@ -985,7 +985,7 @@ function MiniSerresDetail({
                         row.map((plant, col) => {
                           const rowIdx = startRow + rowRelIdx;
                           const isSelected = selectedSlot?.serreId === serre.id && selectedSlot?.row === rowIdx && selectedSlot?.col === col;
-                          const isReady = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 4 : false;
+                          const isReady = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5 : false;
                           const stage = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) : -1;
 
                           if (!plant) {
@@ -1096,7 +1096,7 @@ function MiniSerresDetail({
                   const readySlots: { row: number; col: number; plant: NonNullable<typeof readyPlants[0]> }[] = [];
                   serre.slots.forEach((row, ri) => {
                     row.forEach((plant, ci) => {
-                      if (plant && getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 4) {
+                      if (plant && getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5) {
                         readySlots.push({ row: ri, col: ci, plant });
                       }
                     });

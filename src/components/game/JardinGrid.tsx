@@ -61,7 +61,7 @@ export function JardinGrid() {
 
   // Get ready-to-transplant seedlings (per-plant threshold)
   const readySeedlings = useMemo(() =>
-    pepiniere.filter((p) => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 4),
+    pepiniere.filter((p) => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 5),
     [pepiniere]
   );
 
@@ -283,7 +283,7 @@ export function JardinGrid() {
       store.placePlantInGarden(selectedPlantType, cmX, cmY);
     } else {
       // Find ready seedling of this type
-      const idx = store.pepiniere.findIndex((p) => p.plantDefId === selectedPlantType && getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 4);
+      const idx = store.pepiniere.findIndex((p) => p.plantDefId === selectedPlantType && getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 5);
       if (idx >= 0) {
         store.placePlantInGarden(selectedPlantType, cmX, cmY, idx);
       }

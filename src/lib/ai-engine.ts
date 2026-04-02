@@ -199,17 +199,17 @@ export const PLANTS: Record<string, PlantDefinition> = {
   },
 };
 
-export const STAGE_NAMES = ["Germination", "Plantule", "Floraison", "Fructification"];
-export const STAGE_EMOJIS = ["🌰", "🌱", "🌸", "🪴"];
+export const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
+export const STAGE_EMOJIS = ["", "", "", "", "", ""];
 
-// Stage images per plant — manga illustrations for each growth phase
+// Stage images per plant — manga cel-shaded cross-hatching illustrations (6 stades pepiniere)
 export const STAGE_IMAGES: Record<string, string[]> = {
-  tomato:      ["/stages/tomato-0.png",      "/stages/tomato-1.png",      "/stages/tomato-2.png",      "/stages/tomato-3.png"],
-  carrot:      ["/stages/carrot-0.png",      "/stages/carrot-1.png",      "/stages/carrot-2.png",      "/stages/carrot-3.png"],
-  strawberry:  ["/stages/strawberry-0.png",  "/stages/strawberry-1.png",  "/stages/strawberry-2.png",  "/stages/strawberry-3.png"],
-  lettuce:     ["/stages/lettuce-0.png",     "/stages/lettuce-1.png",     "/stages/lettuce-2.png",     "/stages/lettuce-3.png"],
-  basil:       ["/stages/basil-0.png",       "/stages/basil-1.png",       "/stages/basil-2.png",       "/stages/basil-3.png"],
-  pepper:      ["/stages/pepper-0.png",      "/stages/pepper-1.png",      "/stages/pepper-2.png",      "/stages/pepper-3.png"],
+  tomato:      ["/stages/tomato/0.png",  "/stages/tomato/1.png",  "/stages/tomato/2.png",  "/stages/tomato/3.png",  "/stages/tomato/4.png",  "/stages/tomato/5.png"],
+  carrot:      ["/stages/carrot/0.png",  "/stages/carrot/1.png",  "/stages/carrot/2.png",  "/stages/carrot/3.png",  "/stages/carrot/4.png",  "/stages/carrot/5.png"],
+  strawberry:  ["/stages/strawberry/0.png",  "/stages/strawberry/1.png",  "/stages/strawberry/2.png",  "/stages/strawberry/3.png",  "/stages/strawberry/4.png",  "/stages/strawberry/5.png"],
+  lettuce:     ["/stages/lettuce/0.png", "/stages/lettuce/1.png", "/stages/lettuce/2.png", "/stages/lettuce/3.png", "/stages/lettuce/4.png", "/stages/lettuce/5.png"],
+  basil:       ["/stages/basil/0.png",   "/stages/basil/1.png",   "/stages/basil/2.png",   "/stages/basil/3.png",   "/stages/basil/4.png",   "/stages/basil/5.png"],
+  pepper:      ["/stages/pepper/0.png",  "/stages/pepper/1.png",  "/stages/pepper/2.png",  "/stages/pepper/3.png",  "/stages/pepper/4.png",  "/stages/pepper/5.png"],
 };
 
 export const ENVIRONMENTS: Record<

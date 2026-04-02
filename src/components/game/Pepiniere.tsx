@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameStore, SEED_CATALOG, SEED_VARIETIES, PLANTULE_CATALOG, PEPINIERE_STAGES, PEPINIERE_STAGE_NAMES, PEPINIERE_STAGE_IMAGES, getPepiniereStage, getPepiniereTransplantDay, MINI_SERRE_ROWS, MINI_SERRE_COLS, type MiniSerre, MINI_SERRE_PRICE } from "@/store/game-store";
+import { useGameStore, SEED_CATALOG, SEED_VARIETIES, PLANTULE_CATALOG, PEPINIERE_STAGES, PEPINIERE_STAGE_NAMES, getStageImage, getPepiniereStage, getPepiniereTransplantDay, MINI_SERRE_ROWS, MINI_SERRE_COLS, type MiniSerre, MINI_SERRE_PRICE } from "@/store/game-store";
 import { PLANTS } from "@/lib/ai-engine";
 import {
   Droplets, Heart, Sprout, Pill, Plus,
@@ -208,7 +208,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
               const isSelected = selectedSlot?.row === rowIdx && selectedSlot?.col === colIdx;
               const plantDef = plant ? PLANTS[plant.plantDefId] : null;
               const pepStage = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) : -1;
-              const isReady = pepStage >= 4;
+              const isReady = pepStage >= 5;
               const isStunted = plant?.health !== undefined && plant.health <= 20;
               const waterColor = !plant ? "" : plant.waterLevel > 50 ? "bg-blue-400" : plant.waterLevel > 20 ? "bg-amber-400" : "bg-red-400";
 
@@ -233,8 +233,8 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                     <>
                       <div className="absolute inset-0">
                         <Image
-                          src={PEPINIERE_STAGE_IMAGES[Math.min(pepStage, 4)]}
-                          alt={PEPINIERE_STAGE_NAMES[Math.min(pepStage, 4)]}
+                          src={getStageImage(plant.plantDefId, Math.min(pepStage, 5))}
+                          alt={PEPINIERE_STAGE_NAMES[Math.min(pepStage, 5)]}
                           fill
                           sizes="(max-width: 768px) 12vw, 8vw"
                           className={`object-cover rounded-[3px] ${isStunted ? "grayscale opacity-40" : ""}`}
@@ -244,7 +244,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                       <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-black/15 rounded-b">
                         <motion.div
                           className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-b"
-                          animate={{ width: `${(pepStage * 100) / 4}%` }}
+                          animate={{ width: `${(pepStage * 100) / 5}%` }}
                           transition={{ duration: 0.5 }}
                         />
                       </div>
@@ -302,7 +302,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded bg-stone-100 border border-stone-300 flex items-center justify-center">
-                    <span className="text-[10px] font-black text-stone-500">{pepStage + 1}/5</span>
+                    <span className="text-[10px] font-black text-stone-500">{pepStage + 1}/6</span>
                   </div>
                   <div>
                     <p className="text-[9px] font-black">{plantDef.name}</p>
@@ -335,7 +335,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                   <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().waterMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); }} className="px-1.5 py-0.5 bg-blue-500 text-white text-[7px] font-bold rounded hover:bg-blue-600" title="Arroser"><Droplets className="w-2.5 h-2.5" /></button>
                   {(plant.hasDisease || plant.hasPest) && <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().treatMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); }} className="px-1.5 py-0.5 bg-pink-500 text-white text-[7px] font-bold rounded hover:bg-pink-600" title="Traiter"><Pill className="w-2.5 h-2.5" /></button>}
                   <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().fertilizeMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); }} className="px-1.5 py-0.5 bg-violet-500 text-white text-[7px] font-bold rounded hover:bg-violet-600" title="Engrais"><Sprout className="w-2.5 h-2.5" /></button>
-                  {pepStage >= 4 && (
+                  {pepStage >= 5 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

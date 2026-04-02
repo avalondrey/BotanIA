@@ -7,7 +7,7 @@ import {
 } from "@/lib/ai-engine";
 import { SEED_SHOPS, SEED_VARIETIES, CHAMBRE_CATALOG } from "@/store/game-store";
 
-const STAGE_NAMES = ["Germination", "Plantule", "Floraison", "Fructification"];
+const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
 const MONTH_NAMES_SHORT = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
 
 type CardType = "plante" | "variete" | "environnement" | "action" | "ressource" | "boutique" | "chambre";
@@ -247,8 +247,8 @@ export default function AdminPage() {
 
       code += `// ── STAGE_IMAGES entry ──\n`;
       code += `  "${plantId}": [\n`;
-      for (let i = 0; i < 4; i++) {
-        code += `    "/stages/${plantId}-${i}.png",\n`;
+      for (let i = 0; i < 6; i++) {
+        code += `    "/stages/${plantId}/${i}.png",\n`;
       }
       code += `  ],\n\n`;
     }
@@ -308,9 +308,9 @@ export default function AdminPage() {
     code += `z-ai-generate -p "${prompt}" -o "./public${imagePath}" -s 1024x1024\n\n`;
     if (cardType === "plante" || cardType === "variete") {
       const plantId = f("parentPlant") || cardId;
-      const stageLabels = ["seed germination sprout", "young seedling plant", "flowering plant", "fruit bearing mature plant"];
-      for (let i = 0; i < 4; i++) {
-        code += `z-ai-generate -p "Manga style ${stageLabels[i]} for ${f("name") || cardId}, bold black borders, white background, growth stage ${i + 1}" -o "./public/stages/${plantId}-${i}.png" -s 1024x1024\n`;
+      const stageLabels = ["dirt mound seed in terracotta pot", "seedling 1 leaf in terracotta pot", "seedling 2 leaves in terracotta pot", "seedling 3 leaves slightly bigger", "seedling 4 leaves in terracotta pot", "seedling 5 leaves ready to transplant"];
+      for (let i = 0; i < 6; i++) {
+        code += `z-ai-generate -p "Manga cel-shaded cross-hatching ${stageLabels[i]} for ${f("name") || cardId}, white background" -o "./public/stages/${plantId}/${i}.png" -s 1024x1024\n`;
       }
     }
 
@@ -605,18 +605,18 @@ export default function AdminPage() {
               onClick={async () => {
                 if (!f("name")) return;
                 setGenerating(true);
-                setGenStatus("Génération des 4 stades...");
-                const stageLabels = ["seed germination sprout", "young seedling", "flowering plant", "fruit bearing mature plant"];
+                setGenStatus("Génération des 6 stades...");
+                const stageLabels = ["dirt mound seed in terracotta pot", "seedling 1 leaf in terracotta pot", "seedling 2 leaves in terracotta pot", "seedling 3 leaves slightly bigger", "seedling 4 leaves in terracotta pot", "seedling 5 leaves ready to transplant"];
                 const plantId = f("parentPlant") || cardId;
                 let statuses: string[] = [];
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 6; i++) {
                   try {
                     const res = await fetch("/api/admin/generate", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
-                        prompt: `Manga style ${stageLabels[i]} for ${f("name")}, bold black borders, white background, growth stage ${i + 1}`,
-                        outputPath: `/stages/${plantId}-${i}.png`,
+                        prompt: `Manga cel-shaded cross-hatching ${stageLabels[i]} for ${f("name")}, white background`,
+                        outputPath: `/stages/${plantId}/${i}.png`,
                       }),
                     });
                     const data = await res.json();
@@ -631,7 +631,7 @@ export default function AdminPage() {
               disabled={generating || !f("name")}
               className="px-4 py-2 bg-gradient-to-b from-emerald-500 to-emerald-600 text-white rounded-xl border-2 border-emerald-700 font-black text-sm uppercase hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-50 shadow-[2px_2px_0_0_#000]"
             >
-              🎨 Générer les 4 stades
+              🎨 Générer les 6 stades
             </button>
           )}
         </div>

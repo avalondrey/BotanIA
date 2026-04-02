@@ -59,41 +59,40 @@ import {
 //   Piment:  7-12j germ. (abri), 130j récolte
 
 export const PEPINIERE_STAGE_NAMES = [
-  "Graine semée",
-  "Monticule / Levée",
+  "Monticule de terre",
   "Petite plantule",
-  "Premières feuilles",
-  "Prêt à transplanter",
+  "Plantule 2 feuilles",
+  "Plantule 4 feuilles",
+  "Plantule 5 feuilles",
+  "Floraison",
 ];
 
-export const PEPINIERE_STAGE_IMAGES = [
-  "/stages/pepiniere/stage0-graine.png",
-  "/stages/pepiniere/stage1-monticule.png",
-  "/stages/pepiniere/stage2-plantule.png",
-  "/stages/pepiniere/stage3-feuilles.png",
-  "/stages/pepiniere/stage4-pret.png",
-];
+// Helper: get stage image path for a specific plant type
+export function getStageImage(plantDefId: string, stage: number): string {
+  return `/stages/${plantDefId}/${Math.min(stage, 5)}.png`;
+}
 
-// Seuils par plante (jours) : [J0→stage1, J→stage2, J→stage3, J→stage4]
-// Basés sur données réelles de germination et croissance en pépinière/mini serre
+// Seuils par plante (jours) : [J0->stage1, J->stage2, J->stage3, J->stage4, J->stage5]
+// 6 stades: monticule -> plantule 1 feuille -> 2 feuilles -> 4 feuilles -> 5+ feuilles -> pret
 export const PEPINIERE_PLANT_THRESHOLDS: Record<string, number[]> = {
-  tomato:      [5, 10, 21, 45],   // germ. 4-6j, plantule 2-3sem, prêt ~6-8sem
-  carrot:      [8, 14, 25, 50],   // germ. 5-8j, croissance lente, prêt ~7sem
-  lettuce:     [4, 8,  15, 25],   // germ. 3-5j, croissance rapide, prêt ~4sem
-  strawberry:  [14, 22, 35, 55],  // germ. 14-21j, très lent au début, prêt ~8sem
-  basil:       [6, 10, 18, 30],   // germ. 6-9j, croissance moyenne, prêt ~4sem
-  pepper:      [9, 16, 28, 55],   // germ. 7-12j, lent, prêt ~8sem
+  tomato:      [4, 8, 15, 24, 40],   // germ. 4-6j, plantule lente, 4 feuilles ~24j, pret ~40j
+  carrot:      [6, 12, 20, 32, 50],   // germ. 5-8j, croissance lente, pret ~7sem
+  lettuce:     [3, 6, 10, 16, 25],   // germ. 3-5j, croissance rapide, pret ~4sem
+  strawberry:  [12, 20, 30, 42, 55],  // germ. 14-21j, lent au debut, pret ~8sem
+  basil:       [5, 9, 14, 22, 30],   // germ. 6-9j, croissance moyenne, pret ~4sem
+  pepper:      [8, 14, 22, 35, 55],   // germ. 7-12j, lent, pret ~8sem
 };
 
-// Seuils par défaut (si plante non dans la table)
-const DEFAULT_PEPINIERE_THRESHOLDS = [7, 14, 25, 45];
+// Seuils par defaut (si plante non dans la table)
+const DEFAULT_PEPINIERE_THRESHOLDS = [5, 10, 18, 28, 45];
 
 export const PEPINIERE_STAGES = [
-  { name: "Graine semée", minDays: 0, maxDays: 7 },
-  { name: "Monticule / Levée", minDays: 7, maxDays: 14 },
-  { name: "Petite plantule", minDays: 14, maxDays: 25 },
-  { name: "Premières feuilles", minDays: 25, maxDays: 45 },
-  { name: "Prêt à transplanter", minDays: 45, maxDays: Infinity },
+  { name: "Monticule de terre", minDays: 0, maxDays: 5 },
+  { name: "Petite plantule", minDays: 5, maxDays: 10 },
+  { name: "Plantule 2 feuilles", minDays: 10, maxDays: 18 },
+  { name: "Plantule 4 feuilles", minDays: 18, maxDays: 28 },
+  { name: "Plantule 5 feuilles", minDays: 28, maxDays: 45 },
+  { name: "Pret a transplanter", minDays: 45, maxDays: Infinity },
 ];
 
 export function getPepiniereStage(daysSincePlanting: number, plantDefId?: string): number {
@@ -101,6 +100,7 @@ export function getPepiniereStage(daysSincePlanting: number, plantDefId?: string
     ? (PEPINIERE_PLANT_THRESHOLDS[plantDefId] || DEFAULT_PEPINIERE_THRESHOLDS)
     : DEFAULT_PEPINIERE_THRESHOLDS;
 
+  if (daysSincePlanting >= thresholds[4]) return 5;
   if (daysSincePlanting >= thresholds[3]) return 4;
   if (daysSincePlanting >= thresholds[2]) return 3;
   if (daysSincePlanting >= thresholds[1]) return 2;
@@ -109,7 +109,7 @@ export function getPepiniereStage(daysSincePlanting: number, plantDefId?: string
 }
 
 export function getPepiniereTransplantDay(plantDefId: string): number {
-  return (PEPINIERE_PLANT_THRESHOLDS[plantDefId] || DEFAULT_PEPINIERE_THRESHOLDS)[3];
+  return (PEPINIERE_PLANT_THRESHOLDS[plantDefId] || DEFAULT_PEPINIERE_THRESHOLDS)[4];
 }
 
 // ═══ Garden Grid Cell (legacy) ═══
