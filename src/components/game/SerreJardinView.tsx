@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameStore, getPepiniereStage, PEPINIERE_STAGE_NAMES, PEPINIERE_STAGE_IMAGES, type MiniSerre } from "@/store/game-store";
+import { useGameStore, getPepiniereStage, PEPINIERE_STAGE_NAMES, getStageImage, type MiniSerre } from "@/store/game-store";
 import { PLANTS } from "@/lib/ai-engine";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -622,10 +622,10 @@ export function SerreJardinView() {
                     <div className="w-8 h-8 rounded-lg bg-green-100 border border-green-300 flex items-center justify-center">
                       {(() => {
                         const stageIdx = detailPlant.stage;
-                        if (stageIdx >= 0 && stageIdx < PEPINIERE_STAGE_IMAGES.length) {
+                        if (stageIdx >= 0 && stageIdx <= 5) {
                           return (
                             <img
-                              src={PEPINIERE_STAGE_IMAGES[stageIdx]}
+                              src={getStageImage(detailPlant.plantDefId, stageIdx)}
                               alt={PEPINIERE_STAGE_NAMES[stageIdx]}
                               className="w-6 h-6 object-contain"
                             />
@@ -671,10 +671,10 @@ export function SerreJardinView() {
                 </div>
 
                 {/* Stage image */}
-                {detailPlant.stage >= 0 && detailPlant.stage < PEPINIERE_STAGE_IMAGES.length && (
+                {detailPlant.stage >= 0 && detailPlant.stage <= 5 && (
                   <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-center">
                     <img
-                      src={PEPINIERE_STAGE_IMAGES[detailPlant.stage]}
+                      src={getStageImage(detailPlant.plantDefId, detailPlant.stage)}
                       alt={PEPINIERE_STAGE_NAMES[detailPlant.stage]}
                       className="w-20 h-20 object-contain mx-auto"
                     />
