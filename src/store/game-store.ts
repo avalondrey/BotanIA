@@ -273,6 +273,34 @@ export const SEED_SHOPS: SeedShop[] = [
     image: "/cards/card-shop-clause.png",
     description: "Semences et plants potagers — Qualité professionnelle",
   },
+  // Boutiques Bio & Paysannes
+  {
+    id: "kokopelli",
+    name: "Kokopelli",
+    emoji: "\ud83c\udf31",
+    color: "from-green-50 to-emerald-50",
+    borderColor: "border-green-300",
+    image: "/cards/card-shop-vilmorin.png",
+    description: "Semences biologiques, libres de droits et reproductibles depuis +25 ans",
+  },
+  {
+    id: "biaugerme",
+    name: "Le Biau Germe",
+    emoji: "\ud83c\udf3e",
+    color: "from-yellow-50 to-amber-50",
+    borderColor: "border-amber-300",
+    image: "/cards/card-shop-vilmorin.png",
+    description: "Semences paysannes biologiques depuis 1981 - 12 fermes en France",
+  },
+  {
+    id: "saintemarthe",
+    name: "Ferme de Sainte Marthe",
+    emoji: "\ud83c\udfe1",
+    color: "from-orange-50 to-red-50",
+    borderColor: "border-orange-300",
+    image: "/cards/card-shop-vilmorin.png",
+    description: "Semences biologiques et reproductibles, Patrimoine varietal depuis 1973",
+  },
 ];
 
 export const SEED_VARIETIES: SeedVariety[] = [
@@ -309,6 +337,81 @@ export const SEED_VARIETIES: SeedVariety[] = [
     optimalTemp: [18, 28],
     waterNeed: 5.5,
     lightNeed: 8,
+  },
+  // Kokopelli - Varietes bio libres
+  {
+    id: "tomato-cherokee",
+    plantDefId: "tomato",
+    shopId: "kokopelli",
+    name: "Tomate Cherokee Purple",
+    emoji: "\ud83c\udf45",
+    price: 65, grams: 0.3,
+    description: "Variete ancestrale amerindienne, fruits pourpres noirs au gout fume unique",
+    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    stageDurations: [8,24,22,50], realDaysToHarvest: 104,
+    optimalTemp: [18,28], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "tomato-rosedeberne",
+    plantDefId: "tomato",
+    shopId: "kokopelli",
+    name: "Tomate Rose de Berne",
+    emoji: "\ud83c\udf45",
+    price: 70, grams: 0.3,
+    description: "Variete suisse ancienne, rose et charnue, douceur exceptionnelle",
+    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    stageDurations: [8,22,23,48], realDaysToHarvest: 101,
+    optimalTemp: [18,27], waterNeed: 5.0, lightNeed: 8,
+  },
+  // Biau Germe - Semences paysannes bio
+  {
+    id: "tomato-marmade",
+    plantDefId: "tomato",
+    shopId: "biaugerme",
+    name: "Tomate Marmande",
+    emoji: "\ud83c\udf45",
+    price: 60, grams: 0.3,
+    description: "La classique du Sud-Ouest, cotelee et parfumee, tres productive",
+    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    stageDurations: [7,21,21,48], realDaysToHarvest: 97,
+    optimalTemp: [18,28], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "carrot-guerande",
+    plantDefId: "carrot",
+    shopId: "biaugerme",
+    name: "Carotte de Guerande",
+    emoji: "\ud83e\udd55",
+    price: 45, grams: 0.5,
+    description: "Variete bretonne adaptee aux sols sableux, douce et croquante",
+    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    stageDurations: [10,28,26,52], realDaysToHarvest: 116,
+    optimalTemp: [15,22], waterNeed: 4.0, lightNeed: 6,
+  },
+  // Ferme de Sainte Marthe - Patrimoine varietal
+  {
+    id: "basil-genoveois",
+    plantDefId: "basil",
+    shopId: "saintemarthe",
+    name: "Basilic Genois",
+    emoji: "\ud83c\udf3f",
+    price: 50, grams: 0.2,
+    description: "Le vrai basilic italien, feuilles petites et parfum intense",
+    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    stageDurations: [6,18,20,40], realDaysToHarvest: 84,
+    optimalTemp: [20,27], waterNeed: 4.0, lightNeed: 6,
+  },
+  {
+    id: "pepper-doux-france",
+    plantDefId: "pepper",
+    shopId: "saintemarthe",
+    name: "Poivron Doux de France",
+    emoji: "\ud83c\udf36\ufe0f",
+    price: 55, grams: 0.2,
+    description: "Poivron traditionnel francais, doux et parfume, rouge a maturite",
+    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    stageDurations: [10,28,28,60], realDaysToHarvest: 126,
+    optimalTemp: [20,28], waterNeed: 5.5, lightNeed: 8,
   },
 ];
 
@@ -1883,7 +1986,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
         const env = getRealEnvironment(state.realWeather, effectiveZoneId);
         const precipitation = getZonePrecipitation(state.realWeather, effectiveZoneId);
-        const weatherType = WEATHER_TYPES[state.realWeather.current.gameWeather] || WEATHER_TYPES["sunny"];
+        const weatherType = WEATHER_TYPES[state.realWeather.current?.gameWeather] || WEATHER_TYPES["sunny"];
 
         const realParams: RealWeatherParams = {
           temperature: env.temperature,
@@ -1925,7 +2028,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     scoreGain += miniSerrePlantCount;
 
     const newWeather = state.realWeather
-      ? (WEATHER_TYPES[state.realWeather.current.gameWeather] || WEATHER_TYPES["sunny"])
+      ? (WEATHER_TYPES[state.realWeather.current?.gameWeather] || WEATHER_TYPES["sunny"])
       : generateWeatherForMonth(newMonth);
 
     const newScore = state.score + scoreGain;

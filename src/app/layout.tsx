@@ -43,6 +43,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <link rel="manifest" href="/manifest.json" />
+      <link rel="apple-touch-icon" href="/images/pepiniere/tomato/stage-4.png" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >

@@ -1,7 +1,22 @@
 // src/lib/weather-service.ts
+export interface WeatherCurrent {
+  temperature: number;
+  weatherCode: number;
+  gameWeather: string;
+  isRaining: boolean;
+  windSpeed: number;
+  humidity: number;
+}
+export interface WeatherToday {
+  tempMax: number;
+  tempMin: number;
+  uvIndex: number;
+  date: string;
+}
 export type RealWeatherData = {
-  temp: number; weatherCode: number; isRaining: boolean; isHeatwave: boolean;
-  humidity: number; windSpeed: number; description: string;
+  current: WeatherCurrent;
+  today: WeatherToday;
+  description: string;
 };
 export type GPSCoords = { lat: number; lon: number };
 
@@ -11,6 +26,20 @@ export const ZONE_MODIFIERS = {
   jardin:    { water: 1.0, growth: 1.0, protection: false }
 } as const;
 
+const codeToGameWeather: Record<number, string> = {
+  0: "sunny", 1: "partly-cloudy", 2: "partly-cloudy", 3: "cloudy",
+  45: "cloudy", 48: "cloudy",
+  51: "drizzle", 53: "drizzle", 55: "drizzle",
+  56: "rain", 57: "rain", 61: "rain", 63: "rain", 65: "rain",
+  66: "rain", 67: "rain",
+  71: "snow", 73: "snow", 75: "snow", 77: "snow",
+  80: "drizzle", 81: "rain", 82: "rain",
+  85: "snow", 86: "snow",
+  95: "stormy", 96: "stormy", 99: "stormy",
+};
+
+const rainCodes = new Set([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99]);
+
 let _cachedWeather: RealWeatherData | null = null;
 let _cacheTime = 0;
 const CACHE_MS = 15 * 60 * 1000;
@@ -19,35 +48,63 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
   const now = Date.now();
   if (_cachedWeather && now - _cacheTime < CACHE_MS) return _cachedWeather;
   try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`);
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max&timezone=auto`;
+    const res = await fetch(url);
     const data = await res.json();
     const c = data.current_weather;
     const maxT = data.daily?.temperature_2m_max?.[0] ?? c.temperature;
-    const rainCodes = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+    const minT = data.daily?.temperature_2m_min?.[0] ?? c.temperature;
+    const uvIndex = data.daily?.uv_index_max?.[0] ?? 5;
+    const isRaining = rainCodes.has(c.weathercode);
     _cachedWeather = {
-      temp: c.temperature, weatherCode: c.weathercode,
-      isRaining: rainCodes.includes(c.weathercode),
-      isHeatwave: maxT >= 30 || c.temperature >= 32,
-      humidity: 60, windSpeed: c.windspeed,
-      description: {0:"Ciel dégagé ☀️",1:"Peu nuageux 🌤️",2:"Partiellement nuageux ⛅",3:"Couvert ☁️",45:"Brouillard 🌫️",51:"Bruine 💧",61:"Pluie 🌧️",63:"Pluie forte 🌊",80:"Averses 🌦️",95:"Orage ⛈️"}[c.weathercode] || "Variable ⛅"
+      current: {
+        temperature: c.temperature,
+        weatherCode: c.weathercode,
+        gameWeather: codeToGameWeather[c.weathercode] || "sunny",
+        isRaining,
+        windSpeed: c.windspeed,
+        humidity: data.current?.relative_humidity_2m ?? 60,
+      },
+      today: { tempMax: maxT, tempMin: minT, uvIndex, date: new Date().toISOString().split("T")[0] },
+      description: "OK",
     };
     _cacheTime = now;
     return _cachedWeather;
   } catch {
-    return { temp:20, weatherCode:0, isRaining:false, isHeatwave:false, humidity:60, windSpeed:10, description:"Indisponible 🌍" };
+    return {
+      current: { temperature: 20, weatherCode: 0, gameWeather: "sunny", isRaining: false, windSpeed: 10, humidity: 60 },
+      today: { tempMax: 25, tempMin: 15, uvIndex: 5, date: "" },
+      description: "Indisponible",
+    };
   }
 }
 
-// ✅ Alias pour matcher tes imports existants
 export const fetchWeather = fetchRealWeather;
-export const getRealEnvironment = fetchRealWeather;
-export const getZonePrecipitation = (isRaining: boolean, zone: keyof typeof ZONE_MODIFIERS) => (zone === 'jardin' && isRaining ? 1.0 : 0);
-export const isFrostRisk = (temp: number) => temp <= 2;
 
-// ✅ GPS (navigateur)
+export function getRealEnvironment(data: RealWeatherData, zoneId: string) {
+  const zone = zoneId === "serre_tile" ? "serre" : zoneId === "garden" ? "jardin" : "pepiniere";
+  const mod = ZONE_MODIFIERS[zone] || ZONE_MODIFIERS.pepiniere;
+  const sunHours = data.current.weatherCode <= 1 ? 8 : data.current.weatherCode <= 2 ? 6 : 3;
+  return {
+    temperature: data.current.temperature * (mod.protection ? 1.15 : 1.0),
+    humidity: data.current.humidity * (mod.protection ? 0.7 : 1.0),
+    sunlightHours: sunHours * (mod.protection ? 0.6 : 1.0),
+    soilQuality: mod.protection ? 80 : 65,
+  };
+}
+
+export function getZonePrecipitation(data: RealWeatherData, zoneId: string): number {
+  const zone = zoneId === "serre_tile" ? "serre" : zoneId === "garden" ? "jardin" : "pepiniere";
+  return (zone === "jardin" && data.current.isRaining) ? 1.0 : 0;
+}
+
+export function isFrostRisk(data: RealWeatherData): boolean {
+  return data.current.temperature <= 2;
+}
+
 export function getGPSLocation(): Promise<GPSCoords | null> {
   return new Promise((resolve) => {
-    if (typeof window === 'undefined' || !navigator.geolocation) return resolve(null);
+    if (typeof window === "undefined" || !navigator.geolocation) return resolve(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
       () => resolve(null),
@@ -55,9 +112,11 @@ export function getGPSLocation(): Promise<GPSCoords | null> {
     );
   });
 }
+
 export function loadGPSCoords(): GPSCoords | null {
-  try { return JSON.parse(localStorage.getItem('botania_gps') || 'null'); } catch { return null; }
+  try { return JSON.parse(localStorage.getItem("botania_gps") || "null"); } catch { return null; }
 }
+
 export function saveGPSCoords(c: GPSCoords) {
-  localStorage.setItem('botania_gps', JSON.stringify(c));
+  localStorage.setItem("botania_gps", JSON.stringify(c));
 }
