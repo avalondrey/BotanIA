@@ -21,6 +21,8 @@ import {
   TreePine, ShoppingBag, Sprout, RefreshCw, MapPin, Loader2,
   Warehouse, Home,
 } from "lucide-react";
+import HarvestParticles from "@/components/ui/HarvestParticles";
+import { useNightMode, useAutoSave } from "@/lib/use-effects";
 
 export default function GamePage() {
   const initGame = useGameStore((s) => s.initGame);
@@ -40,6 +42,10 @@ export default function GamePage() {
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const weatherRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useNightMode();
+  useAutoSave();
+
+  const [harvestTrigger, setHarvestTrigger] = useState(0);
 
   const [weatherStatus, setWeatherStatus] = useState<"loading" | "ready" | "error">("loading");
   const [statusMessage, setStatusMessage] = useState("Chargement...");
@@ -114,20 +120,19 @@ export default function GamePage() {
       }
     }, 6 * 60 * 60 * 1000);
 
-    return () => {
-      // Auto-save every 10 seconds
-      autoSaveRef.current = setInterval(() => {
-        try {
-          const s = useGameStore.getState();
-          const backup = JSON.stringify({ day: s.day, month: s.month, season: s.season, score: s.score, coins: s.coins, bestScore: s.bestScore });
-          localStorage.setItem('jardin-culture-autosave', backup);
-        } catch(e) {}
-      }, 10000);
-      return () => {
-        if (weatherRefreshRef.current) clearInterval(weatherRefreshRef.current);
-        if (autoSaveRef.current) clearInterval(autoSaveRef.current);
-      };
+    // Auto-save every 10 seconds
+    autoSaveRef.current = setInterval(() => {
+      try {
+        const s = useGameStore.getState();
+        const backup = JSON.stringify({ day: s.day, month: s.month, season: s.season, score: s.score, coins: s.coins, bestScore: s.bestScore });
+        localStorage.setItem('jardin-culture-autosave', backup);
+      } catch(e) {}
+    }, 10000);
 
+    return () => {
+      if (weatherRefreshRef.current) clearInterval(weatherRefreshRef.current);
+      if (autoSaveRef.current) clearInterval(autoSaveRef.current);
+    };
   }, [initGame, loadWeather]);
 
   // Game tick

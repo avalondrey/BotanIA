@@ -244,6 +244,7 @@ export interface SeedVariety {
   emoji: string;
   price: number;
   grams: number;
+  seedCount: number; // Nombre de graines dans le paquet
   description: string;
   image: string;
   unlocked: boolean;
@@ -280,7 +281,7 @@ export const SEED_SHOPS: SeedShop[] = [
     emoji: "\ud83c\udf31",
     color: "from-green-50 to-emerald-50",
     borderColor: "border-green-300",
-    image: "/cards/card-shop-vilmorin.png",
+    image: "/cards/card-kokopelli-semences-fr.png",
     description: "Semences biologiques, libres de droits et reproductibles depuis +25 ans",
   },
   {
@@ -289,7 +290,7 @@ export const SEED_SHOPS: SeedShop[] = [
     emoji: "\ud83c\udf3e",
     color: "from-yellow-50 to-amber-50",
     borderColor: "border-amber-300",
-    image: "/cards/card-shop-vilmorin.png",
+    image: "/cards/card-shop-biaugerme.png",
     description: "Semences paysannes biologiques depuis 1981 - 12 fermes en France",
   },
   {
@@ -298,7 +299,7 @@ export const SEED_SHOPS: SeedShop[] = [
     emoji: "\ud83c\udfe1",
     color: "from-orange-50 to-red-50",
     borderColor: "border-orange-300",
-    image: "/cards/card-shop-vilmorin.png",
+    image: "/cards/card-shop-saintemarthe.png",
     description: "Semences biologiques et reproductibles, Patrimoine varietal depuis 1973",
   },
 ];
@@ -347,7 +348,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "\ud83c\udf45",
     price: 65, grams: 0.3,
     description: "Variete ancestrale amerindienne, fruits pourpres noirs au gout fume unique",
-    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    image: "/cards/card-tomato-cherokee.png", unlocked: false,
     stageDurations: [8,24,22,50], realDaysToHarvest: 104,
     optimalTemp: [18,28], waterNeed: 5.0, lightNeed: 8,
   },
@@ -359,7 +360,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "\ud83c\udf45",
     price: 70, grams: 0.3,
     description: "Variete suisse ancienne, rose et charnue, douceur exceptionnelle",
-    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    image: "/cards/card-tomato-rosedeberne.png", unlocked: false,
     stageDurations: [8,22,23,48], realDaysToHarvest: 101,
     optimalTemp: [18,27], waterNeed: 5.0, lightNeed: 8,
   },
@@ -372,7 +373,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "\ud83c\udf45",
     price: 60, grams: 0.3,
     description: "La classique du Sud-Ouest, cotelee et parfumee, tres productive",
-    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    image: "/cards/card-tomato-marmade.png", unlocked: false,
     stageDurations: [7,21,21,48], realDaysToHarvest: 97,
     optimalTemp: [18,28], waterNeed: 5.0, lightNeed: 8,
   },
@@ -384,7 +385,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "\ud83e\udd55",
     price: 45, grams: 0.5,
     description: "Variete bretonne adaptee aux sols sableux, douce et croquante",
-    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    image: "/cards/card-carrot-guerande.png", unlocked: false,
     stageDurations: [10,28,26,52], realDaysToHarvest: 116,
     optimalTemp: [15,22], waterNeed: 4.0, lightNeed: 6,
   },
@@ -397,7 +398,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "\ud83c\udf3f",
     price: 50, grams: 0.2,
     description: "Le vrai basilic italien, feuilles petites et parfum intense",
-    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    image: "/cards/card-basil-genoveois.png", unlocked: false,
     stageDurations: [6,18,20,40], realDaysToHarvest: 84,
     optimalTemp: [20,27], waterNeed: 4.0, lightNeed: 6,
   },
@@ -409,7 +410,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "\ud83c\udf36\ufe0f",
     price: 55, grams: 0.2,
     description: "Poivron traditionnel francais, doux et parfume, rouge a maturite",
-    image: "/cards/card-shop-vilmorin.png", unlocked: false,
+    image: "/cards/card-pepper-doux-france.png", unlocked: false,
     stageDurations: [10,28,28,60], realDaysToHarvest: 126,
     optimalTemp: [20,28], waterNeed: 5.5, lightNeed: 8,
   },
@@ -962,7 +963,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (state.coins < item.price) return false;
 
     const newCollection = { ...state.seedCollection };
-    newCollection[plantDefId] = (newCollection[plantDefId] || 0) + 3; // Packet of 3
+    newCollection[plantDefId] = (newCollection[plantDefId] || 0) + Math.ceil(item.price / 15);
     const newCoins = state.coins - item.price;
 
     saveCoins(newCoins);
@@ -1002,7 +1003,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // Also add to seedCollection so the seed is usable in mini serres & jardin
     const newCollection = { ...state.seedCollection };
-    newCollection[variety.plantDefId] = (newCollection[variety.plantDefId] || 0) + 1;
+     (variety.seedCount || 1);
     saveSeedCollection(newCollection);
 
     saveCoins(newCoins);
