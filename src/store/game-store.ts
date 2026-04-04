@@ -1920,8 +1920,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     scoreGain += miniSerrePlantCount;
 
     const newWeather = state.realWeather
-		? (WEATHER_TYPES[state.realWeather?.current?.gameWeather] || WEATHER_TYPES["sunny"])
-		: generateWeatherForMonth(newMonth);
+      ? (WEATHER_TYPES[state.realWeather.current.gameWeather] || WEATHER_TYPES["sunny"])
+      : generateWeatherForMonth(newMonth);
 
     const newScore = state.score + scoreGain;
     const newBest = Math.max(state.bestScore, newScore);

@@ -1,4 +1,4 @@
-﻿import { RealWeather } from './weather-service';
+import { RealWeather } from './weather-service';
 export interface EnvModifiers { waterNeedMultiplier: number; growthSpeedMultiplier: number; stressRisk: 'canicule'|'gel'|'normal'|'excès_eau'; timeLabel: string; weatherLabel: string; }
 export function calculateEnvironment(realDate: Date, weather: RealWeather): EnvModifiers {
   const hour = realDate.getHours(); const isNight = hour >= 20 || hour < 6;

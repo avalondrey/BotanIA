@@ -1,4 +1,4 @@
-﻿// 🤖 Lia - Assistant IA Data
+// 🤖 Lia - Assistant IA Data
 export interface LiaTip {
   id: string;
   type: 'water' | 'disease' | 'pest' | 'harvest' | 'transplant' | 'weather' | 'general';

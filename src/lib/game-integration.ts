@@ -1,4 +1,4 @@
-﻿import { getPlantAdviceSafe } from './plant-advice';
+import { getPlantAdviceSafe } from './plant-advice';
 
 // 📦 Persistance locale
 const STORAGE_KEY = 'botanIA_garden_v1';

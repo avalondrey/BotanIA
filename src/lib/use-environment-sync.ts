@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RealWeather, fetchRealWeather } from './weather-service';
 import { calculateEnvironment, EnvModifiers } from './environment-engine';
 export function useEnvironmentSync(lat?: number, lon?: number) {

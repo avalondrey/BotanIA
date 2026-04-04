@@ -1,4 +1,4 @@
-﻿// src/lib/weather-service.ts
+// src/lib/weather-service.ts
 export type RealWeatherData = {
   temp: number; weatherCode: number; isRaining: boolean; isHeatwave: boolean;
   humidity: number; windSpeed: number; description: string;

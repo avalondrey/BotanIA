@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { triggerAutoAdvice } from "@/lib/game-integration";
 

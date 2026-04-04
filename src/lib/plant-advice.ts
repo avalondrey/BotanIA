@@ -1,4 +1,4 @@
-﻿export async function getPlantAdviceSafe(
+export async function getPlantAdviceSafe(
   plantName: string,
   stage: number,
   season: string,
