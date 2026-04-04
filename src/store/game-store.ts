@@ -1876,6 +1876,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       if (state.realWeather) {
         const effectiveZoneId = inSerre ? "serre_tile" : "garden";
+        const isRaining = state.realWeather.current?.isRaining || false;
+        // Auto-arrosage gratuit quand il pleut (jardin uniquement, pas en serre)
+        if (isRaining && !inSerre) {
+          newPlant.waterLevel = Math.min(100, newPlant.waterLevel + 50);
+        }
         const env = getRealEnvironment(state.realWeather, effectiveZoneId);
         const precipitation = getZonePrecipitation(state.realWeather, effectiveZoneId);
         const weatherType = WEATHER_TYPES[state.realWeather.current.gameWeather] || WEATHER_TYPES["sunny"];
