@@ -111,7 +111,7 @@ export function GameHUD() {
   return (
     <div className="space-y-3">
       {/* Top HUD bar */}
-      <div className="flex items-center gap-2 flex-wrap p-2.5 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000]">
+      <div className="flex items-center gap-1.5 flex-wrap p-2.5 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000]">
         {/* Score */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-amber-300">
           <Trophy className="w-3.5 h-3.5 text-amber-500" />
@@ -164,7 +164,7 @@ export function GameHUD() {
         </div>
 
         {/* Real Weather */}
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border ${
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border whitespace-nowrap flex-shrink-0 ${
           hasFrostRisk ? "bg-blue-50 border-blue-300" : "bg-sky-50 border-sky-200"
         }`}>
           {weatherLoading ? (
@@ -172,18 +172,18 @@ export function GameHUD() {
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             >
-              <RefreshCw className="w-3 h-3 text-sky-500" />
+              <RefreshCw className="w-3.5 h-3.5 text-sky-500" />
             </motion.div>
           ) : (
             <span className="text-base">
-              {realWeather ? realWeather.current.weatherEmoji : "🌤️"}
+              {realWeather?.current?.weatherEmoji || "🌤️"}
             </span>
           )}
           <div>
             <p className={`text-[8px] font-bold leading-none ${hasFrostRisk ? "text-blue-400" : "text-sky-400"}`}>MÉTÉO</p>
             {realWeather ? (
               <p className={`text-[10px] font-black leading-tight ${hasFrostRisk ? "text-blue-800" : ""}`}>
-                {Math.round(realWeather.current.temperature)}°C · {realWeather.current.weatherDescription}
+                {realWeather?.current?.temperature != null ? `${realWeather.current?.weatherDescription || "—"}` : "Météo indisponible"}
                 {hasFrostRisk && " 🥶"}
               </p>
             ) : weatherError ? (
@@ -201,17 +201,17 @@ export function GameHUD() {
 
         {/* GPS / Location */}
         {gpsCoords && (
-          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-stone-50 rounded-lg border border-stone-200">
-            <MapPin className="w-3 h-3 text-stone-400" />
+          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-stone-50 rounded-lg border border-stone-200 flex-shrink-0">
+            <MapPin className="w-3.5 h-3.5 text-stone-400" />
             <p className="text-[8px] font-bold text-stone-500">
-              {gpsCoords.latitude.toFixed(2)}°, {gpsCoords.longitude.toFixed(2)}°
+              {gpsCoords?.latitude != null && gpsCoords?.longitude != null ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "Localisation..."}
             </p>
           </div>
         )}
 
         {/* Stats */}
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg border border-green-200">
-          <Sprout className="w-3 h-3 text-green-600" />
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg border border-green-200 flex-shrink-0 whitespace-nowrap">
+          <Sprout className="w-3.5 h-3.5 text-green-600" />
           <div>
             <p className="text-[8px] text-green-400 font-bold leading-none">PLANTES</p>
             <p className="text-xs font-black leading-tight text-green-700">
@@ -223,13 +223,13 @@ export function GameHUD() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg border border-green-200">
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg border border-green-200 flex-shrink-0">
           <span className="text-[9px]">✂️</span>
           <p className="text-xs font-black text-green-700">{harvested}</p>
         </div>
 
         {/* Serre tiles */}
-        <div className="flex items-center gap-1 px-2 py-1 bg-cyan-50 rounded-lg border border-cyan-200">
+        <div className="flex items-center gap-1 px-2 py-1 bg-cyan-50 rounded-lg border border-cyan-200 flex-shrink-0">
           <span className="text-[9px]">🏡</span>
           <p className="text-xs font-black text-cyan-700">{serreTiles}</p>
         </div>
@@ -247,28 +247,28 @@ export function GameHUD() {
           <div className="flex items-center gap-1">
             <Thermometer className="w-3.5 h-3.5 text-red-500" />
             <span className="text-[10px] font-bold">
-              {realWeather.today.tempMin}°/{realWeather.today.tempMax}°C
+              {gpsCoords?.latitude != null && gpsCoords?.longitude != null ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "Localisation..."}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Droplets className="w-3.5 h-3.5 text-blue-500" />
             <span className="text-[10px] font-bold">
-              {realWeather.current.humidity}%
+             {realWeather?.current?.humidity ?? "—"}%
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Wind className="w-3.5 h-3.5 text-stone-500" />
             <span className="text-[10px] font-bold">
-              {Math.round(realWeather.current.windSpeed)} km/h
+             {realWeather?.current?.windSpeed != null ? `${Math.round(realWeather.current.windSpeed)} km/h` : "—"}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Sun className="w-3.5 h-3.5 text-amber-500" />
             <span className="text-[10px] font-bold">
-              UV {realWeather.today.uvIndex}
+              UV {realWeather?.today?.uvIndex ?? "—"}
             </span>
           </div>
-          {realWeather.today.precipitation > 0 && (
+           {(realWeather?.today?.precipitation ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Droplets className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-[10px] font-bold text-blue-700">
@@ -282,7 +282,7 @@ export function GameHUD() {
             </div>
           )}
           <p className="text-[8px] text-sky-400 ml-auto">
-            Maj: {new Date(realWeather.current.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            Maj: {new Date(realWeather?.current?.timestamp ?? Date.now()).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </motion.div>
       )}
@@ -297,7 +297,7 @@ export function GameHUD() {
           >
             <div className="flex items-center justify-between mb-1.5">
               <h3 className="text-[9px] font-black uppercase flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" /> Journal IA
+                <AlertTriangle className="w-3.5 h-3.5" /> Journal IA
               </h3>
               <button onClick={toggleConsole} className="text-[8px] text-stone-400 font-bold hover:text-black">
                 {showConsole ? "Masquer" : "Voir"}

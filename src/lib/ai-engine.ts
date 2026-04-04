@@ -1,30 +1,30 @@
-// ═══════════════════════════════════════════════════
-//  AI Cultivation Engine — Jardin Culture v3
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  AI Cultivation Engine â€” Jardin Culture v3
 //  Phase 3: Card contacts + combos
 //  Phase 4: Weather + real calendar
 //  Phase 5: More plants + diseases + pests
-//  Phase 6: Real-time calibration (vrai calendrier + botanique réelle)
-// ═══════════════════════════════════════════════════
+//  Phase 6: Real-time calibration (vrai calendrier + botanique rÃ©elle)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export interface PlantDefinition {
   id: string;
   name: string;
   emoji: string;
   image: string;
-  stageDurations: [number, number, number, number]; // jours réels par stade (botanique)
+  stageDurations: [number, number, number, number]; // jours rÃ©els par stade (botanique)
   optimalTemp: [number, number];
-  waterNeed: number; // mm/jour réel (évapotranspiration)
+  waterNeed: number; // mm/jour rÃ©el (Ã©vapotranspiration)
   lightNeed: number;
   harvestEmoji: string;
-  cropCoefficient: number; // Kc FAO réel
-  // Mois de plantation optimaux (0=Jan, 11=Déc) — calendrier réel
+  cropCoefficient: number; // Kc FAO rÃ©el
+  // Mois de plantation optimaux (0=Jan, 11=DÃ©c) â€” calendrier rÃ©el
   optimalPlantMonths: number[];
-  optimalSeasons: string[]; // gardé pour compatibilité
+  optimalSeasons: string[]; // gardÃ© pour compatibilitÃ©
   diseaseResistance: number;
   pestResistance: number;
-  droughtResistance: number; // 0.0-1.0 — higher = loses water slower (deep roots)
-  // Description botanique réelle
-  realDaysToHarvest: number; // durée totale moyenne graine→récolte
+  droughtResistance: number; // 0.0-1.0 â€” higher = loses water slower (deep roots)
+  // Description botanique rÃ©elle
+  realDaysToHarvest: number; // durÃ©e totale moyenne graineâ†’rÃ©colte
 }
 
 export interface PlantState {
@@ -84,77 +84,77 @@ export interface ComboInfo {
   bonus: number;
 }
 
-// ═══════════════════════════════════════════════════
-//  PLANTES — Données botaniques réelles (France métropolitaine)
-//  Sources: FAO Crop Coefficients, INRAE, filières maraîchage
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PLANTES â€” DonnÃ©es botaniques rÃ©elles (France mÃ©tropolitaine)
+//  Sources: FAO Crop Coefficients, INRAE, filiÃ¨res maraÃ®chage
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export const PLANTS: Record<string, PlantDefinition> = {
   tomato: {
-    id: "tomato", name: "Tomate", emoji: "🍅",
+    id: "tomato", name: "Tomate", emoji: "ðŸ…",
     image: "/cards/card-tomato.png",
-    // Botanique réel: Germination 7j → Plantule 21j (3 sem) → Développement 28j (4 sem) → Floraison+fruits 45j (6-7 sem) = ~101j
+    // Botanique rÃ©el: Germination 7j â†’ Plantule 21j (3 sem) â†’ DÃ©veloppement 28j (4 sem) â†’ Floraison+fruits 45j (6-7 sem) = ~101j
     // Source: Kokopelli, Le Potager Minimaliste, Iriso
     stageDurations: [7, 21, 28, 45],
-    optimalTemp: [18, 28], //°C optimal croissance
-    waterNeed: 5.5, // mm/jour (Kc=1.05, ET0≈5mm)
+    optimalTemp: [18, 28], //Â°C optimal croissance
+    waterNeed: 5.5, // mm/jour (Kc=1.05, ET0â‰ˆ5mm)
     lightNeed: 8, // heures/jour
-    harvestEmoji: "🍅",
+    harvestEmoji: "ðŸ…",
     cropCoefficient: 1.05, // Kc FAO tomate
-    optimalPlantMonths: [2, 3, 4], // Semis: Mars-Avril (sous abri Fév)
+    optimalPlantMonths: [2, 3, 4], // Semis: Mars-Avril (sous abri FÃ©v)
     optimalSeasons: ["spring", "summer"],
-    diseaseResistance: 45, // Mildiou très fréquent
+    diseaseResistance: 45, // Mildiou trÃ¨s frÃ©quent
     pestResistance: 40, // Pucerons, aleurodes
     droughtResistance: 0.75, // deep root system, can survive days without water
     realDaysToHarvest: 109,
   },
   carrot: {
-    id: "carrot", name: "Carotte", emoji: "🥕",
+    id: "carrot", name: "Carotte", emoji: "ðŸ¥•",
     image: "/cards/card-carrot.png",
-    // Botanique réel: Germination 14j → Levée 18j → Croissance racine 35j → Maturation 45j = ~112j
+    // Botanique rÃ©el: Germination 14j â†’ LevÃ©e 18j â†’ Croissance racine 35j â†’ Maturation 45j = ~112j
     // Source: time-lapse data (80-100 days total), seed packets
     stageDurations: [14, 18, 35, 45],
     optimalTemp: [15, 25],
     waterNeed: 3.8, // mm/jour
     lightNeed: 6,
-    harvestEmoji: "🥕",
+    harvestEmoji: "ðŸ¥•",
     cropCoefficient: 1.0, // Kc FAO carotte
     optimalPlantMonths: [2, 3, 4, 5, 8, 9], // Semis: Mars-Juin, Sept-Oct
     optimalSeasons: ["spring", "autumn"],
-    diseaseResistance: 70, // Relativement résistante
+    diseaseResistance: 70, // Relativement rÃ©sistante
     pestResistance: 50, // Mouche de la carotte
     droughtResistance: 0.65, // deep taproot
     realDaysToHarvest: 114,
   },
   strawberry: {
-    id: "strawberry", name: "Fraise", emoji: "🍓",
+    id: "strawberry", name: "Fraise", emoji: "ðŸ“",
     image: "/cards/card-strawberry.png",
-    // Botanique réel: Germination 21j → Plantule 25j → Floraison 30j → Fructification 40j = ~116j
+    // Botanique rÃ©el: Germination 21j â†’ Plantule 25j â†’ Floraison 30j â†’ Fructification 40j = ~116j
     // Source: research papers, Facebook gardening groups (3-4 sem flowers after leaves)
     stageDurations: [21, 25, 30, 40],
     optimalTemp: [16, 26],
     waterNeed: 4.2, // mm/jour
     lightNeed: 7,
-    harvestEmoji: "🍓",
+    harvestEmoji: "ðŸ“",
     cropCoefficient: 1.0, // Kc FAO fraise
-    optimalPlantMonths: [2, 3, 4, 8, 9], // Plantation: Mars-Avril, Août-Sept
+    optimalPlantMonths: [2, 3, 4, 8, 9], // Plantation: Mars-Avril, AoÃ»t-Sept
     optimalSeasons: ["spring", "summer"],
     diseaseResistance: 30, // Botrytis, oidium
-    pestResistance: 55, // Araignée rouge
+    pestResistance: 55, // AraignÃ©e rouge
     droughtResistance: 0.45, // shallow roots, needs regular water
     realDaysToHarvest: 123,
   },
   lettuce: {
-    id: "lettuce", name: "Salade", emoji: "🥬",
+    id: "lettuce", name: "Salade", emoji: "ðŸ¥¬",
     image: "/cards/card-lettuce.png",
-    // Botanique: Germination 7j → Plantule 12j → Pommaison 18j → Maturation 12j = ~49j
+    // Botanique: Germination 7j â†’ Plantule 12j â†’ Pommaison 18j â†’ Maturation 12j = ~49j
     stageDurations: [7, 12, 18, 12],
     optimalTemp: [12, 22],
     waterNeed: 3.0, // mm/jour
     lightNeed: 5,
-    harvestEmoji: "🥬",
+    harvestEmoji: "ðŸ¥¬",
     cropCoefficient: 0.95, // Kc FAO salade
-    optimalPlantMonths: [1, 2, 3, 4, 8, 9, 10], // Semis: Fév-Mai, Sept-Nov
+    optimalPlantMonths: [1, 2, 3, 4, 8, 9, 10], // Semis: FÃ©v-Mai, Sept-Nov
     optimalSeasons: ["spring", "autumn"],
     diseaseResistance: 55, // Mildiou, pourriture
     pestResistance: 35, // Limaces, pucerons
@@ -162,17 +162,17 @@ export const PLANTS: Record<string, PlantDefinition> = {
     realDaysToHarvest: 49,
   },
   basil: {
-    id: "basil", name: "Basilic", emoji: "🌿",
+    id: "basil", name: "Basilic", emoji: "ðŸŒ¿",
     image: "/cards/card-basil.png",
-    // Botanique réel: Germination 10j → Plantule 15j → Végétatif 25j → Récolte 30j = ~80j
-    // Source: semis avril-mai, récolte juill-août, cycle court
+    // Botanique rÃ©el: Germination 10j â†’ Plantule 15j â†’ VÃ©gÃ©tatif 25j â†’ RÃ©colte 30j = ~80j
+    // Source: semis avril-mai, rÃ©colte juill-aoÃ»t, cycle court
     stageDurations: [10, 15, 25, 30],
     optimalTemp: [20, 30],
     waterNeed: 3.5, // mm/jour
     lightNeed: 7,
-    harvestEmoji: "🌿",
+    harvestEmoji: "ðŸŒ¿",
     cropCoefficient: 1.15, // Kc FAO basilic (gourmand)
-    optimalPlantMonths: [3, 4, 5], // Semis: Avril-Mai (après gelées)
+    optimalPlantMonths: [3, 4, 5], // Semis: Avril-Mai (aprÃ¨s gelÃ©es)
     optimalSeasons: ["summer"],
     diseaseResistance: 40, // Fonte des semis, mildiou
     pestResistance: 50, // Pucerons, mouches
@@ -180,17 +180,17 @@ export const PLANTS: Record<string, PlantDefinition> = {
     realDaysToHarvest: 88,
   },
   pepper: {
-    id: "pepper", name: "Piment", emoji: "🌶️",
+    id: "pepper", name: "Piment", emoji: "ðŸŒ¶ï¸",
     image: "/cards/card-pepper.png",
-    // Botanique réel: Germination 14j → Plantule 35j (5 sem) → Floraison 30j → Fructification 55j = ~134j
-    // Source: semis fév-mars sous abri, repiquage mai, récolte août-sept
+    // Botanique rÃ©el: Germination 14j â†’ Plantule 35j (5 sem) â†’ Floraison 30j â†’ Fructification 55j = ~134j
+    // Source: semis fÃ©v-mars sous abri, repiquage mai, rÃ©colte aoÃ»t-sept
     stageDurations: [14, 35, 30, 55],
     optimalTemp: [20, 32],
     waterNeed: 4.8, // mm/jour
     lightNeed: 8,
-    harvestEmoji: "🌶️",
+    harvestEmoji: "ðŸŒ¶ï¸",
     cropCoefficient: 1.1, // Kc FAO poivron/piment
-    optimalPlantMonths: [1, 2, 3, 4], // Semis: Fév-Avril (sous abri)
+    optimalPlantMonths: [1, 2, 3, 4], // Semis: FÃ©v-Avril (sous abri)
     optimalSeasons: ["spring", "summer"],
     diseaseResistance: 35, // Alternariose, mildiou
     pestResistance: 45, // Pucerons, thrips
@@ -202,7 +202,7 @@ export const PLANTS: Record<string, PlantDefinition> = {
 export const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
 export const STAGE_EMOJIS = ["", "", "", "", "", ""];
 
-// Stage images per plant — manga cel-shaded cross-hatching illustrations (6 stades pepiniere)
+// Stage images per plant â€” manga cel-shaded cross-hatching illustrations (6 stades pepiniere)
 export const STAGE_IMAGES: Record<string, string[]> = {
   tomato:      ["/stages/tomato/0.png",  "/stages/tomato/1.png",  "/stages/tomato/2.png",  "/stages/tomato/3.png",  "/stages/tomato/4.png",  "/stages/tomato/5.png"],
   carrot:      ["/stages/carrot/0.png",  "/stages/carrot/1.png",  "/stages/carrot/2.png",  "/stages/carrot/3.png",  "/stages/carrot/4.png",  "/stages/carrot/5.png"],
@@ -217,26 +217,26 @@ export const ENVIRONMENTS: Record<
   { name: string; emoji: string; image: string; tempMod: number; humidMod: number; lightMod: number; soilMod: number }
 > = {
   indoor_planter: {
-    name: "Chambre de Culture", emoji: "🏠", image: "/cards/card-planter.png",
+    name: "Chambre de Culture", emoji: "ðŸ ", image: "/cards/card-planter.png",
     tempMod: 1.0, humidMod: 0.9, lightMod: 0.6, soilMod: 0.9,
   },
   greenhouse: {
-    name: "Serre", emoji: "🏡", image: "/cards/card-greenhouse.png",
+    name: "Serre", emoji: "ðŸ¡", image: "/cards/card-greenhouse.png",
     tempMod: 1.2, humidMod: 0.95, lightMod: 0.85, soilMod: 1.0,
   },
   garden: {
-    name: "Jardin", emoji: "🌳", image: "/cards/card-garden.png",
+    name: "Jardin", emoji: "ðŸŒ³", image: "/cards/card-garden.png",
     tempMod: 0.8, humidMod: 0.7, lightMod: 1.0, soilMod: 1.1,
   },
 };
 
-// ═══════════════════════════════════════════════════
-//  PLANT SPACING — Réaliste (agriculture française)
-//  Sources: INRAE, filières maraîchage, GEVES
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PLANT SPACING â€” RÃ©aliste (agriculture franÃ§aise)
+//  Sources: INRAE, filiÃ¨res maraÃ®chage, GEVES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export interface PlantSpacingInfo {
-  /** Distance entre plants sur la même ligne (cm) */
+  /** Distance entre plants sur la mÃªme ligne (cm) */
   plantSpacingCm: number;
   /** Distance entre lignes (cm) */
   rowSpacingCm: number;
@@ -247,25 +247,25 @@ export interface PlantSpacingInfo {
 }
 
 export const PLANT_SPACING: Record<string, PlantSpacingInfo> = {
-  tomato:     { plantSpacingCm: 50, rowSpacingCm: 70, color: '#dc2626', label: '50×70cm' },
-  carrot:     { plantSpacingCm: 5,  rowSpacingCm: 25, color: '#ea580c', label: '5×25cm' },
-  strawberry: { plantSpacingCm: 30, rowSpacingCm: 60, color: '#db2777', label: '30×60cm' },
-  lettuce:    { plantSpacingCm: 25, rowSpacingCm: 30, color: '#16a34a', label: '25×30cm' },
-  basil:      { plantSpacingCm: 20, rowSpacingCm: 35, color: '#65a30d', label: '20×35cm' },
-  pepper:     { plantSpacingCm: 40, rowSpacingCm: 55, color: '#ca8a04', label: '40×55cm' },
+  tomato:     { plantSpacingCm: 50, rowSpacingCm: 70, color: '#dc2626', label: '50Ã—70cm' },
+  carrot:     { plantSpacingCm: 5,  rowSpacingCm: 25, color: '#ea580c', label: '5Ã—25cm' },
+  strawberry: { plantSpacingCm: 30, rowSpacingCm: 60, color: '#db2777', label: '30Ã—60cm' },
+  lettuce:    { plantSpacingCm: 25, rowSpacingCm: 30, color: '#16a34a', label: '25Ã—30cm' },
+  basil:      { plantSpacingCm: 20, rowSpacingCm: 35, color: '#65a30d', label: '20Ã—35cm' },
+  pepper:     { plantSpacingCm: 40, rowSpacingCm: 55, color: '#ca8a04', label: '40Ã—55cm' },
 };
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  PHASE 4: WEATHER SYSTEM
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export const WEATHER_TYPES: Record<string, WeatherData> = {
-  sunny: { type: "sunny", emoji: "☀️", label: "Ensoleillé", tempMod: 1.1, waterMod: 1.3, lightMod: 1.3, growthMod: 1.1 },
-  cloudy: { type: "cloudy", emoji: "⛅", label: "Nuageux", tempMod: 0.9, waterMod: 0.8, lightMod: 0.6, growthMod: 0.85 },
-  rainy: { type: "rainy", emoji: "🌧️", label: "Pluvieux", tempMod: 0.85, waterMod: 0.3, lightMod: 0.4, growthMod: 0.9 },
-  stormy: { type: "stormy", emoji: "⛈️", label: "Orageux", tempMod: 0.8, waterMod: 0.1, lightMod: 0.2, growthMod: 0.6 },
-  heatwave: { type: "heatwave", emoji: "🔥", label: "Canicule", tempMod: 1.4, waterMod: 1.6, lightMod: 1.2, growthMod: 0.7 },
-  frost: { type: "frost", emoji: "🥶", label: "Gel", tempMod: 0.4, waterMod: 0.7, lightMod: 0.7, growthMod: 0.3 },
+  sunny: { type: "sunny", emoji: "â˜€ï¸", label: "EnsoleillÃ©", tempMod: 1.1, waterMod: 1.3, lightMod: 1.3, growthMod: 1.1 },
+  cloudy: { type: "cloudy", emoji: "â›…", label: "Nuageux", tempMod: 0.9, waterMod: 0.8, lightMod: 0.6, growthMod: 0.85 },
+  rainy: { type: "rainy", emoji: "ðŸŒ§ï¸", label: "Pluvieux", tempMod: 0.85, waterMod: 0.3, lightMod: 0.4, growthMod: 0.9 },
+  stormy: { type: "stormy", emoji: "â›ˆï¸", label: "Orageux", tempMod: 0.8, waterMod: 0.1, lightMod: 0.2, growthMod: 0.6 },
+  heatwave: { type: "heatwave", emoji: "ðŸ”¥", label: "Canicule", tempMod: 1.4, waterMod: 1.6, lightMod: 1.2, growthMod: 0.7 },
+  frost: { type: "frost", emoji: "ðŸ¥¶", label: "Gel", tempMod: 0.4, waterMod: 0.7, lightMod: 0.7, growthMod: 0.3 },
 };
 
 function weightedRandom(weights: Record<string, number>): string {
@@ -279,35 +279,35 @@ function weightedRandom(weights: Record<string, number>): string {
   return entries[0][0];
 }
 
-// ═══════════════════════════════════════════════════
-//  CALENDRIER RÉEL — France métropolitaine (hémisphère nord)
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  CALENDRIER RÃ‰EL â€” France mÃ©tropolitaine (hÃ©misphÃ¨re nord)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const MONTH_NAMES = [
-  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+  "Janvier", "FÃ©vrier", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "AoÃ»t", "Septembre", "Octobre", "Novembre", "DÃ©cembre",
 ];
 
 const MONTH_SHORT = [
-  "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
-  "Juil", "Août", "Sep", "Oct", "Nov", "Déc",
+  "Jan", "FÃ©v", "Mar", "Avr", "Mai", "Juin",
+  "Juil", "AoÃ»t", "Sep", "Oct", "Nov", "DÃ©c",
 ];
 
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-/** Jour de l'année (1-366) à partir d'une Date */
+/** Jour de l'annÃ©e (1-366) Ã  partir d'une Date */
 export function getDayOfYear(date: Date): number {
   const start = new Date(date.getFullYear(), 0, 0);
   const diff = date.getTime() - start.getTime();
   return Math.floor(diff / 86_400_000);
 }
 
-/** Jour de l'année d'aujourd'hui */
+/** Jour de l'annÃ©e d'aujourd'hui */
 export function getTodayDayOfYear(): number {
   return getDayOfYear(new Date());
 }
 
-/** Numéro du mois (0-11) à partir du jour de l'année */
+/** NumÃ©ro du mois (0-11) Ã  partir du jour de l'annÃ©e */
 export function getMonthFromDay(dayOfYear: number): number {
   let d = ((dayOfYear - 1) % 365 + 365) % 365; // normaliser 1-365
   for (let m = 0; m < 12; m++) {
@@ -317,7 +317,7 @@ export function getMonthFromDay(dayOfYear: number): number {
   return 11;
 }
 
-/** Jour du mois (1-31) à partir du jour de l'année */
+/** Jour du mois (1-31) Ã  partir du jour de l'annÃ©e */
 function getDayOfMonth(dayOfYear: number): number {
   let d = ((dayOfYear - 1) % 365 + 365) % 365;
   for (let m = 0; m < 12; m++) {
@@ -334,7 +334,7 @@ export function getRealDateDisplay(dayOfYear: number): string {
   return `${day} ${MONTH_SHORT[month]}`;
 }
 
-/** Date complète : "31 Mars 2026" */
+/** Date complÃ¨te : "31 Mars 2026" */
 export function getRealDateFull(dayOfYear: number): string {
   const month = getMonthFromDay(dayOfYear);
   const day = getDayOfMonth(dayOfYear);
@@ -346,42 +346,42 @@ export function getCurrentMonth(): number {
   return new Date().getMonth();
 }
 
-/** Année actuelle */
+/** AnnÃ©e actuelle */
 export function getCurrentYear(): number {
   return new Date().getFullYear();
 }
 
-// ═══════════════════════════════════════════════════
-//  ENVIRONNEMENT RÉEL PAR MOIS — France métropolitaine
-//  Données Météo-France / INRAE moyennes mensuelles
-// ═══════════════════════════════════════════════════
-// température (°C), humidité (%), ensoleillement (h/jour), qualité sol (%)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  ENVIRONNEMENT RÃ‰EL PAR MOIS â€” France mÃ©tropolitaine
+//  DonnÃ©es MÃ©tÃ©o-France / INRAE moyennes mensuelles
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// tempÃ©rature (Â°C), humiditÃ© (%), ensoleillement (h/jour), qualitÃ© sol (%)
 
 const MONTHLY_ENV: EnvironmentState[] = [
   { temperature: 4,  humidity: 85, sunlightHours: 2.5, soilQuality: 40, soilPH: 6.8 }, // Jan
-  { temperature: 6,  humidity: 80, sunlightHours: 3.5, soilQuality: 42, soilPH: 6.7 }, // Fév
+  { temperature: 6,  humidity: 80, sunlightHours: 3.5, soilQuality: 42, soilPH: 6.7 }, // FÃ©v
   { temperature: 10, humidity: 72, sunlightHours: 5.5, soilQuality: 55, soilPH: 6.6 }, // Mar
   { temperature: 13, humidity: 65, sunlightHours: 7.0, soilQuality: 65, soilPH: 6.5 }, // Avr
   { temperature: 17, humidity: 58, sunlightHours: 8.5, soilQuality: 72, soilPH: 6.4 }, // Mai
   { temperature: 21, humidity: 52, sunlightHours: 10.0, soilQuality: 78, soilPH: 6.3 }, // Juin
   { temperature: 24, humidity: 48, sunlightHours: 11.0, soilQuality: 80, soilPH: 6.2 }, // Juil
-  { temperature: 23, humidity: 52, sunlightHours: 10.0, soilQuality: 78, soilPH: 6.3 }, // Août
+  { temperature: 23, humidity: 52, sunlightHours: 10.0, soilQuality: 78, soilPH: 6.3 }, // AoÃ»t
   { temperature: 19, humidity: 62, sunlightHours: 7.5, soilQuality: 70, soilPH: 6.5 }, // Sep
   { temperature: 14, humidity: 72, sunlightHours: 5.0, soilQuality: 60, soilPH: 6.6 }, // Oct
   { temperature: 8,  humidity: 82, sunlightHours: 3.0, soilQuality: 48, soilPH: 6.7 }, // Nov
-  { temperature: 5,  humidity: 87, sunlightHours: 2.0, soilQuality: 42, soilPH: 6.8 }, // Déc
+  { temperature: 5,  humidity: 87, sunlightHours: 2.0, soilQuality: 42, soilPH: 6.8 }, // DÃ©c
 ];
 
-/** Environnement basé sur le mois réel */
+/** Environnement basÃ© sur le mois rÃ©el */
 export function getEnvironmentForMonth(month: number): EnvironmentState {
   return { ...MONTHLY_ENV[((month % 12) + 12) % 12] };
 }
 
-/** Variabilité journalière ±3°C sur la température */
+/** VariabilitÃ© journaliÃ¨re Â±3Â°C sur la tempÃ©rature */
 export function getEnvironmentWithDailyVariation(baseEnv: EnvironmentState): EnvironmentState {
-  const tempVar = (Math.random() - 0.5) * 6; // ±3°C
-  const humidVar = (Math.random() - 0.5) * 10; // ±5%
-  const lightVar = (Math.random() - 0.5) * 2; // ±1h
+  const tempVar = (Math.random() - 0.5) * 6; // Â±3Â°C
+  const humidVar = (Math.random() - 0.5) * 10; // Â±5%
+  const lightVar = (Math.random() - 0.5) * 2; // Â±1h
   return {
     ...baseEnv,
     temperature: Math.round((baseEnv.temperature + tempVar) * 10) / 10,
@@ -390,26 +390,26 @@ export function getEnvironmentWithDailyVariation(baseEnv: EnvironmentState): Env
   };
 }
 
-// ═══════════════════════════════════════════════════
-//  MÉTÉO RÉELLE PAR MOIS — Probabilités France
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  MÃ‰TÃ‰O RÃ‰ELLE PAR MOIS â€” ProbabilitÃ©s France
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const MONTHLY_WEATHER_WEIGHTS: Record<string, number>[] = [
-  // Jan: hiver doux, pluie fréquente
+  // Jan: hiver doux, pluie frÃ©quente
   { sunny: 10, cloudy: 30, rainy: 30, stormy: 5, heatwave: 0, frost: 25 },
-  // Fév: encore froid, un peu plus de soleil
+  // FÃ©v: encore froid, un peu plus de soleil
   { sunny: 15, cloudy: 30, rainy: 25, stormy: 5, heatwave: 0, frost: 25 },
   // Mar: transition printemps
   { sunny: 25, cloudy: 30, rainy: 25, stormy: 8, heatwave: 0, frost: 12 },
-  // Avr: printemps, giboulées
+  // Avr: printemps, giboulÃ©es
   { sunny: 30, cloudy: 28, rainy: 22, stormy: 10, heatwave: 0, frost: 10 },
   // Mai: beau, orages possibles
   { sunny: 35, cloudy: 25, rainy: 18, stormy: 12, heatwave: 0, frost: 10 },
-  // Juin: été, premiers orages
+  // Juin: Ã©tÃ©, premiers orages
   { sunny: 45, cloudy: 15, rainy: 12, stormy: 15, heatwave: 8, frost: 5 },
   // Juil: canicule possible
   { sunny: 50, cloudy: 12, rainy: 8, stormy: 10, heatwave: 18, frost: 2 },
-  // Août: canicule + orages
+  // AoÃ»t: canicule + orages
   { sunny: 48, cloudy: 14, rainy: 10, stormy: 12, heatwave: 14, frost: 2 },
   // Sep: retour de la pluie
   { sunny: 35, cloudy: 22, rainy: 22, stormy: 10, heatwave: 3, frost: 8 },
@@ -417,7 +417,7 @@ const MONTHLY_WEATHER_WEIGHTS: Record<string, number>[] = [
   { sunny: 20, cloudy: 30, rainy: 30, stormy: 10, heatwave: 0, frost: 10 },
   // Nov: pluie, vent, premiers froids
   { sunny: 12, cloudy: 32, rainy: 32, stormy: 8, heatwave: 0, frost: 16 },
-  // Déc: hiver, gel fréquent
+  // DÃ©c: hiver, gel frÃ©quent
   { sunny: 10, cloudy: 28, rainy: 28, stormy: 5, heatwave: 0, frost: 29 },
 ];
 
@@ -427,7 +427,7 @@ export function generateWeatherForMonth(month: number): WeatherData {
   return WEATHER_TYPES[wType];
 }
 
-/** Compatibilité : génère météo à partir de la saison (utilisé par game-store init) */
+/** CompatibilitÃ© : gÃ©nÃ¨re mÃ©tÃ©o Ã  partir de la saison (utilisÃ© par game-store init) */
 export function generateWeather(season: string): WeatherData {
   const seasonToMonth: Record<string, number> = {
     winter: 0, spring: 3, summer: 6, autumn: 9,
@@ -438,21 +438,21 @@ export function generateWeather(season: string): WeatherData {
 export function getSeasonalPlantingAdvice(season: string): string {
   switch (season) {
     case "spring":
-      return "🌱 Printemps : idéal pour semer tomates, carottes, fraises, salades";
+      return "ðŸŒ± Printemps : idÃ©al pour semer tomates, carottes, fraises, salades";
     case "summer":
-      return "☀️ Été : temps des bassins et basilic, surveillez l'arrosage !";
+      return "â˜€ï¸ Ã‰tÃ© : temps des bassins et basilic, surveillez l'arrosage !";
     case "autumn":
-      return "🍂 Automne : récoltez, semez carottes et salades d'hiver";
+      return "ðŸ‚ Automne : rÃ©coltez, semez carottes et salades d'hiver";
     case "winter":
-      return "❄️ Hiver : dormance des cultures, préparez le sol pour le printemps";
+      return "â„ï¸ Hiver : dormance des cultures, prÃ©parez le sol pour le printemps";
     default:
       return "";
   }
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  PHASE 3: COMBO SYSTEM
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function detectCombos(adjacentCards: { type: string; subType: string }[]): ComboInfo[] {
   const combos: ComboInfo[] = [];
@@ -461,15 +461,15 @@ export function detectCombos(adjacentCards: { type: string; subType: string }[])
 
   // Combo: Water + Soil + Light = Full Care (+50% growth)
   if (types.includes("action") && types.includes("resource") && subTypes.includes("soil") && subTypes.includes("light")) {
-    combos.push({ type: "full_care", label: "Soin Complet", emoji: "✨", bonus: 0.5 });
+    combos.push({ type: "full_care", label: "Soin Complet", emoji: "âœ¨", bonus: 0.5 });
   }
   // Combo: Soil + Plant = Rich Earth (+25% growth)
   if (subTypes.includes("soil") && types.includes("plant")) {
-    combos.push({ type: "rich_earth", label: "Terre Riche", emoji: "🌍", bonus: 0.25 });
+    combos.push({ type: "rich_earth", label: "Terre Riche", emoji: "ðŸŒ", bonus: 0.25 });
   }
   // Combo: Light + Greenhouse = Optimized Light (+20% growth)
   if (subTypes.includes("light") && adjacentCards.some((c) => c.subType === "greenhouse")) {
-    combos.push({ type: "optimized_light", label: "Lumière Optimisée", emoji: "💡", bonus: 0.2 });
+    combos.push({ type: "optimized_light", label: "LumiÃ¨re OptimisÃ©e", emoji: "ðŸ’¡", bonus: 0.2 });
   }
 
   return combos;
@@ -478,15 +478,15 @@ export function detectCombos(adjacentCards: { type: string; subType: string }[])
 export function getComboBonusText(comboLevel: number): string {
   switch (comboLevel) {
     case 0: return "";
-    case 1: return "+25% 🌍";
-    case 2: return "+50% ✨";
-    default: return "+50% ✨";
+    case 1: return "+25% ðŸŒ";
+    case 2: return "+50% âœ¨";
+    default: return "+50% âœ¨";
   }
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  CORE AI CALCULATIONS
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function calculateEvapotranspiration(
   baseTemp: number,
@@ -502,8 +502,8 @@ export function calculateEvapotranspiration(
 export function calculateWaterNeed(plant: PlantDefinition, env: EnvironmentState, weather: WeatherData): number {
   const ET = calculateEvapotranspiration(env.temperature, env.sunlightHours, plant.cropCoefficient);
   const droughtFactor = 1.0 - (plant.droughtResistance || 0.5) * 0.6;
-  // Réaliste: une tomate adulte consomme ~3-4L/semaine, soit ~0.5L/jour
-  // Le waterLevel est un pourcentage (0-100), perte ~3-5%/jour en été
+  // RÃ©aliste: une tomate adulte consomme ~3-4L/semaine, soit ~0.5L/jour
+  // Le waterLevel est un pourcentage (0-100), perte ~3-5%/jour en Ã©tÃ©
   return Math.min(20, ET * 1.5 * weather.waterMod * droughtFactor);
 }
 
@@ -566,11 +566,11 @@ export function simulateDay(
   season: string,
   comboBonus: number
 ): { newState: PlantState; alerts: AlertData[]; cellX: number; cellY: number } {
-  // Plants never die — isDead always false in new simulation
+  // Plants never die â€” isDead always false in new simulation
   const alerts: AlertData[] = [];
   let newState = { ...state };
 
-  // ── Water consumption (modified by weather) ──
+  // â”€â”€ Water consumption (modified by weather) â”€â”€
   const dailyWaterLoss = calculateWaterNeed(plantDef, env, weather);
   // Rain reduces water loss
   if (weather.type === "rainy" || weather.type === "stormy") {
@@ -585,19 +585,19 @@ export function simulateDay(
       id: `water-${Date.now()}-${Math.random()}`,
       type: "water",
       message: `${plantDef.emoji} ${plantDef.name} a besoin d'eau ! (${Math.round(newState.waterLevel)}%)`,
-      emoji: "💧", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      emoji: "ðŸ’§", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
   if (newState.waterLevel >= 30) newState.needsWater = false;
 
-  // ── Health ──
+  // â”€â”€ Health â”€â”€
   if (newState.waterLevel < 10) {
     newState.health = Math.max(0, newState.health - 15);
     alerts.push({
       id: `health-${Date.now()}-${Math.random()}`,
       type: "health",
-      message: `${plantDef.emoji} ${plantDef.name} se fane ! Santé: ${Math.round(newState.health)}%`,
-      emoji: "⚠️", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `${plantDef.emoji} ${plantDef.name} se fane ! SantÃ©: ${Math.round(newState.health)}%`,
+      emoji: "âš ï¸", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   } else if (newState.waterLevel > 90) {
     // Overwatering
@@ -608,7 +608,7 @@ export function simulateDay(
     newState.health = Math.min(100, newState.health + 2);
   }
 
-  // ── Phase 5: Disease ──
+  // â”€â”€ Phase 5: Disease â”€â”€
   if (newState.hasDisease) {
     newState.diseaseDays++;
     newState.health = Math.max(0, newState.health - 8);
@@ -621,7 +621,7 @@ export function simulateDay(
           id: `disease-cure-${Date.now()}`,
           type: "disease",
           message: `${plantDef.emoji} ${plantDef.name} s'est remise de sa maladie !`,
-          emoji: "💚", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
+          emoji: "ðŸ’š", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
         });
       }
     }
@@ -629,15 +629,15 @@ export function simulateDay(
       alerts.push({
         id: `disease-${Date.now()}-${Math.random()}`,
         type: "disease",
-        message: `🦠 ${plantDef.name} souffre d'une maladie ! Santé: ${Math.round(newState.health)}%`,
-        emoji: "🦠", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+        message: `ðŸ¦  ${plantDef.name} souffre d'une maladie ! SantÃ©: ${Math.round(newState.health)}%`,
+        emoji: "ðŸ¦ ", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
       });
     }
   } else {
     // Random disease chance (higher in humid weather, much lower indoor)
     const indoorFactor = (zoneId === "garden") ? 1.0 : 0.1;
-    // Maladies : rare en conditions normales, plus fréquentes par temps humide
-    // Réaliste : mildiou apparaît tous les 2-3 semaines en conditions favorables
+    // Maladies : rare en conditions normales, plus frÃ©quentes par temps humide
+    // RÃ©aliste : mildiou apparaÃ®t tous les 2-3 semaines en conditions favorables
     const diseaseChance = weather.type === "rainy" ? 0.008 : weather.type === "stormy" ? 0.015 : 0.002;
     if (Math.random() < diseaseChance * indoorFactor && newState.stage > 0) {
       const resistance = plantDef.diseaseResistance / 100;
@@ -647,14 +647,14 @@ export function simulateDay(
         alerts.push({
           id: `disease-new-${Date.now()}`,
           type: "disease",
-          message: `🦠 Maladie détectée sur ${plantDef.emoji} ${plantDef.name} !`,
-          emoji: "🦠", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+          message: `ðŸ¦  Maladie dÃ©tectÃ©e sur ${plantDef.emoji} ${plantDef.name} !`,
+          emoji: "ðŸ¦ ", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
         });
       }
     }
   }
 
-  // ── Phase 5: Pest ──
+  // â”€â”€ Phase 5: Pest â”€â”€
   if (newState.hasPest) {
     newState.pestDays++;
     newState.health = Math.max(0, newState.health - 6);
@@ -666,8 +666,8 @@ export function simulateDay(
         alerts.push({
           id: `pest-gone-${Date.now()}`,
           type: "pest",
-          message: `🐛 Les ravageurs ont quitté ${plantDef.name} !`,
-          emoji: "✅", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
+          message: `ðŸ› Les ravageurs ont quittÃ© ${plantDef.name} !`,
+          emoji: "âœ…", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
         });
       }
     }
@@ -675,14 +675,14 @@ export function simulateDay(
       alerts.push({
         id: `pest-${Date.now()}-${Math.random()}`,
         type: "pest",
-        message: `🐛 Ravageurs sur ${plantDef.emoji} ${plantDef.name} ! (-6 santé/jour)`,
-        emoji: "🐛", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+        message: `ðŸ› Ravageurs sur ${plantDef.emoji} ${plantDef.name} ! (-6 santÃ©/jour)`,
+        emoji: "ðŸ›", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
       });
     }
   } else {
     const indoorFactor = (zoneId === "garden") ? 1.0 : 0.15;
-    // Parasites : pucerons plus fréquents en été, aleurodes en serre
-    // Réaliste : attaque tous les 3-4 semaines en été
+    // Parasites : pucerons plus frÃ©quents en Ã©tÃ©, aleurodes en serre
+    // RÃ©aliste : attaque tous les 3-4 semaines en Ã©tÃ©
     const pestChance = season === "summer" ? 0.008 : 0.003;
     if (Math.random() < pestChance * indoorFactor && newState.stage >= 1) {
       const resistance = plantDef.pestResistance / 100;
@@ -692,26 +692,26 @@ export function simulateDay(
         alerts.push({
           id: `pest-new-${Date.now()}`,
           type: "pest",
-          message: `🐛 Ravageurs attaquent ${plantDef.emoji} ${plantDef.name} !`,
-          emoji: "🐛", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+          message: `ðŸ› Ravageurs attaquent ${plantDef.emoji} ${plantDef.name} !`,
+          emoji: "ðŸ›", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
         });
       }
     }
   }
 
-  // ── Fertilizer countdown ──
+  // â”€â”€ Fertilizer countdown â”€â”€
   if (newState.fertilizerBoost > 0) {
     newState.fertilizerBoost--;
   }
 
-  // ── Frost damage ──
+  // â”€â”€ Frost damage â”€â”€
   if (weather.type === "frost" && newState.stage < 2) {
     newState.health = Math.max(0, newState.health - 20);
     alerts.push({
       id: `frost-${Date.now()}-${Math.random()}`,
       type: "weather",
-      message: `🥶 Gel ! ${plantDef.emoji} ${plantDef.name} souffre (-20 santé)`,
-      emoji: "🥶", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `ðŸ¥¶ Gel ! ${plantDef.emoji} ${plantDef.name} souffre (-20 santÃ©)`,
+      emoji: "ðŸ¥¶", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
 
@@ -721,23 +721,23 @@ export function simulateDay(
     alerts.push({
       id: `heat-${Date.now()}-${Math.random()}`,
       type: "weather",
-      message: `🔥 Canicule ! ${plantDef.emoji} ${plantDef.name} brûle (-10 santé)`,
-      emoji: "🔥", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `ðŸ”¥ Canicule ! ${plantDef.emoji} ${plantDef.name} brÃ»le (-10 santÃ©)`,
+      emoji: "ðŸ”¥", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
 
-  // ── Survival mode: plants never die ──
+  // â”€â”€ Survival mode: plants never die â”€â”€
   if (newState.health <= 0) {
     newState.health = 5; // Clamp to minimum 5%
     alerts.push({
       id: `survie-${Date.now()}-${Math.random()}`,
       type: "health",
-      message: `⚠️ ${plantDef.name} est en survie ! Conditions à améliorer.`,
-      emoji: "⚠️", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `âš ï¸ ${plantDef.name} est en survie ! Conditions Ã  amÃ©liorer.`,
+      emoji: "âš ï¸", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
 
-  // ── Growth (stunted when health <= 5) ──
+  // â”€â”€ Growth (stunted when health <= 5) â”€â”€
   let growthRate: number;
   if (newState.health <= 5) {
     // Stunted: no growth, no water consumption
@@ -772,7 +772,7 @@ export function simulateDay(
     alerts.push({
       id: `stage-${Date.now()}-${Math.random()}`,
       type: "stage",
-      message: `${plantDef.emoji} ${plantDef.name} → ${STAGE_NAMES[newState.stage]} ! ${STAGE_EMOJIS[newState.stage]}`,
+      message: `${plantDef.emoji} ${plantDef.name} â†’ ${STAGE_NAMES[newState.stage]} ! ${STAGE_EMOJIS[newState.stage]}`,
       emoji: STAGE_EMOJIS[newState.stage], cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
     });
   }
@@ -783,7 +783,7 @@ export function simulateDay(
     alerts.push({
       id: `harvest-${Date.now()}-${Math.random()}`,
       type: "harvest",
-      message: `${plantDef.harvestEmoji} ${plantDef.name} est prête à récolter !`,
+      message: `${plantDef.harvestEmoji} ${plantDef.name} est prÃªte Ã  rÃ©colter !`,
       emoji: plantDef.harvestEmoji, cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
     });
   }
@@ -791,7 +791,7 @@ export function simulateDay(
   return { newState, alerts, cellX: 0, cellY: 0 };
 }
 
-// ── ACTIONS ──
+// â”€â”€ ACTIONS â”€â”€
 
 export function applyWatering(state: PlantState): PlantState {
   return {
@@ -830,7 +830,7 @@ export function createInitialPlantState(plantDefId: string): PlantState {
   };
 }
 
-// ── SEASONS & ENVIRONMENT — calendrier réel ──
+// â”€â”€ SEASONS & ENVIRONMENT â€” calendrier rÃ©el â”€â”€
 
 /** @deprecated utiliser getEnvironmentForMonth() */
 export function getEnvironmentForSeason(season: string): EnvironmentState {
@@ -848,18 +848,18 @@ export function getSeason(dayOfYear: number): string {
 
 export function getSeasonEmoji(season: string): string {
   switch (season) {
-    case "spring": return "🌸";
-    case "summer": return "☀️";
-    case "autumn": return "🍂";
-    case "winter": return "❄️";
-    default: return "📅";
+    case "spring": return "ðŸŒ¸";
+    case "summer": return "â˜€ï¸";
+    case "autumn": return "ðŸ‚";
+    case "winter": return "â„ï¸";
+    default: return "ðŸ“…";
   }
 }
 
 export function getSeasonLabel(season: string): string {
   switch (season) {
     case "spring": return "Printemps";
-    case "summer": return "Été";
+    case "summer": return "Ã‰tÃ©";
     case "autumn": return "Automne";
     case "winter": return "Hiver";
     default: return season;
@@ -870,7 +870,7 @@ export function getDayDate(day: number): string {
   return getRealDateDisplay(day);
 }
 
-// ═══ Frost Calendar ═══
+// â•â•â• Frost Calendar â•â•â•
 
 /**
  * Returns approximate last frost date advice for France.
@@ -880,13 +880,13 @@ export function getLastFrostDate(): string {
   const month = getCurrentMonth();
   if (month >= 4) {
     // April onwards: frost risk is minimal
-    return "Plantation au jardin possible — risque de gel minime 🌱";
+    return "Plantation au jardin possible â€” risque de gel minime ðŸŒ±";
   } else if (month === 3) {
     // March: transitional, risk remains
-    return "⚠️ Mars — risques de gelées tardives, attendez mi-avril pour le jardin";
+    return "âš ï¸ Mars â€” risques de gelÃ©es tardives, attendez mi-avril pour le jardin";
   } else {
     // Jan-Feb: too cold for outdoor planting
-    return "❄️ Tôt dans la saison — démarrage en Pépinière recommandé";
+    return "â„ï¸ TÃ´t dans la saison â€” dÃ©marrage en PÃ©piniÃ¨re recommandÃ©";
   }
 }
 
@@ -897,9 +897,9 @@ export function isTransplantSeason(): boolean {
   return getCurrentMonth() >= 3; // April onwards (month is 0-indexed)
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  PHASE 7: REAL WEATHER SIMULATION
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export interface RealWeatherParams {
   temperature: number;       // effective temperature after zone modifier
@@ -923,7 +923,7 @@ export function simulateDayWithRealWeather(
   zoneId: string,
   comboBonus: number
 ): { newState: PlantState; alerts: AlertData[] } {
-  // Plants never die — isDead always false in new simulation
+  // Plants never die â€” isDead always false in new simulation
   const alerts: AlertData[] = [];
   let newState = { ...state };
 
@@ -938,15 +938,15 @@ export function simulateDayWithRealWeather(
 
   const weather = realWeather.gameWeather;
 
-  // ── Rain-based watering (ONLY Jardin — Serre & Chambre de Culture sont à l'intérieur) ──
+  // â”€â”€ Rain-based watering (ONLY Jardin â€” Serre & Chambre de Culture sont Ã  l'intÃ©rieur) â”€â”€
   if (realWeather.precipitation > 0 && zoneId === "garden") {
-    // Roughly: 1mm rain ≈ 1L/m², convert to water level percentage
+    // Roughly: 1mm rain â‰ˆ 1L/mÂ², convert to water level percentage
     // A good rain of 5mm gives ~5% water, up to a max boost of 30%
     const rainWater = Math.min(30, realWeather.precipitation * 3);
     newState.waterLevel = Math.min(100, newState.waterLevel + rainWater);
   }
 
-  // ── Water consumption based on evapotranspiration + drought resistance ──
+  // â”€â”€ Water consumption based on evapotranspiration + drought resistance â”€â”€
   const ET = calculateEvapotranspiration(env.temperature, env.sunlightHours, plantDef.cropCoefficient);
   // Indoor zones (pepiniere, chambre) lose water much slower
   const zoneMultiplier = (zoneId === "garden") ? 1.0 : 0.3;
@@ -962,30 +962,30 @@ export function simulateDayWithRealWeather(
       id: `water-${Date.now()}-${Math.random()}`,
       type: "water",
       message: `${plantDef.emoji} ${plantDef.name} a besoin d'eau ! (${Math.round(newState.waterLevel)}%)`,
-      emoji: "💧", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      emoji: "ðŸ’§", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
   if (newState.waterLevel >= 30) newState.needsWater = false;
 
-  // ── Health ──
+  // â”€â”€ Health â”€â”€
   if (newState.waterLevel < 10) {
     newState.health = Math.max(0, newState.health - 15);
     alerts.push({
       id: `health-${Date.now()}-${Math.random()}`,
       type: "health",
-      message: `${plantDef.emoji} ${plantDef.name} se fane ! Santé: ${Math.round(newState.health)}%`,
-      emoji: "⚠️", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `${plantDef.emoji} ${plantDef.name} se fane ! SantÃ©: ${Math.round(newState.health)}%`,
+      emoji: "âš ï¸", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   } else if (newState.waterLevel > 90) {
-    // Sur-arrosage : perte de santé + risque maladies
+    // Sur-arrosage : perte de santÃ© + risque maladies
     newState.health = Math.max(0, newState.health - 3);
-    // En intérieur (Serre / Chambre de Culture), l'excès d'eau est dangereux
+    // En intÃ©rieur (Serre / Chambre de Culture), l'excÃ¨s d'eau est dangereux
     if (zoneId !== "garden") {
       alerts.push({
         id: `overwater-${Date.now()}-${Math.random()}`,
         type: "health",
-        message: `⚠️ Excès d'eau en ${zoneId === "greenhouse" ? "Serre" : "Chambre de Culture"} ! Risque de pourriture et moisissures.`,
-        emoji: "💧", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+        message: `âš ï¸ ExcÃ¨s d'eau en ${zoneId === "greenhouse" ? "Serre" : "Chambre de Culture"} ! Risque de pourriture et moisissures.`,
+        emoji: "ðŸ’§", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
       });
     }
   } else if (newState.waterLevel < 30) {
@@ -994,7 +994,7 @@ export function simulateDayWithRealWeather(
     newState.health = Math.min(100, newState.health + 2);
   }
 
-  // ── Disease (higher chance in humid/rainy real weather) ──
+  // â”€â”€ Disease (higher chance in humid/rainy real weather) â”€â”€
   if (newState.hasDisease) {
     newState.diseaseDays++;
     newState.health = Math.max(0, newState.health - 8);
@@ -1006,7 +1006,7 @@ export function simulateDayWithRealWeather(
           id: `disease-cure-${Date.now()}`,
           type: "disease",
           message: `${plantDef.emoji} ${plantDef.name} s'est remise de sa maladie !`,
-          emoji: "💚", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
+          emoji: "ðŸ’š", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
         });
       }
     }
@@ -1014,12 +1014,12 @@ export function simulateDayWithRealWeather(
       alerts.push({
         id: `disease-${Date.now()}-${Math.random()}`,
         type: "disease",
-        message: `🦠 ${plantDef.name} souffre d'une maladie ! Santé: ${Math.round(newState.health)}%`,
-        emoji: "🦠", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+        message: `ðŸ¦  ${plantDef.name} souffre d'une maladie ! SantÃ©: ${Math.round(newState.health)}%`,
+        emoji: "ðŸ¦ ", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
       });
     }
   } else {
-    // Disease probability — very low in indoor controlled environments (grow tents)
+    // Disease probability â€” very low in indoor controlled environments (grow tents)
     // Disease chance - realistic: mildew every 2-3 weeks in favorable conditions
     let diseaseChance = 0.001; // base: very low
 
@@ -1037,7 +1037,7 @@ export function simulateDayWithRealWeather(
         diseaseChance += 0.008; // slight risk from severe overwatering
       }
       if (newState.waterLevel > 95) {
-        diseaseChance += 0.015; // critical overwatering → mold
+        diseaseChance += 0.015; // critical overwatering â†’ mold
       }
     }
 
@@ -1049,14 +1049,14 @@ export function simulateDayWithRealWeather(
         alerts.push({
           id: `disease-new-${Date.now()}`,
           type: "disease",
-          message: `🦠 Maladie détectée sur ${plantDef.emoji} ${plantDef.name} !`,
-          emoji: "🦠", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+          message: `ðŸ¦  Maladie dÃ©tectÃ©e sur ${plantDef.emoji} ${plantDef.name} !`,
+          emoji: "ðŸ¦ ", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
         });
       }
     }
   }
 
-  // ── Pest (higher chance in warm weather) ──
+  // â”€â”€ Pest (higher chance in warm weather) â”€â”€
   if (newState.hasPest) {
     newState.pestDays++;
     newState.health = Math.max(0, newState.health - 6);
@@ -1068,8 +1068,8 @@ export function simulateDayWithRealWeather(
         alerts.push({
           id: `pest-gone-${Date.now()}`,
           type: "pest",
-          message: `🐛 Les ravageurs ont quitté ${plantDef.name} !`,
-          emoji: "✅", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
+          message: `ðŸ› Les ravageurs ont quittÃ© ${plantDef.name} !`,
+          emoji: "âœ…", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
         });
       }
     }
@@ -1077,12 +1077,12 @@ export function simulateDayWithRealWeather(
       alerts.push({
         id: `pest-${Date.now()}-${Math.random()}`,
         type: "pest",
-        message: `🐛 Ravageurs sur ${plantDef.emoji} ${plantDef.name} ! (-6 santé/jour)`,
-        emoji: "🐛", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+        message: `ðŸ› Ravageurs sur ${plantDef.emoji} ${plantDef.name} ! (-6 santÃ©/jour)`,
+        emoji: "ðŸ›", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
       });
     }
   } else {
-    // Pest probability — realistic: aphids every 3-4 weeks in summer
+    // Pest probability â€” realistic: aphids every 3-4 weeks in summer
     let pestChance = 0.002; // base: low
     if (zoneId !== "garden") {
       // Indoor: very few pests (sealed environment)
@@ -1100,52 +1100,52 @@ export function simulateDayWithRealWeather(
         alerts.push({
           id: `pest-new-${Date.now()}`,
           type: "pest",
-          message: `🐛 Ravageurs attaquent ${plantDef.emoji} ${plantDef.name} !`,
-          emoji: "🐛", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+          message: `ðŸ› Ravageurs attaquent ${plantDef.emoji} ${plantDef.name} !`,
+          emoji: "ðŸ›", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
         });
       }
     }
   }
 
-  // ── Fertilizer countdown ──
+  // â”€â”€ Fertilizer countdown â”€â”€
   if (newState.fertilizerBoost > 0) {
     newState.fertilizerBoost--;
   }
 
-  // ── Frost damage (real temp based) ──
+  // â”€â”€ Frost damage (real temp based) â”€â”€
   if (realWeather.temperature < 2 && newState.stage < 2) {
     newState.health = Math.max(0, newState.health - 20);
     alerts.push({
       id: `frost-${Date.now()}-${Math.random()}`,
       type: "weather",
-      message: `🥶 Gel (${Math.round(realWeather.temperature)}°C) ! ${plantDef.emoji} ${plantDef.name} souffre (-20 santé)`,
-      emoji: "🥶", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `ðŸ¥¶ Gel (${Math.round(realWeather.temperature)}Â°C) ! ${plantDef.emoji} ${plantDef.name} souffre (-20 santÃ©)`,
+      emoji: "ðŸ¥¶", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
 
-  // ── Heatwave damage (real temp based) ──
+  // â”€â”€ Heatwave damage (real temp based) â”€â”€
   if (realWeather.temperature > 35 && newState.waterLevel < 40) {
     newState.health = Math.max(0, newState.health - 10);
     alerts.push({
       id: `heat-${Date.now()}-${Math.random()}`,
       type: "weather",
-      message: `🔥 Canicule (${Math.round(realWeather.temperature)}°C) ! ${plantDef.emoji} ${plantDef.name} brûle (-10 santé)`,
-      emoji: "🔥", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `ðŸ”¥ Canicule (${Math.round(realWeather.temperature)}Â°C) ! ${plantDef.emoji} ${plantDef.name} brÃ»le (-10 santÃ©)`,
+      emoji: "ðŸ”¥", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
 
-  // ── Survival mode: plants never die ──
+  // â”€â”€ Survival mode: plants never die â”€â”€
   if (newState.health <= 0) {
     newState.health = 5; // Clamp to minimum 5%
     alerts.push({
       id: `survie-${Date.now()}-${Math.random()}`,
       type: "health",
-      message: `⚠️ ${plantDef.name} est en survie ! Conditions à améliorer.`,
-      emoji: "⚠️", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      message: `âš ï¸ ${plantDef.name} est en survie ! Conditions Ã  amÃ©liorer.`,
+      emoji: "âš ï¸", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
     });
   }
 
-  // ── Growth with real weather (stunted when health <= 5) ──
+  // â”€â”€ Growth with real weather (stunted when health <= 5) â”€â”€
   let growthRate: number;
   if (newState.health <= 5) {
     // Stunted: no growth, no water consumption
@@ -1179,7 +1179,7 @@ export function simulateDayWithRealWeather(
     alerts.push({
       id: `stage-${Date.now()}-${Math.random()}`,
       type: "stage",
-      message: `${plantDef.emoji} ${plantDef.name} → ${STAGE_NAMES[newState.stage]} ! ${STAGE_EMOJIS[newState.stage]}`,
+      message: `${plantDef.emoji} ${plantDef.name} â†’ ${STAGE_NAMES[newState.stage]} ! ${STAGE_EMOJIS[newState.stage]}`,
       emoji: STAGE_EMOJIS[newState.stage], cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
     });
   }
@@ -1190,10 +1190,13 @@ export function simulateDayWithRealWeather(
     alerts.push({
       id: `harvest-${Date.now()}-${Math.random()}`,
       type: "harvest",
-      message: `${plantDef.harvestEmoji} ${plantDef.name} est prête à récolter !`,
+      message: `${plantDef.harvestEmoji} ${plantDef.name} est prÃªte Ã  rÃ©colter !`,
       emoji: plantDef.harvestEmoji, cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info",
     });
   }
 
   return { newState, alerts };
 }
+
+
+

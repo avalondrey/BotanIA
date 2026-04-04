@@ -484,7 +484,7 @@ export function JardinGrid() {
       )}
 
       {/* ═══ Tool bar ═══ */}
-      <div className="flex items-center gap-2 p-2 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000] flex-wrap">
+      <div className="flex items-center gap-1.5 p-2 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000] flex-wrap">
         <span className="text-[9px] font-black uppercase text-stone-500 mr-1">Outils:</span>
 
         <ToolButton active={tool === "select"} onClick={() => setTool("select")} icon="👆" label="Sélection" />
@@ -498,7 +498,7 @@ export function JardinGrid() {
         {gardenSerreZones.length === 0 ? (
           <button
             onClick={() => { setTool("serre"); setSerreStart(null); }}
-            className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border-2 flex items-center gap-1 transition-all bg-cyan-100 border-cyan-400 text-cyan-800 shadow-[2px_2px_0_0_#000] hover:bg-cyan-200"
+            className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border-2 flex items-center gap-1 transition-all flex-shrink-0 bg-cyan-100 border-cyan-400 text-cyan-800 shadow-[2px_2px_0_0_#000] hover:bg-cyan-200"
             title="Dessiner une zone de serre"
           >
             🏡 + Serre
@@ -506,7 +506,7 @@ export function JardinGrid() {
         ) : (
           <button
             onClick={() => setTool(tool === "serre" ? "select" : "serre")}
-            className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border-2 flex items-center gap-1 transition-all
+            className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border-2 flex items-center gap-1 transition-all flex-shrink-0
               ${tool === "serre"
                 ? "bg-cyan-100 border-cyan-400 text-cyan-800 shadow-[2px_2px_0_0_#000]"
                 : showGardenSerre
@@ -570,7 +570,7 @@ export function JardinGrid() {
       <div
         ref={containerRef}
         className="relative border-[3px] border-black rounded-2xl overflow-hidden cursor-crosshair shadow-[6px_6px_0_0_#000] select-none"
-        style={{ height: "500px", background: "#f5f0e8" }}
+        style={{ height: "clamp(350px, 50vh, 600px)", background: "#f5f0e8" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -937,7 +937,7 @@ function ToolButton({ active, onClick, icon, label }: { active: boolean; onClick
   return (
     <button
       onClick={onClick}
-      className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border-2 flex items-center gap-1 transition-all
+      className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border-2 flex items-center gap-1 transition-all flex-shrink-0
         ${active
           ? "bg-black text-white border-black shadow-[2px_2px_0_0_#000]"
           : "bg-white border-stone-300 text-stone-600 hover:border-black"

@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jardin Culture — Jeu de Cartes Manga</title>
+<style>
+/* ═══════════ RESET & BASE ═══════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#faf9f6;
+  color:#1a1a1a;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ═══════════ SCREENTONE BG ═══════════ */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;
+  opacity:.04;pointer-events:none;
+  background-image:radial-gradient(circle,#000 1px,transparent 1px);
+  background-size:6px 6px;
+}
+
+/* ═══════════ MANGA BORDER STYLE ═══════════ */
+.manga-border{
+  border:3px solid #000;
+  box-shadow:6px 6px 0 #000;
+}
+.manga-border-sm{
+  border:2px solid #000;
+  box-shadow:4px 4px 0 #000;
+}
+
+/* ═══════════ HEADER ═══════════ */
+.header{
+  background:#fff;
+  border-bottom:3px solid #000;
+  padding:2rem 1.5rem;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.header::after{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,#000 .8px,transparent .8px);
+  background-size:10px 10px;opacity:.04;pointer-events:none;
+}
+.header h1{
+  font-size:clamp(2.2rem,6vw,4.5rem);
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:-.02em;
+  -webkit-text-stroke:1.5px #000;
+  text-shadow:3px 3px 0 #000;
+  position:relative;
+}
+.header .subtitle{
+  font-size:clamp(.85rem,2vw,1.2rem);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.25em;
+  color:#555;
+  margin-top:.25rem;
+}
+.badges{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;position:relative}
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 12px;border:2px solid #000;background:#fff;
+  font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
+}
+
+/* ═══════════ NAV ═══════════ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(6px);
+  border-bottom:3px solid #000;
+  display:flex;overflow-x:auto;
+}
+.nav button{
+  flex:1;min-width:120px;padding:14px 8px;
+  border:none;background:transparent;
+  font-size:.8rem;font-weight:900;text-transform:uppercase;
+  letter-spacing:.1em;color:#999;
+  border-bottom:4px solid transparent;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.nav button:hover{color:#333;border-bottom-color:#ccc}
+.nav button.active{color:#000;border-bottom-color:#000;background:#f9f8f5}
+
+/* ═══════════ CONTAINER ═══════════ */
+.container{max-width:1200px;margin:0 auto;padding:2rem 1.5rem}
+
+/* ═══════════ SECTION TITLES ═══════════ */
+.section-title{
+  font-size:clamp(1.5rem,4vw,2.2rem);
+  font-weight:900;text-transform:uppercase;
+  padding-bottom:.5rem;
+  border-bottom:4px solid #000;
+  margin-bottom:2rem;
+}
+
+/* ═══════════ TABS ═══════════ */
+.tab-content{display:none}
+.tab-content.active{display:block;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════ CARD GRID ═══════════ */
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:1.5rem;
+}
+.game-card{
+  cursor:pointer;transition:transform .25s;
+}
+.game-card:hover{transform:translateY(-8px) scale(1.03)}
+.game-card .card-img{
+  aspect-ratio:3/4;width:100%;object-fit:cover;
+  border-radius:10px;
+  border:2px solid #000;
+  box-shadow:4px 4px 0 #000;
+  display:block;
+}
+.game-card.selected .card-img{
+  box-shadow:0 0 0 4px #000, 4px 4px 0 #000;
+}
+.game-card .card-label{
+  margin-top:.5rem;font-weight:900;font-size:.8rem;
+  text-align:center;text-transform:uppercase;letter-spacing:.05em;
+}
+.type-badge{
+  position:absolute;top:8px;right:8px;
+  padding:2px 8px;border-radius:4px;
+  font-size:.65rem;font-weight:900;text-transform:uppercase;
+  border:1.5px solid;
+}
+.type-env{background:#d1fae5;color:#065f46;border-color:#34d399}
+.type-plant{background:#fef3c7;color:#92400e;border-color:#fbbf24}
+.type-action{background:#dbeafe;color:#1e40af;border-color:#60a5fa}
+.type-alert{background:#fee2e2;color:#991b1b;border-color:#f87171}
+.type-res{background:#f3e8ff;color:#581c87;border-color:#c084fc}
+
+/* ═══════════ CARD DETAIL PANEL ═══════════ */
+.detail-panel{
+  display:none;margin-top:2rem;
+  padding:2rem;background:#fff;
+  border-radius:12px;
+  border:3px solid #000;box-shadow:6px 6px 0 #000;
+}
+.detail-panel.open{display:block;animation:fadeIn .35s ease}
+.detail-grid{display:grid;grid-template-columns:260px 1fr;gap:2rem;align-items:start}
+@media(max-width:700px){.detail-grid{grid-template-columns:1fr}}
+.detail-img{
+  aspect-ratio:3/4;width:100%;object-fit:cover;
+  border-radius:10px;border:2px solid #000;
+}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:1rem 0}
+.stat-box{
+  padding:.75rem;background:#f5f5f0;border:1.5px solid #e0e0d8;
+  border-radius:8px;text-align:center;
+}
+.stat-box .stat-label{font-size:.7rem;color:#888;font-weight:700;text-transform:uppercase}
+.stat-box .stat-value{font-size:1.1rem;font-weight:900;color:#000}
+.algo-box{
+  padding:1rem;background:#1a1a1a;color:#e0e0e0;
+  border-radius:10px;font-family:monospace;font-size:.85rem;
+  margin-top:1rem;
+}
+.algo-box .algo-label{font-size:.7rem;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:.4rem;display:flex;align-items:center;gap:4px}
+.algo-box code{color:#4ade80}
+.close-btn{
+  border:none;background:none;color:#888;cursor:pointer;
+  font-size:.8rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;margin-top:1rem;display:inline-flex;align-items:center;gap:4px;
+}
+.close-btn:hover{color:#000}
+
+/* ═══════════ OVERVIEW ═══════════ */
+.overview-hero{
+  display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start;
+}
+@media(max-width:768px){.overview-hero{grid-template-columns:1fr}}
+.overview-hero p{font-size:1.05rem;color:#444;line-height:1.8}
+.concept-box{
+  padding:1.5rem;background:#fff;
+  border:2px solid #000;box-shadow:4px 4px 0 #000;
+  border-radius:10px;
+}
+.concept-box h4{
+  font-size:.8rem;font-weight:900;text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:.75rem;display:flex;align-items:center;gap:6px;
+}
+.concept-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.concept-list li{display:flex;align-items:flex-start;gap:.75rem;color:#555;font-size:.95rem}
+.concept-list li strong{color:#000;min-width:90px;font-weight:900}
+
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2rem}
+@media(max-width:768px){.how-grid{grid-template-columns:1fr}}
+.how-card{
+  padding:1.5rem;background:#fff;
+  border:2px solid #000;box-shadow:4px 4px 0 #000;
+  border-radius:10px;position:relative;
+}
+.how-card .step-num{
+  position:absolute;top:-16px;left:16px;
+  padding:2px 14px;background:#000;color:#fff;
+  font-size:1.4rem;font-weight:900;border-radius:4px;
+}
+.how-card .step-icon{margin:1rem 0 .5rem;color:#444}
+.how-card h3{font-size:1rem;font-weight:900;text-transform:uppercase;margin-bottom:.5rem}
+.how-card p{color:#555;font-size:.95rem;line-height:1.7}
+
+.types-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-top:2rem}
+@media(max-width:600px){.types-row{grid-template-columns:repeat(2,1fr)}}
+.type-chip{
+  padding:1rem;text-align:center;border-radius:10px;
+  border:2px solid;font-weight:900;font-size:.8rem;text-transform:uppercase;
+}
+
+/* ═══════════ PREVIEW CARDS IN OVERVIEW ═══════════ */
+.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:500px){.preview-grid{grid-template-columns:1fr 1fr}}
+.preview-card{
+  position:relative;cursor:pointer;border-radius:10px;overflow:hidden;
+  border:2px solid #000;box-shadow:3px 3px 0 #000;
+}
+.preview-card img{aspect-ratio:3/4;width:100%;height:100%;object-fit:cover;display:block}
+.preview-card .overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:6px;background:rgba(0,0,0,.8);color:#fff;
+  font-size:.7rem;font-weight:900;text-align:center;text-transform:uppercase;
+}
+.preview-card:hover{transform:translateY(-4px);transition:transform .2s}
+
+/* ═══════════ EVOLUTION ═══════════ */
+.evo-container{
+  padding:2rem;background:#fff;
+  border:2px solid #000;box-shadow:4px 4px 0 #000;
+  border-radius:12px;
+}
+.evo-center-img{
+  display:flex;justify-content:center;margin-bottom:2.5rem;
+}
+.evo-center-img img{
+  width:200px;aspect-ratio:3/4;object-fit:cover;
+  border-radius:10px;border:2px solid #000;box-shadow:4px 4px 0 #000;
+}
+.timeline{position:relative;max-width:700px;margin:0 auto}
+.timeline::before{
+  content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;
+  background:#e0e0d8;transform:translateX(-50%);
+}
+@media(max-width:600px){.timeline::before{left:20px}}
+.tl-item{
+  position:relative;display:flex;align-items:flex-start;
+  margin-bottom:2rem;
+}
+.tl-item:nth-child(odd){flex-direction:row}
+.tl-item:nth-child(even){flex-direction:row-reverse}
+.tl-content{
+  flex:1;padding:1.25rem;background:#fff;
+  border:2px solid #000;border-radius:10px;
+  box-shadow:3px 3px 0 #000;
+  transition:all .4s;
+}
+.tl-content.dimmed{opacity:.45;border-color:#ddd;box-shadow:2px 2px 0 #ddd}
+.tl-content.lit{opacity:1;border-color:#000;box-shadow:3px 3px 0 #000}
+.tl-dot{
+  width:16px;height:16px;border-radius:50%;border:2px solid #000;
+  background:#fff;position:absolute;left:50%;top:20px;transform:translateX(-50%);
+  z-index:2;transition:background .3s;
+}
+.tl-dot.lit{background:#000}
+.tl-spacer{flex:1}
+@media(max-width:600px){
+  .tl-item,.tl-item:nth-child(even){flex-direction:row;padding-left:40px}
+  .tl-dot{left:12px}
+  .tl-spacer{display:none}
+}
+.tl-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+.tl-icon{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:1.1rem;
+}
+.tl-name{font-weight:900;font-size:1rem;text-transform:uppercase}
+.tl-days{font-size:.75rem;color:#888;font-family:monospace}
+.tl-desc{color:#555;font-size:.92rem;line-height:1.7}
+
+.evo-controls{
+  display:flex;justify-content:center;align-items:center;gap:.5rem;margin-top:2rem;
+}
+.evo-btn{
+  width:36px;height:36px;border-radius:50%;border:2px solid #000;
+  background:#fff;font-weight:900;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;
+}
+.evo-btn.lit{background:#000;color:#fff}
+.evo-btn:hover{border-color:#000}
+.evo-status{text-align:center;margin-top:1rem;font-size:.85rem;color:#777}
+.evo-status span{font-weight:900;color:#000;font-size:1.05rem}
+
+.cal-note{
+  margin-top:2rem;padding:1.25rem;
+  border:2px solid #f59e0b;background:#fffbeb;border-radius:10px;
+  display:flex;align-items:flex-start;gap:.75rem;
+}
+.cal-note .icon{font-size:1.3rem}
+.cal-note h3{font-weight:900;font-size:.95rem;text-transform:uppercase;color:#92400e;margin-bottom:.25rem}
+.cal-note p{color:#78716c;font-size:.92rem;line-height:1.7}
+
+/* ═══════════ DEMO ═══════════ */
+.demo-layout{display:grid;grid-template-columns:1fr 340px;gap:2rem;align-items:start}
+@media(max-width:800px){.demo-layout{grid-template-columns:1fr}}
+.demo-board{
+  min-height:480px;padding:1.5rem;background:#fff;
+  border:2px solid #000;box-shadow:6px 6px 0 #000;
+  border-radius:12px;
+}
+.demo-board-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.demo-board-header h3{font-size:.8rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px}
+.demo-phase-tag{
+  padding:2px 10px;background:#f0f0ec;border:1.5px solid #d0d0c8;
+  border-radius:4px;font-size:.7rem;font-family:monospace;
+}
+.board-area{
+  position:relative;background:#f9f9f5;border:2px dashed #c0c0b8;
+  border-radius:10px;min-height:400px;padding:1.5rem;
+  display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:end;
+  overflow:hidden;
+}
+.board-area::before{
+  content:'';position:absolute;inset:0;opacity:.15;pointer-events:none;
+  background-image:radial-gradient(circle,#666 1px,transparent 1px);
+  background-size:20px 20px;
+}
+.placed-card{
+  position:relative;cursor:pointer;transition:transform .2s;
+}
+.placed-card:hover{transform:translateY(-4px)}
+.placed-card.highlight{z-index:10}
+.placed-card.highlight .placed-img{
+  box-shadow:0 0 0 3px #f59e0b, 0 0 0 5px #000, 4px 4px 0 #000;
+}
+.placed-img{
+  width:110px;aspect-ratio:3/4;object-fit:cover;
+  border-radius:8px;border:2px solid #000;box-shadow:3px 3px 0 #000;
+  display:block;
+}
+@media(min-width:600px){.placed-img{width:120px}}
+.placed-label{
+  margin-top:4px;font-size:.65rem;font-weight:900;
+  text-align:center;text-transform:uppercase;max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pulse-badge{
+  position:absolute;top:-8px;right:-8px;
+  width:24px;height:24px;border-radius:50%;
+  background:#f59e0b;border:2px solid #000;
+  color:#fff;font-weight:900;font-size:.75rem;
+  display:flex;align-items:center;justify-content:center;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+.activation-banner{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  padding:6px 16px;background:#dcfce7;border:2px solid #22c55e;
+  border-radius:20px;color:#166534;font-weight:900;font-size:.8rem;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+  animation:fadeIn .4s ease;
+}
+
+.demo-step-panel{
+  padding:1.25rem;background:#fff;
+  border:2px solid #000;box-shadow:4px 4px 0 #000;
+  border-radius:10px;animation:fadeIn .35s ease;
+}
+.demo-step-panel .step-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.demo-step-panel .step-num{
+  width:28px;height:28px;border-radius:50%;background:#000;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.8rem;
+}
+.demo-step-panel .step-title{font-size:.8rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.demo-step-panel p{color:#555;font-size:.9rem;line-height:1.7}
+.ai-alert{
+  margin-top:.75rem;padding:.6rem .75rem;
+  background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;
+  color:#991b1b;font-weight:700;font-size:.75rem;display:flex;align-items:center;gap:4px;
+}
+.demo-controls{display:flex;gap:.5rem;margin-top:1rem}
+.demo-controls button{
+  flex:1;padding:8px;border:2px solid #000;
+  font-weight:900;font-size:.8rem;text-transform:uppercase;
+  cursor:pointer;border-radius:6px;transition:all .15s;
+}
+.demo-controls .prev{background:#fff;color:#000}
+.demo-controls .prev:hover{background:#f5f5f0}
+.demo-controls .prev:disabled{opacity:.3;cursor:default}
+.demo-controls .next{background:#000;color:#fff}
+.demo-controls .next:hover{background:#333}
+.demo-controls .next:disabled{opacity:.3;cursor:default}
+.demo-dots{display:flex;gap:6px;justify-content:center;margin-top:.75rem}
+.demo-dot{
+  width:24px;height:6px;border-radius:3px;background:#d0d0c8;
+  border:none;cursor:pointer;transition:all .2s;
+}
+.demo-dot.lit{background:#000;width:36px}
+
+.ai-console{
+  margin-top:1rem;padding:1rem;background:#111;color:#ccc;
+  border-radius:10px;font-family:monospace;font-size:.78rem;
+}
+.ai-console .console-label{font-size:.7rem;color:#666;font-weight:700;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:4px}
+.ai-console .log-line{margin-bottom:.25rem}
+.ai-console .log-green{color:#4ade80}
+.ai-console .log-red{color:#f87171}
+.ai-console .log-amber{color:#fbbf24}
+.ai-console .log-dim{color:#555}
+
+.mech-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem}
+@media(max-width:700px){.mech-grid{grid-template-columns:1fr}}
+.mech-card{
+  padding:1.25rem;background:#fff;
+  border:2px solid #000;box-shadow:4px 4px 0 #000;
+  border-radius:10px;
+}
+.mech-card h3{font-size:.9rem;font-weight:900;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+.mech-card p{color:#555;font-size:.92rem;line-height:1.7}
+
+/* ═══════════ FOOTER ═══════════ */
+.footer{
+  margin-top:4rem;border-top:3px solid #000;background:#fff;
+  padding:2rem;text-align:center;
+}
+.footer p:first-child{font-size:.8rem;font-weight:900;text-transform:uppercase;letter-spacing:.15em;color:#aaa}
+.footer p:last-child{font-size:.7rem;color:#ccc;margin-top:.25rem}
+
+/* ═══════════ ANIMATIONS ═══════════ */
+@keyframes cardEnter{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.card-enter{animation:cardEnter .35s ease both}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="header">
+  <h1>🌱 Jardin Culture</h1>
+  <p class="subtitle">Jeu de Cartes — Style Manga</p>
+  <div class="badges">
+    <span class="badge">⚡ IA Intégrée</span>
+    <span class="badge">📅 Calendrier Réel</span>
+    <span class="badge">👁️ Manga Style</span>
+    <span class="badge">🎴 8 Cartes</span>
+  </div>
+</header>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav class="nav" id="mainNav">
+  <button class="active" onclick="switchTab('overview')">👁️ Concept</button>
+  <button onclick="switchTab('cards')">🃏 Cartes</button>
+  <button onclick="switchTab('evolution')">🌱 Évolution</button>
+  <button onclick="switchTab('demo')">🎮 Démo Live</button>
+</nav>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="container">
+
+  <!-- ════════ OVERVIEW ════════ -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="overview-hero">
+      <div>
+        <h2 class="section-title">Le Concept</h2>
+        <p>
+          <strong>Jardin Culture</strong> est un jeu de cartes de gestion de jardin où chaque carte est un
+          <strong>visuel style manga</strong> (outlines épais, hachures, screentone) avec un
+          <strong>algorithme invisible géré par une IA</strong> qui simule les conditions réelles de culture.
+        </p>
+        <p style="margin-top:1rem">
+          Posez vos cartes dans un environnement (bac, serre, jardin), l'IA calcule les besoins en eau,
+          la vitesse de pousse, et génère des alertes quand il faut agir. Tout est lié au
+          <strong>calendrier réel</strong> — quand remplanter au jardin, quand arroser, quand récolter.
+        </p>
+        <div class="concept-box" style="margin-top:1.5rem">
+          <h4>✨ Style Visuel Unique</h4>
+          <ul class="concept-list">
+            <li><strong>Outlines ▸</strong> Traits noirs épais style plume manga</li>
+            <li><strong>Hachures ▸</strong> Lignes croisées pour les ombres</li>
+            <li><strong>Screentone ▸</strong> Points de trame pour les textures</li>
+            <li><strong>Billboarding ▸</strong> Sprites 2D dans un monde 3D isométrique</li>
+          </ul>
+        </div>
+        <!-- Types -->
+        <h2 class="section-title" style="margin-top:2.5rem">Types de Cartes</h2>
+        <div class="types-row">
+          <div class="type-chip type-env">🏡 Environnement</div>
+          <div class="type-chip type-plant">🌱 Plante</div>
+          <div class="type-chip type-action">💧 Action</div>
+          <div class="type-chip type-alert">⚠️ Alerte</div>
+          <div class="type-chip type-res">✨ Ressource</div>
+        </div>
+      </div>
+      <div>
+        <h2 class="section-title">Aperçu</h2>
+        <div class="preview-grid">
+          <div class="preview-card" onclick="switchTab('cards');setTimeout(()=>selectCard('planter'),100)">
+            <img src="cards/card-planter.png" alt="Bac de Culture">
+            <div class="overlay">Bac de Culture</div>
+          </div>
+          <div class="preview-card" onclick="switchTab('cards');setTimeout(()=>selectCard('seeds-tomato'),100)">
+            <img src="cards/card-seeds-tomato.png" alt="Semis Tomates">
+            <div class="overlay">Semis Tomates</div>
+          </div>
+          <div class="preview-card" onclick="switchTab('cards');setTimeout(()=>selectCard('watering'),100)">
+            <img src="cards/card-watering.png" alt="Arrosage">
+            <div class="overlay">Arrosage</div>
+          </div>
+          <div class="preview-card" onclick="switchTab('cards');setTimeout(()=>selectCard('tomato-evolution'),100)">
+            <img src="cards/card-tomato-evolution.png" alt="Évolution">
+            <div class="overlay">Évolution</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <h2 class="section-title" style="margin-top:3rem">Comment ça marche</h2>
+    <div class="how-grid">
+      <div class="how-card">
+        <span class="step-num">01</span>
+        <div class="step-icon">🏡</div>
+        <h3>Posez l'Environnement</h3>
+        <p>Commencez par placer un bac de culture, une serre ou un jardin. C'est votre zone de jeu où les plantes pourront évoluer.</p>
+      </div>
+      <div class="how-card">
+        <span class="step-num">02</span>
+        <div class="step-icon">🌱</div>
+        <h3>Semez vos Cartes Plantes</h3>
+        <p>Placez vos graines dans l'environnement. L'IA active la carte et démarre le timer de croissance basé sur le calendrier réel.</p>
+      </div>
+      <div class="how-card">
+        <span class="step-num">03</span>
+        <div class="step-icon">⚡</div>
+        <h3>L'IA Gère le Reste</h3>
+        <p>L'IA calcule les besoins en eau, génère des alertes et fait évoluer vos plantes. Placez les cartes action pour répondre !</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ CARDS ════════ -->
+  <div class="tab-content" id="tab-cards">
+    <h2 class="section-title">Toutes les Cartes</h2>
+    <div class="card-grid" id="cardGrid">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-grid">
+        <img class="detail-img" id="detailImg" src="" alt="">
+        <div>
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+            <h3 id="detailTitle" style="font-size:1.4rem;font-weight:900;text-transform:uppercase"></h3>
+            <span class="type-badge" id="detailBadge"></span>
+          </div>
+          <p id="detailDesc" style="color:#555;line-height:1.7;font-size:1rem"></p>
+          <div class="stat-grid" id="detailStats"></div>
+          <div class="algo-box" id="detailAlgo" style="display:none">
+            <div class="algo-label">⚡ Algorithme IA (invisible)</div>
+            <code id="detailAlgoCode"></code>
+          </div>
+          <button class="close-btn" onclick="closeDetail()">← Fermer les détails</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ EVOLUTION ════════ -->
+  <div class="tab-content" id="tab-evolution">
+    <h2 class="section-title">Évolution des Plantes</h2>
+    <div class="evo-container">
+      <p style="text-align:center;color:#666;margin-bottom:1.5rem">
+        La carte plante fonctionne comme un <strong>mini-diapo</strong> qui avance automatiquement au fil du temps
+        selon les conditions réelles et le calendrier.
+      </p>
+      <div class="evo-center-img">
+        <img src="cards/card-tomato-evolution.png" alt="Évolution Tomate">
+      </div>
+      <div class="timeline" id="timeline">
+        <!-- Filled by JS -->
+      </div>
+      <div class="evo-controls" id="evoControls">
+        <!-- Filled by JS -->
+      </div>
+      <div class="evo-status">
+        🕐 Simulation en cours — Stade actuel : <span id="evoStageName">Germination</span>
+      </div>
+    </div>
+    <div class="cal-note">
+      <span class="icon">📅</span>
+      <div>
+        <h3>Lien Calendrier Réel</h3>
+        <p>Chaque stade est lié au calendrier de culture réel. Les tomates se sèment en mars-avril, se repiquent en mai
+        et se récoltent en juillet-août. L'IA ajuste les durées en fonction de votre localisation géographique et des
+        données météo du jour.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ DEMO ════════ -->
+  <div class="tab-content" id="tab-demo">
+    <h2 class="section-title">Démo Interactive</h2>
+    <p style="color:#666;font-size:1.05rem;margin-bottom:1.5rem">
+      Regardez comment les cartes interagissent entre elles. La simulation avance automatiquement.
+    </p>
+    <div class="demo-layout">
+      <div class="demo-board">
+        <div class="demo-board-header">
+          <h3>🏗️ Zone de Jeu</h3>
+          <span class="demo-phase-tag" id="phaseTag">Étape 1/5</span>
+        </div>
+        <div class="board-area" id="boardArea">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+      <div>
+        <div class="demo-step-panel" id="stepPanel">
+          <div class="step-head">
+            <span class="step-num" id="stepNum">1</span>
+            <span class="step-title" id="stepTitle"></span>
+          </div>
+          <p id="stepDesc"></p>
+          <div class="ai-alert" id="aiAlert" style="display:none">
+            ⚠️ IA Active — Algorithme en cours d'exécution...
+          </div>
+        </div>
+        <div class="demo-controls">
+          <button class="prev" id="prevBtn" onclick="changeDemo(-1)">← Préc.</button>
+          <button class="next" id="nextBtn" onclick="changeDemo(1)">Suiv. →</button>
+        </div>
+        <div class="demo-dots" id="demoDots"></div>
+        <div class="ai-console" id="aiConsole">
+          <div class="console-label">⚡ Console IA</div>
+          <div id="consoleOutput"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mech-grid">
+      <div class="mech-card">
+        <h3>🖐️ Contact entre Cartes</h3>
+        <p>Les cartes s'activent quand elles se touchent. Une carte Arrosage posée à côté d'une carte Plante
+        déclenche l'arrosage. Une carte Graine posée dans un Bac active le cycle de germination. Le système
+        est comme un puzzle vivant.</p>
+      </div>
+      <div class="mech-card">
+        <h3>⚡ IA Invisible</h3>
+        <p>Derrière chaque carte, un algorithme IA calcule en permanence les besoins : évapotranspiration,
+        cumul de degrés-jours, stress hydrique, nutriments disponibles. Le joueur ne voit que le résultat
+        visuel et les alertes.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer">
+  <p>Jardin Culture — Preview du Concept de Jeu de Cartes</p>
+  <p>Style Manga / Cel-Shaded • Outlines • Hachures • Screentone • Billboarding</p>
+</footer>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+/* ── DATA ── */
+const CARDS = [
+  {
+    id:'planter', title:'Bac de Culture Intérieur', type:'env', typeLabel:'Environnement',
+    image:'cards/card-planter.png',
+    desc:'Zone de culture environnementale. Quand une carte graine ou plantule est posée dans ce bac, elle s\'active et commence son cycle de croissance. Le bac fournit les données de température et humidité ambiante à l\'IA.',
+    stats:[{l:'Température',v:'18-25°C'},{l:'Humidité',v:'60-80%'},{l:'Capacité',v:'3 plantes'}]
+  },
+  {
+    id:'greenhouse', title:'Serre', type:'env', typeLabel:'Environnement',
+    image:'cards/card-greenhouse.png',
+    desc:'Environnement contrôlé avec protection contre les intempéries. Idéal pour les semis précoces et les cultures sensibles. L\'IA gère automatiquement la ventilation et l\'ombrage selon les conditions.',
+    stats:[{l:'Température',v:'15-35°C'},{l:'Lumière',v:'Filtrée'},{l:'Protection',v:'Totale'}]
+  },
+  {
+    id:'seeds-tomato', title:'Semis de Tomates', type:'plant', typeLabel:'Plante',
+    image:'cards/card-seeds-tomato.png',
+    desc:'Carte graine qui s\'active au contact d\'un environnement (bac, serre, jardin). L\'IA démarre le timer de germination et calcule les besoins en eau selon les données réelles du jour.',
+    stats:[{l:'Germination',v:'7-14 jours'},{l:'Profondeur',v:'1cm'},{l:'Température sol',v:'20-25°C'}],
+    algo:'calculBesoinEau(tempAir, humiditeSol, stadeCroissance, typePlante) → volumeEau'
+  },
+  {
+    id:'tomato-evolution', title:'Tomate — Évolution', type:'plant', typeLabel:'Plante',
+    image:'cards/card-tomato-evolution.png',
+    desc:'Mini-diapo montrant les 4 stades d\'évolution de la tomate : Graine → Plantule → Floraison → Fructification. L\'IA fait avancer les stades en fonction du calendrier réel et des conditions.',
+    stats:[{l:'Stade 1',v:'Germination'},{l:'Stade 2',v:'Plantule'},{l:'Stade 3',v:'Floraison'},{l:'Stade 4',v:'Récolte'}],
+    algo:'evolutionStade(jourCalendrier, cumulDegresJours, stressHydrique) → stadeActuel'
+  },
+  {
+    id:'watering', title:'Arrosage', type:'action', typeLabel:'Action',
+    image:'cards/card-watering.png',
+    desc:'Carte action qui s\'active au contact des cartes plantes adjacentes. L\'IA calcule le volume d\'eau nécessaire et met à jour l\'humidité du sol. Si l\'arrosage est insuffisant, une alerte se déclenche.',
+    stats:[{l:'Volume',v:'Variable IA'},{l:'Fréquence',v:'Calculée'},{l:'Mode',v:'Automatique'}],
+    algo:'volumeEau = (evapotranspiration × coefficientCulture) - precipitation'
+  },
+  {
+    id:'sunlight', title:'Lumière', type:'res', typeLabel:'Ressource',
+    image:'cards/card-sunlight.png',
+    desc:'Carte ressource fournissant les données d\'ensoleillement. L\'IA utilise ces données pour calculer la photosynthèse et ajuster les besoins en eau. En serre, la lumière est filtrée.',
+    stats:[{l:'Heures/jour',v:'8-14h'},{l:'Intensité',v:'Variable'},{l:'Spectre',v:'Complet'}]
+  },
+  {
+    id:'soil', title:'Terre Riche', type:'res', typeLabel:'Ressource',
+    image:'cards/card-soil.png',
+    desc:'Carte ressource définissant la qualité du sol. L\'IA analyse les nutriments disponibles et détermine si un engrais est nécessaire. Les vers de terre améliorent l\'aération du sol.',
+    stats:[{l:'pH idéal',v:'6.0-6.8'},{l:'Azote',v:'Élevé'},{l:'Drainage',v:'Bon'}]
+  },
+  {
+    id:'alert', title:'Alerte Arrosage', type:'alert', typeLabel:'Alerte',
+    image:'cards/card-alert.png',
+    desc:'Carte événement générée automatiquement par l\'IA quand le seuil d\'humidité est critique. Le joueur doit placer une carte Arrosage à côté de la plante concernée avant le timer.',
+    stats:[{l:'Urgence',v:'HAUTE'},{l:'Timer',v:'24h'},{l:'Conséquence',v:'Flétrissement'}],
+    algo:'if (humiditeSol < seuilCritique) → genererAlerte(plante, timer)'
+  }
+];
+
+const TYPE_CSS = {
+  env:'type-env', plant:'type-plant', action:'type-action', alert:'type-alert', res:'type-res'
+};
+
+const STAGES = [
+  {stage:1, name:'Germination', days:'Jours 0-14', color:'#f59e0b', icon:'🌱',
+   desc:'La graine absorbe l\'eau et perce la surface du sol. L\'IA surveille la température du sol et l\'humidité pour optimiser le taux de germination. Une température de 20-25°C est idéale.'},
+  {stage:2, name:'Plantule', days:'Jours 14-35', color:'#84cc16', icon:'🌿',
+   desc:'Les premières vraies feuilles apparaissent. L\'IA calcule les besoins en eau croissants et ajuste la fréquence d\'arrosage. Le plantule peut être repiqué si nécessaire.'},
+  {stage:3, name:'Floraison', days:'Jours 35-60', color:'#eab308', icon:'☀️',
+   desc:'Les fleurs jaunes apparaissent. L\'IA augmente les besoins en potassium et surveille la pollinisation. Température optimale : 20-28°C le jour, 15-20°C la nuit.'},
+  {stage:4, name:'Fructification', days:'Jours 60-90', color:'#ef4444', icon:'🍅',
+   desc:'Les fruits vertes apparaissent puis murissent en rouge. L\'IA alerte quand les tomates sont prêtes à récolter. C\'est le stade le plus gourmand en eau.'}
+];
+
+const DEMO_STEPS = [
+  {title:'1. Posez un Bac de Culture',
+   desc:'Le bac crée la zone environnementale. C\'est le terrain de jeu où les cartes plantes pourront s\'activer.',
+   cards:['planter'], highlight:'env'},
+  {title:'2. Placez les Semis de Tomates',
+   desc:'La carte graine est posée dans le bac → elle s\'active ! L\'IA démarre le cycle de croissance en fonction des conditions réelles.',
+   cards:['planter','seeds-tomato'], highlight:'plant'},
+  {title:'3. Ajoutez Terre Riche + Lumière',
+   desc:'Les ressources améliorent les conditions. L\'IA recalcule la vitesse de pousse avec les nouveaux paramètres.',
+   cards:['planter','seeds-tomato','soil','sunlight'], highlight:'res'},
+  {title:'4. L\'IA déclenche une Alerte Arrosage',
+   desc:'Après quelques jours (simulés), l\'IA détecte que le sol est trop sec et génère une carte Alerte.',
+   cards:['planter','tomato-evolution','soil','sunlight','alert'], highlight:'alert'},
+  {title:'5. Placez la Carte Arrosage !',
+   desc:'La carte Arrosage est posée à côté de la plante → elle s\'active au contact. L\'humidité est restaurée, la plante avance au stade suivant !',
+   cards:['planter','tomato-evolution','soil','sunlight','watering'], highlight:'action'}
+];
+
+/* ── TAB SWITCH ── */
+function switchTab(tab){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#mainNav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const btns = document.querySelectorAll('#mainNav button');
+  const map = {overview:0,cards:1,evolution:2,demo:3};
+  btns[map[tab]].classList.add('active');
+  if(tab==='evolution') startEvoAuto();
+  if(tab==='demo') startDemoAuto();
+  else stopDemoAuto();
+  if(tab!=='evolution') stopEvoAuto();
+}
+
+/* ── CARDS GRID ── */
+function renderCards(){
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = CARDS.map((c,i)=>`
+    <div class="game-card card-enter" style="animation-delay:${i*50}ms" id="gc-${c.id}" onclick="selectCard('${c.id}')">
+      <div style="position:relative">
+        <img class="card-img" src="${c.image}" alt="${c.title}">
+        <span class="type-badge ${TYPE_CSS[c.type]}">${c.typeLabel}</span>
+      </div>
+      <p class="card-label">${c.title}</p>
+    </div>
+  `).join('');
+}
+
+function selectCard(id){
+  const c = CARDS.find(x=>x.id===id); if(!c) return;
+  document.querySelectorAll('.game-card').forEach(g=>g.classList.remove('selected'));
+  const el = document.getElementById('gc-'+id);
+  if(el) el.classList.add('selected');
+  const panel = document.getElementById('detailPanel');
+  document.getElementById('detailImg').src = c.image;
+  document.getElementById('detailTitle').textContent = c.title;
+  const badge = document.getElementById('detailBadge');
+  badge.className = 'type-badge '+TYPE_CSS[c.type];
+  badge.textContent = c.typeLabel;
+  document.getElementById('detailDesc').textContent = c.desc;
+  const statsEl = document.getElementById('detailStats');
+  statsEl.innerHTML = c.stats.map(s=>`
+    <div class="stat-box"><div class="stat-label">${s.l}</div><div class="stat-value">${s.v}</div></div>
+  `).join('');
+  const algoEl = document.getElementById('detailAlgo');
+  if(c.algo){
+    algoEl.style.display='block';
+    document.getElementById('detailAlgoCode').textContent = c.algo;
+  } else {
+    algoEl.style.display='none';
+  }
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDetail(){
+  document.getElementById('detailPanel').classList.remove('open');
+  document.querySelectorAll('.game-card').forEach(g=>g.classList.remove('selected'));
+}
+
+/* ── EVOLUTION ── */
+let evoStage = 0, evoTimer = null;
+function renderTimeline(){
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = STAGES.map((s,i)=>`
+    <div class="tl-item">
+      <div class="tl-content ${i<=evoStage?'lit':'dimmed'}" id="tl-${i}">
+        <div class="tl-header">
+          <div class="tl-icon" style="background:${s.color}">${s.icon}</div>
+          <div>
+            <div class="tl-name">Stade ${s.stage} : ${s.name}</div>
+            <div class="tl-days">${s.days}</div>
+          </div>
+        </div>
+        <p class="tl-desc">${s.desc}</p>
+      </div>
+      <div class="tl-dot ${i<=evoStage?'lit':''}" id="dot-${i}"></div>
+      <div class="tl-spacer"></div>
+    </div>
+  `).join('');
+  document.getElementById('evoStageName').textContent = STAGES[evoStage].name;
+}
+
+function renderEvoControls(){
+  document.getElementById('evoControls').innerHTML = STAGES.map((_,i)=>`
+    <button class="evo-btn ${i===evoStage?'lit':''}" onclick="setEvoStage(${i})">${i+1}</button>
+  `).join('');
+}
+
+function setEvoStage(n){
+  evoStage = n;
+  STAGES.forEach((_,i)=>{
+    const c=document.getElementById('tl-'+i), d=document.getElementById('dot-'+i);
+    if(c){c.className='tl-content '+(i<=n?'lit':'dimmed')}
+    if(d){d.className='tl-dot '+(i<=n?'lit':'')}
+  });
+  document.getElementById('evoStageName').textContent = STAGES[n].name;
+  renderEvoControls();
+}
+
+function startEvoAuto(){
+  stopEvoAuto();
+  evoTimer = setInterval(()=>{
+    evoStage = (evoStage+1)%4;
+    setEvoStage(evoStage);
+  }, 3000);
+}
+function stopEvoAuto(){ if(evoTimer){clearInterval(evoTimer);evoTimer=null} }
+
+/* ── DEMO ── */
+let demoPhase = 0, demoTimer = null;
+function renderDemo(){
+  const step = DEMO_STEPS[demoPhase];
+  document.getElementById('phaseTag').textContent = `Étape ${demoPhase+1}/5`;
+  document.getElementById('stepNum').textContent = demoPhase+1;
+  document.getElementById('stepTitle').textContent = step.title;
+  document.getElementById('stepDesc').textContent = step.desc;
+  document.getElementById('aiAlert').style.display = demoPhase>=3?'flex':'none';
+
+  // Board
+  const area = document.getElementById('boardArea');
+  let html = '';
+  if(demoPhase===4){
+    html += '<div class="activation-banner">💧 Arrosage activé au contact ! ✨</div>';
+  }
+  html += step.cards.map((cid,i)=>{
+    const c = CARDS.find(x=>x.id===cid);
+    const hl = c.type === step.highlight;
+    return `
+      <div class="placed-card card-enter ${hl?'highlight':''}" style="animation-delay:${i*120}ms">
+        <img class="placed-img" src="${c.image}" alt="${c.title}">
+        ${hl?'<div class="pulse-badge">!</div>':''}
+        <p class="placed-label">${c.title}</p>
+      </div>
+    `;
+  }).join('');
+  area.innerHTML = html;
+
+  // Console
+  const out = document.getElementById('consoleOutput');
+  let logs = '';
+  if(demoPhase>=1) logs += '<div class="log-line log-green">&gt; Graine activée dans le bac...</div>';
+  if(demoPhase>=2) logs += '<div class="log-line log-green">&gt; Calcul stade croissance en cours...<br>&gt; Conditions optimales détectées</div>';
+  if(demoPhase>=3) logs += '<div class="log-line log-red">&gt; ⚠ ALERTE: humidité sol = 23% (seuil: 40%)</div>';
+  if(demoPhase>=4) logs += '<div class="log-line log-amber">&gt; Arrosage appliqué. Humidité → 75%<br>&gt; Évolution stade → Plantule 🌱</div>';
+  out.innerHTML = logs;
+
+  // Dots
+  document.getElementById('demoDots').innerHTML = DEMO_STEPS.map((_,i)=>`
+    <button class="demo-dot ${i===demoPhase?'lit':''}" onclick="setDemoPhase(${i})"></button>
+  `).join('');
+
+  // Buttons
+  document.getElementById('prevBtn').disabled = demoPhase===0;
+  document.getElementById('nextBtn').disabled = demoPhase===4;
+}
+
+function changeDemo(dir){
+  const next = demoPhase+dir;
+  if(next>=0 && next<=4){ demoPhase=next; renderDemo(); }
+}
+function setDemoPhase(n){ demoPhase=n; renderDemo(); }
+
+function startDemoAuto(){
+  stopDemoAuto();
+  demoTimer = setInterval(()=>{ changeDemo(1); if(demoPhase>=4) setTimeout(()=>{demoPhase=-1;changeDemo(1)},2000); }, 4000);
+}
+function stopDemoAuto(){ if(demoTimer){clearInterval(demoTimer);demoTimer=null} }
+
+/* ── INIT ── */
+renderCards();
+renderTimeline();
+renderEvoControls();
+renderDemo();
+</script>
+</body>
+</html>

@@ -1,311 +1,63 @@
-// ═══════════════════════════════════════════════════
-//  Service Météo — Jardin Culture v7
-//  Open-Meteo API + GPS + Cache mémoire
-// ═══════════════════════════════════════════════════
+﻿// src/lib/weather-service.ts
+export type RealWeatherData = {
+  temp: number; weatherCode: number; isRaining: boolean; isHeatwave: boolean;
+  humidity: number; windSpeed: number; description: string;
+};
+export type GPSCoords = { lat: number; lon: number };
 
-export interface RealWeatherData {
-  location: {
-    latitude: number;
-    longitude: number;
-    timezone: string;
-  };
-  current: {
-    temperature: number;
-    humidity: number;
-    weatherCode: number;
-    weatherDescription: string;
-    weatherEmoji: string;
-    windSpeed: number;
-    gameWeather: GameWeatherType;
-    timestamp: string;
-  };
-  today: {
-    date: string;
-    tempMax: number;
-    tempMin: number;
-    precipitation: number;
-    windMax: number;
-    uvIndex: number;
-  };
-  forecast: Array<{
-    date: string;
-    tempMax: number;
-    tempMin: number;
-    precipitation: number;
-    windMax: number;
-    uvIndex: number;
-    gameWeather: GameWeatherType;
-  }>;
-}
+export const ZONE_MODIFIERS = {
+  pepiniere: { water: 0.8, growth: 0.9, protection: true },
+  serre:     { water: 0.6, growth: 1.2, protection: true },
+  jardin:    { water: 1.0, growth: 1.0, protection: false }
+} as const;
 
-export type GameWeatherType = "sunny" | "cloudy" | "rainy" | "stormy" | "heatwave" | "frost";
+let _cachedWeather: RealWeatherData | null = null;
+let _cacheTime = 0;
+const CACHE_MS = 15 * 60 * 1000;
 
-export interface GPSCoords {
-  latitude: number;
-  longitude: number;
-}
-
-// ═══ Cache mémoire (6 heures) ═══
-
-const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6h
-let cachedWeather: { data: RealWeatherData; timestamp: number } | null = null;
-
-export async function fetchWeather(lat: number, lon: number): Promise<RealWeatherData> {
-  // Check cache
-  if (cachedWeather && Date.now() - cachedWeather.timestamp < CACHE_DURATION) {
-    return cachedWeather.data;
+export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<RealWeatherData> {
+  const now = Date.now();
+  if (_cachedWeather && now - _cacheTime < CACHE_MS) return _cachedWeather;
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`);
+    const data = await res.json();
+    const c = data.current_weather;
+    const maxT = data.daily?.temperature_2m_max?.[0] ?? c.temperature;
+    const rainCodes = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+    _cachedWeather = {
+      temp: c.temperature, weatherCode: c.weathercode,
+      isRaining: rainCodes.includes(c.weathercode),
+      isHeatwave: maxT >= 30 || c.temperature >= 32,
+      humidity: 60, windSpeed: c.windspeed,
+      description: {0:"Ciel dégagé ☀️",1:"Peu nuageux 🌤️",2:"Partiellement nuageux ⛅",3:"Couvert ☁️",45:"Brouillard 🌫️",51:"Bruine 💧",61:"Pluie 🌧️",63:"Pluie forte 🌊",80:"Averses 🌦️",95:"Orage ⛈️"}[c.weathercode] || "Variable ⛅"
+    };
+    _cacheTime = now;
+    return _cachedWeather;
+  } catch {
+    return { temp:20, weatherCode:0, isRaining:false, isHeatwave:false, humidity:60, windSpeed:10, description:"Indisponible 🌍" };
   }
-
-  const res = await fetch(`/api/weather?latitude=${lat}&longitude=${lon}`);
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Erreur réseau" }));
-    throw new Error(error.error || `Erreur météo: ${res.status}`);
-  }
-
-  const data: RealWeatherData = await res.json();
-  cachedWeather = { data, timestamp: Date.now() };
-  return data;
 }
 
-// ═══ GPS ═══
+// ✅ Alias pour matcher tes imports existants
+export const fetchWeather = fetchRealWeather;
+export const getRealEnvironment = fetchRealWeather;
+export const getZonePrecipitation = (isRaining: boolean, zone: keyof typeof ZONE_MODIFIERS) => (zone === 'jardin' && isRaining ? 1.0 : 0);
+export const isFrostRisk = (temp: number) => temp <= 2;
 
-export function getGPSLocation(): Promise<GPSCoords> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Géolocalisation non disponible"));
-      return;
-    }
-
+// ✅ GPS (navigateur)
+export function getGPSLocation(): Promise<GPSCoords | null> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !navigator.geolocation) return resolve(null);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            reject(new Error("Permission de géolocalisation refusée"));
-            break;
-          case error.POSITION_UNAVAILABLE:
-            reject(new Error("Position indisponible"));
-            break;
-          case error.TIMEOUT:
-            reject(new Error("Délai de géolocalisation dépassé"));
-            break;
-          default:
-            reject(new Error("Erreur de géolocalisation inconnue"));
-            break;
-        }
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 3600000, // Accept position up to 1 hour old
-      }
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => resolve(null),
+      { timeout: 5000 }
     );
   });
 }
-
-// ═══ LocalStorage GPS coords ═══
-
-const GPS_STORAGE_KEY = "jardin-culture-gps";
-
-export function saveGPSCoords(coords: GPSCoords): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(GPS_STORAGE_KEY, JSON.stringify(coords));
-  } catch {
-    // ignore
-  }
-}
-
 export function loadGPSCoords(): GPSCoords | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(GPS_STORAGE_KEY);
-    if (stored) return JSON.parse(stored) as GPSCoords;
-  } catch {
-    // ignore
-  }
-  return null;
+  try { return JSON.parse(localStorage.getItem('botania_gps') || 'null'); } catch { return null; }
 }
-
-// ═══ WMO Weather Code → Game Weather ═══
-
-export function weatherCodeToGame(code: number): GameWeatherType {
-  if (code === 0) return "sunny";
-  if (code <= 3) return "cloudy";
-  if (code >= 51 && code <= 67) return "rainy";
-  if (code >= 71 && code <= 77) return "frost";
-  if (code >= 80 && code <= 82) return "rainy";
-  if (code >= 85 && code <= 86) return "frost";
-  if (code >= 95) return "stormy";
-  return "cloudy";
-}
-
-// ═══ Real Weather → Game EnvironmentState ═══
-
-import type { EnvironmentState } from "@/lib/ai-engine";
-
-export interface ZoneModifiers {
-  label: string;
-  emoji: string;
-  tempMin: number | null;       // null = locked range
-  tempMax: number | null;
-  tempMod: number;              // multiplier (if no lock)
-  rainMod: number;              // 0 = no effect, 1 = full effect
-  sunlightMod: number;
-  humidityMod: number;
-  description: string;
-}
-
-export const ZONE_MODIFIERS: Record<string, ZoneModifiers> = {
-  garden: {
-    label: "Jardin",
-    emoji: "🌳",
-    tempMin: null,
-    tempMax: null,
-    tempMod: 1.0,
-    rainMod: 1.0,
-    sunlightMod: 1.0,
-    humidityMod: 1.0,
-    description: "Plein air — conditions météo réelles sans modification.",
-  },
-  greenhouse: {
-    label: "Serre",
-    emoji: "🏡",
-    tempMin: null,
-    tempMax: null,
-    tempMod: 1.3,     // +30% temp
-    rainMod: 0.0,     // pas de pluie (sous verre)
-    sunlightMod: 1.2,  // +20% sunlight
-    humidityMod: 0.9,  // humidity ×0.9
-    description: "Température +30%, pas de pluie (sous verre), lumière +20%, humidité ×0.9",
-  },
-  indoor: {
-    label: "Chambre de Culture",
-    emoji: "🏠",
-    tempMin: 18,
-    tempMax: 22,
-    tempMod: 1.0,
-    rainMod: 0.0,      // pas de pluie (intérieur)
-    sunlightMod: 0.5,
-    humidityMod: 0.8,
-    description: "Température bloquée 18-22°C, lumière ×0.5, pluie sans effet",
-  },
-  mini_serre: {
-    label: "Mini Serre",
-    emoji: "🏡",
-    tempMin: 18,
-    tempMax: 25,
-    tempMod: 1.0,
-    rainMod: 0.0,
-    sunlightMod: 0.7,
-    humidityMod: 0.85,
-    description: "Petite serre indoor — Température 18-25°C, lumière ×0.7, pas de pluie",
-  },
-};
-
-export function getRealEnvironment(
-  weather: RealWeatherData,
-  zoneId: string
-): EnvironmentState {
-  const zone = ZONE_MODIFIERS[zoneId] || ZONE_MODIFIERS.garden;
-  const current = weather.current;
-  const today = weather.today;
-
-  // Average temperature
-  const avgTemp = (today.tempMax + today.tempMin) / 2;
-
-  // Calculate temperature with zone modifiers
-  let effectiveTemp: number;
-  if (zone.tempMin !== null && zone.tempMax !== null) {
-    // Locked range: clamp average temp
-    effectiveTemp = Math.max(zone.tempMin, Math.min(zone.tempMax, avgTemp));
-  } else {
-    effectiveTemp = avgTemp * zone.tempMod;
-  }
-
-  // Sunlight estimation from UV index (simplified)
-  // UV 0-2 = ~2h, UV 3-5 = ~6h, UV 6-7 = ~8h, UV 8+ = ~10h
-  let sunlightHours: number;
-  const uv = today.uvIndex;
-  if (uv <= 2) sunlightHours = 2 + uv;
-  else if (uv <= 5) sunlightHours = 4 + (uv - 2) * 1.5;
-  else if (uv <= 7) sunlightHours = 8 + (uv - 5) * 0.5;
-  else sunlightHours = 10 + (uv - 7) * 0.3;
-  sunlightHours *= zone.sunlightMod;
-
-  // Humidity from real data
-  let effectiveHumidity = current.humidity * zone.humidityMod;
-
-  // Soil quality based on conditions
-  let soilQuality = 65;
-  if (today.precipitation > 0) soilQuality = Math.min(100, soilQuality + 10);
-  if (effectiveTemp > 30) soilQuality = Math.max(30, soilQuality - 15);
-
-  return {
-    temperature: Math.round(effectiveTemp * 10) / 10,
-    humidity: Math.round(Math.max(10, Math.min(100, effectiveHumidity))),
-    sunlightHours: Math.round(Math.max(0, Math.min(16, sunlightHours)) * 10) / 10,
-    soilQuality: Math.round(soilQuality),
-    soilPH: 6.5,
-  };
-}
-
-// Get precipitation for zone (zone.rainMod affects how much rain reaches plants)
-export function getZonePrecipitation(weather: RealWeatherData, zoneId: string): number {
-  const zone = ZONE_MODIFIERS[zoneId] || ZONE_MODIFIERS.garden;
-  return weather.today.precipitation * zone.rainMod;
-}
-
-// Weather emoji for display
-export function getWeatherEmoji(gameWeather: GameWeatherType): string {
-  const emojis: Record<GameWeatherType, string> = {
-    sunny: "☀️",
-    cloudy: "⛅",
-    rainy: "🌧️",
-    stormy: "⛈️",
-    heatwave: "🔥",
-    frost: "🥶",
-  };
-  return emojis[gameWeather] || "🌤️";
-}
-
-export function getWeatherLabel(gameWeather: GameWeatherType): string {
-  const labels: Record<GameWeatherType, string> = {
-    sunny: "Ensoleillé",
-    cloudy: "Nuageux",
-    rainy: "Pluvieux",
-    stormy: "Orageux",
-    heatwave: "Canicule",
-    frost: "Gel",
-  };
-  return labels[gameWeather] || "Variable";
-}
-
-// ═══ Frost Risk ═══
-
-/** Returns true if there's a risk of frost */
-export function isFrostRisk(weather: RealWeatherData): boolean {
-  if (weather.current.temperature < 5) return true;
-  if (weather.today.tempMin < 2) return true;
-  // Check forecast for next 3 days
-  for (const day of weather.forecast.slice(0, 3)) {
-    if (day.tempMin < 2) return true;
-  }
-  return false;
-}
-
-// ═══ French Month Names ═══
-
-const MONTH_NAMES_FR = [
-  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-];
-
-export function getMonthName(month: number): string {
-  return MONTH_NAMES_FR[((month % 12) + 12) % 12];
+export function saveGPSCoords(c: GPSCoords) {
+  localStorage.setItem('botania_gps', JSON.stringify(c));
 }

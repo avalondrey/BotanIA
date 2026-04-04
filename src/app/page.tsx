@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -48,7 +48,7 @@ export default function GamePage() {
     try {
       setWeatherLoading(true);
       setWeatherStatus("loading");
-      setStatusMessage("Récupération des données météo...");
+      setStatusMessage("RÃ©cupÃ©ration des donnÃ©es mÃ©tÃ©o...");
 
       const data = await fetchWeather(coords.latitude, coords.longitude);
       setRealWeather(data);
@@ -58,7 +58,7 @@ export default function GamePage() {
       setWeatherLoading(false);
     } catch (error) {
       console.error("Weather fetch error:", error);
-      setWeatherError(error instanceof Error ? error.message : "Erreur météo");
+      setWeatherError(error instanceof Error ? error.message : "Erreur mÃ©tÃ©o");
       setWeatherStatus("error");
       setStatusMessage(error instanceof Error ? error.message : "Erreur de chargement");
       setWeatherLoading(false);
@@ -169,30 +169,28 @@ export default function GamePage() {
               whileHover={{ scale: 1.02 }}
               onClick={() => window.open('/preview.html', '_blank')}
             >
-              🌱 Jardin Culture
+              ðŸŒ± Jardin Culture
             </motion.h1>
             <span className="px-2 py-0.5 bg-black text-white text-[8px] font-black uppercase rounded">v0.10.0</span>
             <span className="hidden md:inline-block px-2 py-0.5 bg-amber-100 text-amber-800 text-[7px] font-bold uppercase rounded border border-amber-300">alpha</span>
             <span className="hidden sm:inline-block px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black uppercase rounded border border-green-300">
-              🌤️ Météo Réelle
+              ðŸŒ¤ï¸ MÃ©tÃ©o RÃ©elle
             </span>
           </div>
           <div className="flex items-center gap-2">
             {/* GPS status */}
-            <div className="hidden sm:flex items-center gap-1 text-[9px] text-stone-500">
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-stone-600 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
               {weatherStatus === "loading" ? (
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-                  <Loader2 className="w-3 h-3" />
+                  <Loader2 className="w-3.5 h-3.5" />
                 </motion.div>
               ) : weatherStatus === "ready" ? (
-                <MapPin className="w-3 h-3 text-green-500" />
+                <MapPin className="w-3.5 h-3.5 text-green-500" />
               ) : (
-                <MapPin className="w-3 h-3 text-red-400" />
+                <MapPin className="w-3.5 h-3.5 text-red-400" />
               )}
               <span className="font-bold">
-                {weatherStatus === "loading" ? "Localisation..." :
-                 weatherStatus === "ready" ? (gpsCoords ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "Météo active") :
-                 "GPS indisponible"}
+                {weatherStatus === "loading" ? "Localisation..." : (gpsCoords?.latitude != null && gpsCoords?.longitude != null ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "GPS indisponible")}
               </span>
             </div>
 
@@ -201,7 +199,7 @@ export default function GamePage() {
               <button
                 onClick={() => loadWeather(gpsCoords)}
                 className="p-1.5 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
-                title="Actualiser la météo"
+                title="Actualiser la mÃ©tÃ©o"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-stone-500" />
               </button>
@@ -209,10 +207,10 @@ export default function GamePage() {
 
             <AdminButton />
             <button
-              onClick={() => { if (confirm("Recommencer ? Toutes les données seront réinitialisées.")) useGameStore.getState().initGame(true); }}
+              onClick={() => { if (confirm("Recommencer ? Toutes les donnÃ©es seront rÃ©initialisÃ©es.")) useGameStore.getState().initGame(true); }}
               className="px-2 py-1 border-2 border-black bg-stone-100 text-[9px] font-black uppercase rounded-lg hover:bg-stone-200 transition-colors"
             >
-              🔄 Recommencer
+              ðŸ”„ Recommencer
             </button>
           </div>
         </div>
@@ -234,7 +232,7 @@ export default function GamePage() {
               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
               className="text-5xl mb-4 inline-block"
             >
-              🌱
+              ðŸŒ±
             </motion.div>
             <p className="text-sm font-black text-stone-700">Jardin Culture</p>
             <p className="text-xs text-stone-400 mt-1">{statusMessage}</p>
@@ -254,35 +252,35 @@ export default function GamePage() {
               className="data-[state=active]:bg-green-100 data-[state=active]:border-green-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
               <TreePine className="w-4 h-4" />
-              🌿 Jardin
+              ðŸŒ¿ Jardin
             </TabsTrigger>
             <TabsTrigger
               value="serre"
               className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
               <Home className="w-4 h-4" />
-              🏡 Serre
+              ðŸ¡ Serre
             </TabsTrigger>
             <TabsTrigger
               value="pepiniere"
               className="data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
               <Warehouse className="w-4 h-4" />
-              🏠 Chambre de Culture
+              ðŸ  Chambre de Culture
             </TabsTrigger>
             <TabsTrigger
               value="boutique"
               className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
               <ShoppingBag className="w-4 h-4" />
-              🏪 Boutique
+              ðŸª Boutique
             </TabsTrigger>
             <TabsTrigger
               value="graines"
               className="data-[state=active]:bg-emerald-100 data-[state=active]:border-emerald-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
               <Sprout className="w-4 h-4" />
-              🌱 Graines
+              ðŸŒ± Graines
             </TabsTrigger>
           </TabsList>
 
@@ -308,30 +306,30 @@ export default function GamePage() {
         </Tabs>
 
         {/* Footer AI Console */}
-        <div className="mt-4 p-2.5 bg-stone-900 rounded-xl font-mono text-[9px]">
+        <div className="mt-4 p-2.5 bg-stone-900 rounded-xl font-mono text-[9px] overflow-x-auto">
           <p className="text-stone-500 font-bold uppercase mb-1 flex items-center gap-1">
-            <span>⚡</span> Console IA v2.0
+            <span>âš¡</span> Console IA v2.0
           </p>
           <div className="space-y-0.5 text-[9px]">
-            <p className="text-green-400">&gt; Réseau: Jardin + Pépinière + Mini Serres + Boutique ✅</p>
-            <p className="text-green-400">&gt; Mini Serres: 6×4 = 24 emplacements (max 6/chambre) ✅</p>
-            <p className="text-green-400">&gt; Remplir serre + Planter à date ✅</p>
-            <p className="text-green-400">&gt; Tuiles Serre: protection gel, +5°C, -70% pluie ✅</p>
-            <p className="text-green-400">&gt; Graines → Pépinière/Mini Serre (5 étapes) → Jardin ✅</p>
-            <p className="text-green-400">&gt; Météo réelle Open-Meteo + GPS ✅</p>
-            <p className="text-green-400">&gt; Plantes ne meurent jamais (mode survie) ✅</p>
-            <p className="text-green-400">&gt; Inventaire graines + plantules + mini serres ✅</p>
-            <p className="text-stone-500">&gt; Pépinière: T° 20°C, Lumière ×0.6, Croissance ×0.7</p>
-            <p className="text-stone-500">&gt; Mini Serre: même env. que Pépinière (24 slots/grille)</p>
-            <p className="text-stone-500">&gt; Serre Jardin: T° +15%, Pluie -70%, Lumière +15%</p>
-            <p className="text-stone-500">&gt; Jardin: conditions météo réelles 1:1</p>
-            <p className="text-stone-500">&gt; Gel: stoppe croissance (pas de mort)</p>
-            <p className="text-amber-400 animate-pulse">&gt; {isPaused ? "⏸ EN PAUSE" : `▶ ${speed}x — Simulation active`}</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; RÃ©seau: Jardin + PÃ©piniÃ¨re + Mini Serres + Boutique âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; Mini Serres: 6Ã—4 = 24 emplacements (max 6/chambre) âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; Remplir serre + Planter Ã  date âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; Tuiles Serre: protection gel, +5Â°C, -70% pluie âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; Graines â†’ PÃ©piniÃ¨re/Mini Serre (5 Ã©tapes) â†’ Jardin âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; MÃ©tÃ©o rÃ©elle Open-Meteo + GPS âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; Plantes ne meurent jamais (mode survie) âœ…</p>
+            <p className="text-green-400 whitespace-nowrap">&gt; Inventaire graines + plantules + mini serres âœ…</p>
+            <p className="text-stone-500 whitespace-nowrap">&gt; PÃ©piniÃ¨re: TÂ° 20Â°C, LumiÃ¨re Ã—0.6, Croissance Ã—0.7</p>
+            <p className="text-stone-500 whitespace-nowrap">&gt; Mini Serre: mÃªme env. que PÃ©piniÃ¨re (24 slots/grille)</p>
+            <p className="text-stone-500 whitespace-nowrap">&gt; Serre Jardin: TÂ° +15%, Pluie -70%, LumiÃ¨re +15%</p>
+            <p className="text-stone-500 whitespace-nowrap">&gt; Jardin: conditions mÃ©tÃ©o rÃ©elles 1:1</p>
+            <p className="text-stone-500 whitespace-nowrap">&gt; Gel: stoppe croissance (pas de mort)</p>
+            <p className="text-amber-400 animate-pulse whitespace-nowrap">&gt; {isPaused ? "â¸ EN PAUSE" : `â–¶ ${speed}x â€” Simulation active`}</p>
           </div>
         </div>
       </div>
 
-      {/* Admin Panel — rendered via portal to body (z-99999) */}
+      {/* Admin Panel â€” rendered via portal to body (z-99999) */}
       <AdminPanel />
     </div>
   );
