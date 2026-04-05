@@ -1,8 +1,8 @@
-# 🌿 BotanIA — Jardin Culture
+﻿# BotanIA - Simulateur de Jardinage Botanique Realiste
 
-> Simulateur de jardinage botanique français connecté à la météo réelle
+> Simulateur de jardinage botanique francais connecte a la meteo reelle et a des donnees agricoles verifiees.
 
-![Version](https://img.shields.io/badge/version-0.9.4-green)
+![Version](https://img.shields.io/badge/version-0.10.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![Turbopack](https://img.shields.io/badge/Turbopack-ok-ff69b4)
 ![React](https://img.shields.io/badge/React-19-blue)
@@ -11,144 +11,186 @@
 
 ---
 
-## 🎮 Concept
+## Concept
 
-**BotanIA** est un simulateur de jardinage botanique en temps réel qui reproduit fidèlement le cycle de vie des plantes de A à Z :
-- **Graines** → **Pépinière** (5 étapes de croissance) → **Jardin** (maturité → récolte)
-- Météo réelle (Open-Meteo) + GPS pour des conditions 1:1
-- 6 plantes : 🍅 Tomate • 🥕 Carotte • 🍓 Fraise • 🥬 Salade • 🌿 Basilic • 🌶️ Piment
-- **Mini Serres** (6 chambres × 4 slots = 24 emplacements) pour semis protégés
-- **Boutique** multi-semenciers avec variétés bio et paysannes
+BotanIA est un simulateur de jardinage **hardcore** qui reproduit fidelement le cycle de vie des plantes de A a Z, en s'appuyant sur des **donnees reelles** (INRAE, GNIS, fabricants de materiel horticole).
 
-## 🌱 Boutiques disponibles
+### Philosophie
 
-| Boutique | Spécialité |
+- **Dates reelles** : le jeu suit le calendrier reel, les saisons, et les gelées
+- **Meteo reelle** : connecte a Open-Meteo avec GPS, les conditions de votre lieu affectent vos plantes
+- **Biologie verifiee** : temperature min/opt/max, espacements, profondeurs de semis, jours de germination
+- **Materiel specifique** : tentes de culture (Gorilla, Pure Tent), serres pro, panneaux LED avec specs PPFD, duree de vie, spectre
+- **Semenciers reels** : Vilmorin, Clause, Kokopelli, Le Biau Germe, Ferme de Sainte Marthe
+
+## Plantes
+
+| Plante | Emoji | Germ. | Jours recolte | Espace | Besoins |
+|---|---|---|---|---|---|
+| **Tomate** | 🍅 | 8j | 110j | 60x80cm | Eau ++ |
+| **Carotte** | 🥕 | 14j | 110j | 5x25cm | Sol leger |
+| **Laitue** | 🥬 | 4j | 55j | 25x30cm | Azote |
+| **Fraisier** | 🍓 | 20j | 120j | 30x50cm | Eau ++ |
+| **Basilic** | 🌿 | 7j | 60j | 25x30cm | Chaleur |
+| **Piment** | 🌶️ | 14j | 120j | 40x60cm | Soleil |
+
+### Compagnonnage
+
+Les plantes interagissent entre elles :
+- ✅ **Basilic + Tomate** : le basilic repousse les parasites sur les tomates
+- ✅ **Carotte + Laitue** : association benefique
+- ❌ **Piment + Aubergine** : memes maladies
+
+## Materiel horticole
+
+Le jeu integre du materiel avec des specifications techniques reelles :
+
+### Eclairage LED
+- **Panneau LED 100W** : Mars Hydro, PPFD 450 µmol/m²/s a 30cm, 50 000h de duree de vie
+- **Panneau LED 240W** : Spider Farmer, PPFD 850 µmol/m²/s a 30cm, 60 000h
+- Spectre Full Spectrum, dimmable, faible degagement de chaleur
+
+### Tentes de culture (Grow Tents)
+- **Gorilla Grow Tent 60x60** : 160-235cm, cadre acier, Mylar 1680D (isolation 0.9)
+- **Gorilla Grow Tent 90x90** : 160-235cm, cadre acier, Mylar 1680D
+
+### Serres professionnelles
+- **Serre Tunnel 3x4m** : Tube acier Ø32 galvanise, polyethyle
+e 200µ, isolation 0.4
+
+## Boutiques de semences
+
+| Boutique | Specialite |
 |---|---|
-| 🌱 **Vilmorin** | Jardinier depuis 1814 — Leader français des semences |
-| 🌸 **Clause** | Semences et plants potagers — Qualité professionnelle |
-| 🌿 **Kokopelli** | Bio, libre, reproductible — +25 ans de biodiversité |
+| 🌱 **Vilmorin** | Jardinier depuis 1814 — Leader francais des semences |
+| 🌸 **Clause** | Semences et plants potagers — Qualite professionnelle |
+| 🌿 **Kokopelli** | Bio, libre, reproductible — +25 ans de biodiversite |
 | 🌾 **Le Biau Germe** | Paysan bio depuis 1981 — 12 fermes en France |
-| 🏡 **Ferme de Sainte Marthe** | Patrimoine variétal depuis 1973 |
+| 🏡 **Sainte Marthe** | Patrimoine varietal depuis 1973 |
 
-### variétés exclusives par boutique
-- **Kokopelli** : Tomate Cherokee Purple, Rose de Berne
-- **Biau Germe** : Tomate Marmande, Carotte de Guérande
-- **Sainte Marthe** : Basilic Génois, Poivron Doux de France
+### Varietes exclusives
 
-## 📦 Stack technique
+- **Kokopelli** : Cherokee Purple, Rose de Berne
+- **Biau Germe** : Marmande, Carotte de Guerande
+- **Sainte Marthe** : Basilic Genois, Poivron Doux de France
 
-- **Next.js 16** + Turbopack (HMR ultra-rapide)
-- **React 19** + TypeScript
-- **Zustand** (state management + persist localStorage)
-- **Tailwind CSS** + Framer Motion (animations)
-- **Open-Meteo** (météo gratuite sans clé API)
-- **Lucide React** (icônes)
+## Stack technique
 
-## 🚀 Installation
+| Technologie | Utilisation |
+|---|---|
+| **Next.js 16** + Turbopack | Framework web, HMR ultra-rapide |
+| **React 19** + TypeScript | UI type-safe |
+| **Zustand** | State management + persist localStorage |
+| **Tailwind CSS** + Framer Motion | Styles + animations |
+| **Open-Meteo** | Meteo gratuite sans cle API |
+| **Lucide React** | Icones |
 
-```bash
+## Installation
+
+`ash
 git clone https://github.com/avalondrey/BotanIA.git
 cd BotanIA
 npm install
 npm run dev
-```
+`
 
-Ouvrir http://localhost:3000
+Ouvrir **http://localhost:3000**
 
-## 🎮 Gameplay
+## Gameplay
 
-```
-Sélections des graines/Plants a la Boutique
-       ↓
-   Pepiniere
-   (5 étapes de croissance)
-       ↓
-    Jardin
-  (conditions meteo reelles)
-       ↓
-    Recolte
-  (pieces + score)
-```
+`
+1. Acheter des graines a la Boutique
+2. Semer en Pepiniere ou Mini Serre (protection)
+3. Suivre la croissance (5 stades realistes)
+4. Transplanter au Jardin (conditions meteo reelles)
+5. Arroser, traiter, fertiliser
+6. Recolter -> Pieces + Score
+`
 
 **Controles rapides :**
-- `[1-5]` = Vitesse ×1 à ×5
-- `[Espace]` = Pause / Reprendre
-- `[R]` = Recharger les plantes
-- `[A]` = Panneau admin (mode développeur)
+- [1-5] = Vitesse x1 a x5
+- [Espace] = Pause / Reprendre
+- [R] = Recharger les plantes
+- [A] = Panneau admin
 
-## 🌤️ Météo réelle
+## Meteo reelle
 
-Le jeu récupère la météo de votre position GPS :
-- **Ciel degage** → croissance optimale
-- **Pluie** → arrosage gratuit au jardin (+50% eau, pas en serre)
-- **Gel** (≤2°C) → stoppe la croissance (pas de mort)
-- **Canicule** (≥30°C) → stress hydrique
+Le jeu recupere la meteo de votre position GPS :
+
+| Condition | Effet |
+|---|---|
+| **Ciel degage** | Croissance optimale |
+| **Pluie** | Arrosage gratuit au jardin (+50% eau) |
+| **Gel (<=2°C)** | Stoppe la croissance |
+| **Canicule (>=30°C)** | Stress hydrique |
 
 **Protection :**
 - **Serre** : +15% temperature, -70% pluie, +15% lumiere
 - **Pepiniere / Mini Serres** : environnement stable 20°C
 
-## 🏗️ Structure du projet
+## Structure du projet
 
-```
+`
 BotanIA/
 ├── src/
 │   ├── app/                    # Next.js App Router
-│   │   ├── page.tsx            # Page principale du jeu (boucle + meteor)
-│   │   └── api/ollama/route.ts # Endpoint IA (Ollama local)
 │   ├── components/
 │   │   ├── game/               # Composants gameplay
-│   │   │   ├── JardinGrid.tsx        # Jardin 12×6 avec meteo
-│   │   │   ├── Pepiniere.tsx         # Pepiniere 24 slots
+│   │   │   ├── JardinGrid.tsx        # Jardin coordonnees cm
+│   │   │   ├── Pepiniere.tsx         # Pepiniere 8 slots
 │   │   │   ├── SerreJardinView.tsx   # Serre + mini serres
 │   │   │   ├── Boutique.tsx          # Boutique multi-semenciers
-│   │   │   ├── GrainCollection.tsx   # Collection graines/plants
 │   │   │   ├── GameHUD.tsx           # HUD stats + meteo
-│   │   │   └── AdminPanel.tsx        # Panneau admin/dev
-│   │   └── ui/                 # UI generiques
-│   ├── store/game-store.ts     # Zustand store (etat complet du jeu)
+│   │   │   ├── AdminPanel.tsx        # Panneau admin
+│   │   │   └── LiaAssistant.tsx      # Assistante IA Lia
+│   │   └── ui/
+│   ├── data/
+│   │   └── encyclopedia.ts     # Encyclopedie plante + materiel
+│   ├── store/
+│   │   └── game-store.ts       # Zustand store complet
 │   └── lib/
-│       ├── ai-engine.ts        # Moteur de simulation botanique
+│       ├── ai-engine.ts        # Moteur de simulation
 │       ├── weather-service.ts  # Service meteo Open-Meteo + GPS
-│       ├── environment-engine.ts # Calcul environnement
-│       └── use-effects.ts      # Hooks (mode nuit, auto-save)
+│       ├── environment-engine.ts
+│       └── lia-data.ts         # Conseils IA
 ├── public/
-│   ├── images/                 # Images des plantes (6 etapes)
-│   ├── manifest.json           # PWA manifest
-│   └── sw.js                   # Service worker
-├── package.json
-└── CHANGELOG.md
-```
+│   ├── cards/                  # Cartes semences/boutiques
+│   ├── stages/                 # Images stades de croissance
+│   ├── packets/                # Images paquets de graines
+│   ├── pots/                   # Images pots/godets
+│   ├── plants/                 # Images plantes
+│   └── manifest.json
+└── package.json
+`
 
-## 🎨 Design
+## Design
 
-- Style "manga cartoon cel-shade" (pas de realisme, pas d'emojis)
+- Style "manga cartoon cel-shade"
 - Palette : beige sable, noir profond, vert emeraude, orange terre
-- Police : `Space Mono` (code) + `VT323` (retro-game)
-- Bordures noires, ombres portees, effets de hover
+- Police : Space Mono + VT323 (retro-game)
+- Bordures noires, ombres portees, effets hover
 
-## 🔧 Commandes
+## Commandes
 
-```bash
+`ash
 npm run dev          # Dev server (Turbopack)
 npm run build        # Build production
-npm run start        # Start production
-```
+npm start            # Start production
+`
 
-## 📝 Roadmap
+## Roadmap
 
+- [ ] Intégration des donnees d'encyclopedie dans le moteur (temp., espacements, saisonnalité)
+- [ ] Validation visuelle des semis (ligne rouge si graines insuffisantes)
 - [ ] Mode nuit visuel (22h-6h)
-- [ ] Particules de recolte animées
-- [ ] Systeme de maladies et parasites (toggle admin)
-- [ ] Mode multijoueur
+- [ ] Particules de recolte animees
+- [ ] Gestion de l'ėclairage LED dans les chambres de culture (consommation, chaleur, PPFD)
+- [ ] Outil de déplacement des serres dans le jardin
 - [ ] Export/Import de sauvegarde
-- [ ] Plus de varietes par boutique
-- [ ] Achievements / defis saisonners
+- [ ] Achievements / defis saisonniers
 
-## 📄 Licence
+## Licence
 
-Projet educreatifs. Semences et varietes issues de catalogues publics (Kokopelli, Biau Germe, Sainte Marthe, Vilmorin, Clause).
+Projet educatif. Semences et varietes issues de catalogues publics (Kokopelli, Biau Germe, Sainte Marthe, Vilmorin, Clause).
 
----
-
-**Fait avec ❤️ par avalondrey**
+Fait avec ❤️ par avalondrey
