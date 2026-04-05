@@ -22,7 +22,7 @@ import Image from "next/image";
 
 const MONTH_NAMES = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
 
-type ShopTab = "graines" | "plantules" | "chambres" | "mini-serres" | "equipement";
+type ShopTab = "graines" | "plantules" | "chambres" | "mini-serres" | "equipement" | "arbres";
 
 export function Boutique() {
   const coins = useGameStore((s) => s.coins);
@@ -182,11 +182,12 @@ export function Boutique() {
       {/* Category Tabs */}
       <div className="flex gap-2">
         {[
-          { key: "graines" as ShopTab, label: "🌱 Graines", desc: "Paquets ×3" },
+          { key: "graines" as ShopTab, label: "🌱 Graines", desc: "Paquets" },
+          { key: "arbres" as ShopTab, label: "🌳 Arbres", desc: "Fruitiers" },
           { key: "plantules" as ShopTab, label: "🌿 Plantules", desc: "Jeunes plants" },
           { key: "chambres" as ShopTab, label: "🏠 Chambres", desc: "Grow tents" },
           { key: "mini-serres" as ShopTab, label: "🏡 Mini Serres", desc: "Propagateurs" },
-          { key: "equipement" as ShopTab, label: "🔧 Équipement", desc: "Terrain & serre" },
+          { key: "equipement" as ShopTab, label: "🔧 Equipement", desc: "Terrain & serre" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -382,33 +383,34 @@ export function Boutique() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
               {SEED_CATALOG.map((item) => {
                 const plantDef = PLANTS[item.plantDefId];
-                const owned = seedCollection[item.plantDefId] || 0;
+                const owned = seedCollection[item.id] || 0;
                 const canAfford = coins >= item.price;
-                const boughtKey = `seed-${item.plantDefId}`;
+                const boughtKey = `seed-${item.id}`;
 
                 return (
                   <motion.div
-                    key={item.plantDefId}
+                    key={item.id}
                     layout
                     className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
                       ${canAfford ? "border-black shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
                   >
-                    <div className="relative h-20 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
-                      {plantDef && (
-                        <Image
-                          src={`/stages/${item.plantDefId}/0.png`}
-                          alt={item.name}
-                          width={56}
-                          height={56}
-                          className="object-contain drop-shadow-lg"
-                        />
-                      )}
+                    <div className="relative h-20 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={item.packetImage}
+                        alt={item.name}
+                        width={80}
+                        height={48}
+                        className="object-contain drop-shadow-lg"
+                      />
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-red-600 text-white text-[6px] font-black uppercase rounded-sm tracking-wider shadow-md">
+                        {item.brand}
+                      </div>
                       <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-black text-white text-[8px] font-black rounded-lg flex items-center gap-0.5">
                         <Coins className="w-2.5 h-2.5 text-yellow-400" />
                         {item.price}
                       </div>
                       {owned > 0 && (
-                        <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-black rounded-lg">
+                        <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-black rounded-lg">
                           x{owned}
                         </div>
                       )}
@@ -436,11 +438,11 @@ export function Boutique() {
                         <span className="text-base">{item.emoji}</span>
                         <h3 className="text-[9px] font-black uppercase truncate">{item.name}</h3>
                       </div>
-                      <p className="text-[7px] text-stone-400">Recolte: {item.realDaysToHarvest}j | Paquet x3</p>
+                      <p className="text-[7px] text-stone-400">Paquet {item.brand} · Recolte: {item.realDaysToHarvest}j</p>
                       <motion.button
                         whileHover={canAfford ? { scale: 1.05 } : {}}
                         whileTap={canAfford ? { scale: 0.95 } : {}}
-                        onClick={() => canAfford && handleBuySeeds(item.plantDefId)}
+                        onClick={() => canAfford && handleBuySeeds(item.id)}
                         disabled={!canAfford}
                         className={`w-full py-1.5 text-[9px] font-black uppercase rounded-lg border-2 transition-all flex items-center justify-center gap-1
                           ${canAfford
@@ -457,6 +459,142 @@ export function Boutique() {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Arbres Fruitiers Tab */}
+      {activeTab === "arbres" && (
+        <div className="space-y-3">
+          {/* Shop Selector for fruit trees */}
+          <div className="flex gap-2 flex-wrap">
+            {[SEED_SHOPS.find(s => s.id === "guignard"), SEED_SHOPS.find(s => s.id === "inrae"), SEED_SHOPS.find(s => s.id === "saintemarthe")].filter(Boolean).map((shop) => (
+              <button
+                key={shop!.id}
+                onClick={() => setSelectedShopId(shop!.id)}
+                className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl border-2 transition-all flex items-center gap-2
+                  ${selectedShopId === shop!.id
+                    ? `bg-gradient-to-br ${shop!.color} ${shop!.borderColor} shadow-[2px_2px_0_0_#000]`
+                    : "bg-white border-stone-200 hover:border-stone-400"}`}
+              >
+                <span className="text-lg">{shop!.emoji}</span>
+                <div className="text-left">
+                  <p className={`text-[10px] font-black uppercase ${selectedShopId === shop!.id ? "text-black" : "text-stone-500"}`}>{shop!.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected Shop Banner */}
+          {(() => {
+            const shop = allShops.find(s => s.id === selectedShopId);
+            if (!shop) return null;
+            return (
+              <div className={`p-3 bg-gradient-to-br ${shop.color} ${shop.borderColor} border-[3px] rounded-2xl shadow-[4px_4px_0_0_#000]`}>
+                <div className="flex items-center gap-3">
+                  <Image src={shop.image} alt={shop.name} width={48} height={48} className="object-contain rounded-lg" />
+                  <div>
+                    <h3 className="text-sm font-black uppercase">{shop.emoji} {shop.name}</h3>
+                    <p className="text-[8px] text-stone-500">{shop.description}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Fruit Tree Seed Cards */}
+          {(() => {
+            const fruitSeeds = SEED_CATALOG.filter(s => s.category === "fruit-tree");
+            const shopFruitVarieties = SEED_VARIETIES.filter(v =>
+              (v.shopId === "guignard" || v.shopId === "inrae" || v.shopId === "saintemarthe" || v.shopId === "kokopelli") &&
+              fruitSeeds.some(s => s.plantDefId === v.plantDefId)
+            );
+            const treePlants = [...fruitSeeds.map(s => ({
+              ...s,
+              isPacket: true,
+              owned: seedCollection[s.id] || 0,
+              canAfford: coins >= s.price,
+              boughtKey: `seed-${s.id}`,
+            })), ...shopFruitVarieties.map(v => {
+              const parentSeed = fruitSeeds.find(s => s.plantDefId === v.plantDefId);
+              return {
+                id: v.id,
+                plantDefId: v.plantDefId,
+                name: v.name,
+                emoji: v.emoji,
+                price: v.price,
+                brand: v.shopId ? (allShops.find(s => s.id === v.shopId)?.name || v.shopId) : "Inconnu",
+                packetImage: v.image,
+                cardImage: v.image,
+                realDaysToHarvest: v.realDaysToHarvest,
+                category: "fruit-tree" as const,
+                isPacket: false,
+                owned: seedVarieties[v.id] || 0,
+                canAfford: coins >= v.price,
+                boughtKey: `variety-${v.id}`,
+                stageDurations: v.stageDurations,
+              };
+            })];
+
+            if (treePlants.length === 0) {
+              return <p className="text-center text-stone-400 text-sm py-8">Aucun arbre fruitier disponible dans cette boutique.</p>;
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {treePlants.map((item) => (
+                  <motion.div
+                    key={item.boughtKey}
+                    layout
+                    className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+                      ${item.canAfford ? "border-green-600 shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+                  >
+                    <div className="relative h-20 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={item.packetImage}
+                        alt={item.name}
+                        width={80}
+                        height={48}
+                        className="object-contain drop-shadow-lg"
+                      />
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-emerald-600 text-white text-[6px] font-black uppercase rounded-sm tracking-wider shadow-md">
+                        {item.brand}
+                      </div>
+                      <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-black text-white text-[8px] font-black rounded-lg flex items-center gap-0.5">
+                        <Coins className="w-2.5 h-2.5 text-yellow-400" />
+                        {item.price}
+                      </div>
+                      {item.owned > 0 && (
+                        <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-black rounded-lg">
+                          x{item.owned}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <div className="flex items-center gap-1">
+                        <span className="text-base">{item.emoji}</span>
+                        <h3 className="text-[9px] font-black uppercase truncate">{item.name}</h3>
+                      </div>
+                      <p className="text-[7px] text-stone-400">Arbre · Recolte: {item.realDaysToHarvest}j</p>
+                      <motion.button
+                        whileHover={item.canAfford ? { scale: 1.05 } : {}}
+                        whileTap={item.canAfford ? { scale: 0.95 } : {}}
+                        onClick={() => item.isPacket ? buySeeds(item.id) : buySeedVariety(item.id)}
+                        disabled={!item.canAfford}
+                        className={`w-full py-1.5 text-[9px] font-black uppercase rounded-lg border-2 transition-all flex items-center justify-center gap-1
+                          ${item.canAfford
+                            ? "bg-gradient-to-b from-green-500 to-green-600 text-white border-green-700 shadow-[2px_2px_0_0_#000] hover:from-green-400 hover:to-green-500"
+                            : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                          }`}
+                      >
+                        <ShoppingCart className="w-3 h-3" />
+                        Acheter
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 

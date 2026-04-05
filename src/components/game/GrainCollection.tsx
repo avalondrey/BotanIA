@@ -193,13 +193,13 @@ export function GrainCollection() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {SEED_CATALOG.map((item) => {
-              const owned = seedCollection[item.plantDefId] || 0;
+              const owned = seedCollection[item.id] || 0;
               if (owned <= 0) return null;
               const plantDef = PLANTS[item.plantDefId];
 
               return (
                 <motion.div
-                  key={item.plantDefId}
+                  key={item.id}
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -211,18 +211,17 @@ export function GrainCollection() {
 
                   <div className="relative flex flex-col items-center">
                     <div className="relative w-16 h-16 mb-1">
-                      {plantDef && STAGE_IMAGES[item.plantDefId] && (
-                        <Image
-                          src={STAGE_IMAGES[item.plantDefId][1]}
-                          alt={item.name}
-                          fill
-                          className="object-cover rounded-lg border-2 border-black"
-                        />
-                      )}
+                      <Image
+                        src={item.cardImage}
+                        alt={item.name}
+                        fill
+                        className="object-contain rounded-lg border-2 border-black"
+                      />
                     </div>
 
                     <span className="text-lg">{item.emoji}</span>
-                    <p className="text-xs font-black uppercase">{item.name.replace("Graine ", "")}</p>
+                    <p className="text-xs font-black uppercase">{item.name}</p>
+                    <p className="text-[7px] text-red-600 font-black">{item.brand}</p>
 
                     <div className="mt-1 px-2 py-0.5 bg-green-500 text-white text-[10px] font-black rounded-lg">
                       ×{owned}

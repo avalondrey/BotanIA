@@ -7,6 +7,7 @@ import { JardinGrid } from "@/components/game/JardinGrid";
 import { Pepiniere } from "@/components/game/Pepiniere";
 import { SerreJardinView } from "@/components/game/SerreJardinView";
 import { GameHUD } from "@/components/game/GameHUD";
+import { EnhancedHUD } from "@/components/game/EnhancedHUD";
 import { Boutique } from "@/components/game/Boutique";
 import { GrainCollection } from "@/components/game/GrainCollection";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -28,6 +29,7 @@ export default function GamePage() {
   const initGame = useGameStore((s) => s.initGame);
   const tick = useGameStore((s) => s.tick);
   const speed = useGameStore((s) => s.speed);
+  const setSpeed = useGameStore((s) => s.setSpeed);
   const isPaused = useGameStore((s) => s.isPaused);
   const realWeather = useGameStore((s) => s.realWeather);
   const gpsCoords = useGameStore((s) => s.gpsCoords);
@@ -51,15 +53,15 @@ export default function GamePage() {
   const [statusMessage, setStatusMessage] = useState("Chargement...");
 
   // Load weather data
-  const loadWeather = useCallback(async (coords: { latitude: number; longitude: number }) => {
+  const loadWeather = useCallback(async (lat: number, lon: number) => {
     try {
       setWeatherLoading(true);
       setWeatherStatus("loading");
       setStatusMessage("Récupération des données météo...");
 
-      const data = await fetchWeather(coords.latitude, coords.longitude);
+      const data = await fetchWeather(lat, lon);
       setRealWeather(data);
-      setGPSCoords(coords);
+      setGPSCoords({ lat, lon });
       setWeatherStatus("ready");
       setStatusMessage("");
       setWeatherLoading(false);
@@ -81,10 +83,10 @@ export default function GamePage() {
   useEffect(() => {
     let cancelled = false;
 
-    async function doLoad(coords: { latitude: number; longitude: number }) {
+    async function doLoad(lat: number, lon: number) {
       if (cancelled) return;
       try {
-        await loadWeather(coords);
+        await loadWeather(lat, lon);
       } catch (err) {
         console.warn("Meteo indisponible, mode simulation:", err);
         setWeatherStatus("error");
@@ -96,19 +98,23 @@ export default function GamePage() {
     const cachedCoords = loadGPSCoords();
 
     if (cachedCoords) {
-      doLoad(cachedCoords);
+      doLoad(cachedCoords.lat, cachedCoords.lon);
     } else {
       // Try GPS
       getGPSLocation()
         .then((coords) => {
-          saveGPSCoords(coords);
-          doLoad(coords);
+          if (coords) {
+            saveGPSCoords(coords);
+            doLoad(coords.lat, coords.lon);
+          } else {
+            // Fallback to Paris
+            doLoad(48.8566, 2.3522);
+          }
         })
         .catch((gpsError) => {
           console.warn("GPS failed, using default Paris:", gpsError);
           // Fallback to Paris
-          const defaultCoords = { latitude: 48.8566, longitude: 2.3522 };
-          doLoad(defaultCoords);
+          doLoad(48.8566, 2.3522);
         });
     }
 
@@ -116,7 +122,7 @@ export default function GamePage() {
     weatherRefreshRef.current = setInterval(() => {
       const currentCoords = useGameStore.getState().gpsCoords;
       if (currentCoords) {
-        doLoad(currentCoords);
+        doLoad(currentCoords.lat, currentCoords.lon);
       }
     }, 6 * 60 * 60 * 1000);
 
@@ -124,7 +130,7 @@ export default function GamePage() {
     autoSaveRef.current = setInterval(() => {
       try {
         const s = useGameStore.getState();
-        const backup = JSON.stringify({ day: s.day, month: s.month, season: s.season, score: s.score, coins: s.coins, bestScore: s.bestScore });
+        const backup = JSON.stringify({ day: s.day, season: s.season, score: s.score, coins: s.coins, bestScore: s.bestScore });
         localStorage.setItem('jardin-culture-autosave', backup);
       } catch(e) {}
     }, 10000);
@@ -208,7 +214,7 @@ export default function GamePage() {
               )}
               <span className="font-bold">
                 {weatherStatus === "loading" ? "Localisation..." :
-                 weatherStatus === "ready" ? (gpsCoords?.latitude != null && gpsCoords?.longitude != null ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "Météo active") :
+                 weatherStatus === "ready" ? (gpsCoords?.lat != null && gpsCoords?.lon != null ? `${gpsCoords.lat.toFixed(2)}°, ${gpsCoords.lon.toFixed(2)}°` : "Météo active") :
                  "GPS indisponible"}
               </span>
             </div>
@@ -216,7 +222,7 @@ export default function GamePage() {
             {/* Refresh weather button */}
             {gpsCoords && (
               <button
-                onClick={() => loadWeather(gpsCoords)}
+                onClick={() => loadWeather(gpsCoords.lat, gpsCoords.lon)}
                 className="p-1.5 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
                 title="Actualiser la météo"
               >
@@ -262,6 +268,7 @@ export default function GamePage() {
       {/* MAIN */}
       <div className="relative z-10 max-w-[1400px] mx-auto px-3 py-3 md:py-4">
         <GameHUD />
+        <EnhancedHUD />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
@@ -327,9 +334,11 @@ export default function GamePage() {
         {/* Footer AI Console */}
         <div className="mt-4 p-2.5 bg-stone-900 rounded-xl font-mono text-[9px]">
           <p className="text-stone-500 font-bold uppercase mb-1 flex items-center gap-1">
-            <span>⚡</span> Console IA v2.0
+            <span>⚡</span> Console IA v3.0
           </p>
           <div className="space-y-0.5 text-[9px]">
+            <p className="text-green-400">&gt; Calendrier Lunaire 🌙 + Météo 7 jours ⛅ + IA Advisor 💡</p>
+            <p className="text-green-400">&gt; Photo Mode 📸 + Sound System 🔊 + Crop Rotation 🔄</p>
             <p className="text-green-400">&gt; Réseau: Jardin + Pépinière + Mini Serres + Boutique ✅</p>
             <p className="text-green-400">&gt; Mini Serres: 6×4 = 24 emplacements (max 6/chambre) ✅</p>
             <p className="text-green-400">&gt; Remplir serre + Planter à date ✅</p>
@@ -337,7 +346,6 @@ export default function GamePage() {
             <p className="text-green-400">&gt; Graines → Pépinière/Mini Serre (5 étapes) → Jardin ✅</p>
             <p className="text-green-400">&gt; Météo réelle Open-Meteo + GPS ✅</p>
             <p className="text-green-400">&gt; Plantes ne meurent jamais (mode survie) ✅</p>
-            <p className="text-green-400">&gt; Inventaire graines + plantules + mini serres ✅</p>
             <p className="text-stone-500">&gt; Pépinière: T° 20°C, Lumière ×0.6, Croissance ×0.7</p>
             <p className="text-stone-500">&gt; Mini Serre: même env. que Pépinière (24 slots/grille)</p>
             <p className="text-stone-500">&gt; Serre Jardin: T° +15%, Pluie -70%, Lumière +15%</p>

@@ -302,6 +302,25 @@ export const SEED_SHOPS: SeedShop[] = [
     image: "/cards/card-shop-saintemarthe.png",
     description: "Semences biologiques et reproductibles, Patrimoine varietal depuis 1973",
   },
+  // Pepinieres & Arbres fruitiers
+  {
+    id: "guignard",
+    name: "Guignard",
+    emoji: "🌳",
+    color: "from-green-50 to-teal-50",
+    borderColor: "border-green-400",
+    image: "/cards/card-shop-guignard.png",
+    description: "Pepinieriste depuis 1850 — Arbres fruitiers et d'ornement",
+  },
+  {
+    id: "inrae",
+    name: "INRAE",
+    emoji: "🔬",
+    color: "from-blue-50 to-indigo-50",
+    borderColor: "border-blue-300",
+    image: "/cards/card-shop-inrae.png",
+    description: "Institut Recherche Agriculture — Semences forestieres et varietes anciennes",
+  },
 ];
 
 export const SEED_VARIETIES: SeedVariety[] = [
@@ -414,26 +433,316 @@ export const SEED_VARIETIES: SeedVariety[] = [
     stageDurations: [10,28,28,60], realDaysToHarvest: 126,
     optimalTemp: [20,28], waterNeed: 5.5, lightNeed: 8,
   },
+  // Clause — Legumes divers
+  {
+    id: "carrot-nantaise",
+    plantDefId: "carrot",
+    shopId: "clause",
+    name: "Carotte Nantaise",
+    emoji: "🥕",
+    price: 35, grams: 0.5,
+    description: "Variete classique tres douce et tendre, racine cylindrique",
+    image: "/cards/card-carrot-nantaise.png", unlocked: true,
+    stageDurations: [8,20,22,58], realDaysToHarvest: 108,
+    optimalTemp: [15,22], waterNeed: 4.0, lightNeed: 6,
+  },
+  {
+    id: "lettuce-batavia",
+    plantDefId: "lettuce",
+    shopId: "clause",
+    name: "Laitue Batavia",
+    emoji: "🥬",
+    price: 25, grams: 0.3,
+    description: "Feuilles croquantes et blondes, resistante a la chaleur",
+    image: "/cards/card-lettuce-batavia.png", unlocked: true,
+    stageDurations: [4,10,14,22], realDaysToHarvest: 50,
+    optimalTemp: [12,20], waterNeed: 3.5, lightNeed: 6,
+  },
+  {
+    id: "cucumber-marketer",
+    plantDefId: "cucumber",
+    shopId: "clause",
+    name: "Concombre Marketer",
+    emoji: "🥒",
+    price: 40, grams: 0.3,
+    description: "Variete productive, fruits lisses et sans amertume",
+    image: "/cards/card-cucumber-marketer.png", unlocked: false,
+    stageDurations: [6,14,20,40], realDaysToHarvest: 80,
+    optimalTemp: [18,25], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "zucchini-cluse",
+    plantDefId: "zucchini",
+    shopId: "clause",
+    name: "Courgette Black Beauty",
+    emoji: "🥒",
+    price: 45, grams: 0.5,
+    description: "Variete productive, fruits sombres et tendres",
+    image: "/cards/card-zucchini-black.png", unlocked: false,
+    stageDurations: [6,16,20,42], realDaysToHarvest: 84,
+    optimalTemp: [18,28], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "pepper- california",
+    plantDefId: "pepper",
+    shopId: "clause",
+    name: "Poivron California Wonder",
+    emoji: "🌶️",
+    price: 50, grams: 0.2,
+    description: "Type cloche, chair epaisse et douce",
+    image: "/cards/card-pepper-california.png", unlocked: false,
+    stageDurations: [10,26,26,58], realDaysToHarvest: 120,
+    optimalTemp: [20,28], waterNeed: 5.0, lightNeed: 8,
+  },
+  // Kokopelli — Semences bio ancestrales
+  {
+    id: "tomato-blackk",
+    plantDefId: "tomato",
+    shopId: "kokopelli",
+    name: "Tomate Noire de Crimee",
+    emoji: "🍅",
+    price: 65, grams: 0.3,
+    description: "Variete noire ancienne, chair Dense et sucree",
+    image: "/cards/card-tomato-blackk.png", unlocked: false,
+    stageDurations: [8,24,22,52], realDaysToHarvest: 106,
+    optimalTemp: [18,28], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "tomato-green",
+    plantDefId: "tomato",
+    shopId: "kokopelli",
+    name: "Tomate Green Zebra",
+    emoji: "🍅",
+    price: 60, grams: 0.3,
+    description: "Tomate verte rayee, aciditee Balancee, originale en salade",
+    image: "/cards/card-tomato-green-zebra.png", unlocked: false,
+    stageDurations: [8,22,20,46], realDaysToHarvest: 96,
+    optimalTemp: [17,27], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "eggplant-long",
+    plantDefId: "eggplant",
+    shopId: "kokopelli",
+    name: "Aubergine Longue Violette",
+    emoji: "🍆",
+    price: 50, grams: 0.2,
+    description: "Variete productive et precoce, fruits allonges",
+    image: "/cards/card-eggplant-long.png", unlocked: false,
+    stageDurations: [8,20,24,50], realDaysToHarvest: 102,
+    optimalTemp: [20,28], waterNeed: 5.0, lightNeed: 8,
+  },
+  {
+    id: "squash-coco",
+    plantDefId: "squash",
+    shopId: "kokopelli",
+    name: "Courge Butternut Coco",
+    emoji: "🎃",
+    price: 55, grams: 0.5,
+    description: "Variete储藏耐, chair douce et sucree, fruits de 1-2kg",
+    image: "/cards/card-squash-butternut.png", unlocked: false,
+    stageDurations: [8,24,32,80], realDaysToHarvest: 144,
+    optimalTemp: [18,28], waterNeed: 5.5, lightNeed: 8,
+  },
+  // Biau Germe — Semences paysannes
+  {
+    id: "carrot-robver",
+    plantDefId: "carrot",
+    shopId: "biaugerme",
+    name: "Carotte Rob Ver",
+    emoji: "🥕",
+    price: 45, grams: 0.5,
+    description: "Carotte hollandaise rouge-orange, tres douce et sucree",
+    image: "/cards/card-carrot-robver.png", unlocked: false,
+    stageDurations: [9,22,24,55], realDaysToHarvest: 110,
+    optimalTemp: [15,22], waterNeed: 4.0, lightNeed: 6,
+  },
+  {
+    id: "lettuce-feuille",
+    plantDefId: "lettuce",
+    shopId: "biaugerme",
+    name: "Laitue Feuille de Chene",
+    emoji: "🥬",
+    price: 30, grams: 0.3,
+    description: "feuilles tendres et lobees, resistante a la chaleur",
+    image: "/cards/card-lettuce-chene.png", unlocked: false,
+    stageDurations: [4,10,12,24], realDaysToHarvest: 50,
+    optimalTemp: [12,20], waterNeed: 3.5, lightNeed: 6,
+  },
+  {
+    id: "bean-coco",
+    plantDefId: "bean",
+    shopId: "biaugerme",
+    name: "Haricot Coco Blanc",
+    emoji: "🫘",
+    price: 35, grams: 0.4,
+    description: "Haricot blanc nain, grainier et savoureux",
+    image: "/cards/card-bean-coco.png", unlocked: false,
+    stageDurations: [6,14,18,30], realDaysToHarvest: 68,
+    optimalTemp: [16,24], waterNeed: 4.5, lightNeed: 8,
+  },
+  {
+    id: "cabbage-milan",
+    plantDefId: "cabbage",
+    shopId: "biaugerme",
+    name: "Chou de Milan",
+    emoji: "🥬",
+    price: 40, grams: 0.3,
+    description: "Chou pommele rustique, resistant au froid",
+    image: "/cards/card-cabbage-milan.png", unlocked: false,
+    stageDurations: [7,20,28,70], realDaysToHarvest: 125,
+    optimalTemp: [12,18], waterNeed: 4.0, lightNeed: 6,
+  },
+  // Sainte Marthe — Aromatiques et autres
+  {
+    id: "basil-marseillais",
+    plantDefId: "basil",
+    shopId: "saintemarthe",
+    name: "Basilic Marseillais",
+    emoji: "🌿",
+    price: 50, grams: 0.2,
+    description: "Le meilleur basilic pour le pistou,Tres parfume",
+    image: "/cards/card-basil-marseillais.png", unlocked: false,
+    stageDurations: [6,16,18,38], realDaysToHarvest: 78,
+    optimalTemp: [20,27], waterNeed: 4.0, lightNeed: 6,
+  },
+  {
+    id: "strawberry-ciflorette",
+    plantDefId: "strawberry",
+    shopId: "saintemarthe",
+    name: "Fraise Ciflorette",
+    emoji: "🍓",
+    price: 70, grams: 0.2,
+    description: "Fraise allongee tres douce et sucree, originate du Gers",
+    image: "/cards/card-strawberry-ciflorette.png", unlocked: false,
+    stageDurations: [14,24,30,58], realDaysToHarvest: 126,
+    optimalTemp: [14,22], waterNeed: 4.5, lightNeed: 7,
+  },
+  // Arbres fruitiers — Guignard & INRAE
+  {
+    id: "apple-golden",
+    plantDefId: "apple",
+    shopId: "guignard",
+    name: "Pommier Golden Delicious",
+    emoji: "🍎",
+    price: 150, grams: 0.5,
+    description: "Variete classic, chair douce et juteuse, Bonne conservation",
+    image: "/cards/card-apple-golden.png", unlocked: false,
+    stageDurations: [30,60,120,360], realDaysToHarvest: 730,
+    optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
+  },
+  {
+    id: "apple-gala",
+    plantDefId: "apple",
+    shopId: "guignard",
+    name: "Pommier Gala",
+    emoji: "🍎",
+    price: 160, grams: 0.5,
+    description: "Variete croquante et sucree,tres瑞 populaire",
+    image: "/cards/card-apple-gala.png", unlocked: false,
+    stageDurations: [28,56,110,340], realDaysToHarvest: 700,
+    optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
+  },
+  {
+    id: "pear-williams",
+    plantDefId: "pear",
+    shopId: "guignard",
+    name: "Poirier Williams",
+    emoji: "🍐",
+    price: 170, grams: 0.5,
+    description: "Variete tres瑞 ancienne, chair fondante et parfumee",
+    image: "/cards/card-pear-williams.png", unlocked: false,
+    stageDurations: [30,65,130,380], realDaysToHarvest: 800,
+    optimalTemp: [10,22], waterNeed: 5.0, lightNeed: 7,
+  },
+  {
+    id: "cherry-bing",
+    plantDefId: "cherry",
+    shopId: "inrae",
+    name: "Cerisier Bing",
+    emoji: "🍒",
+    price: 180, grams: 0.4,
+    description: "Cerise rouge fonce, chair ferme et tres douce et sucree",
+    image: "/cards/card-cherry-bing.png", unlocked: false,
+    stageDurations: [35,70,140,420], realDaysToHarvest: 900,
+    optimalTemp: [10,24], waterNeed: 5.0, lightNeed: 7,
+  },
+  {
+    id: "walnut-franquette",
+    plantDefId: "walnut",
+    shopId: "inrae",
+    name: "Noyer Franquette",
+    emoji: "🥜",
+    price: 120, grams: 0.4,
+    description: "Noix de Grenoble, amande parfumee et peu de cerne",
+    image: "/cards/card-walnut-franquette.png", unlocked: false,
+    stageDurations: [40,90,200,600], realDaysToHarvest: 1095,
+    optimalTemp: [8,24], waterNeed: 4.5, lightNeed: 6,
+  },
 ];
 
 // ═══ Seed shop items (legacy flat catalog) ═══
 
 export interface SeedItem {
+  id: string;
   plantDefId: string;
   name: string;
   emoji: string;
   price: number;
+  brand: string;         // Fournisseur (Vilmorin, Clause…)
+  packetImage: string;   // Image packet/paquet avec marque
+  cardImage: string;    // Image de la seed card
   realDaysToHarvest: number;
   optimalMonths: number[];
+  category: "vegetable" | "fruit-tree" | "aromatic";
 }
 
+// Seed packets avec marque fournisseur — par categorie
 export const SEED_CATALOG: SeedItem[] = [
-  { plantDefId: "tomato", name: "Graine Tomate", emoji: "🍅", price: 50, realDaysToHarvest: 109, optimalMonths: [2, 3, 4] },
-  { plantDefId: "carrot", name: "Graine Carotte", emoji: "🥕", price: 40, realDaysToHarvest: 114, optimalMonths: [2, 3, 4, 5, 8, 9] },
-  { plantDefId: "strawberry", name: "Graine Fraise", emoji: "🍓", price: 60, realDaysToHarvest: 123, optimalMonths: [2, 3, 4, 8, 9] },
-  { plantDefId: "lettuce", name: "Graine Salade", emoji: "🥬", price: 30, realDaysToHarvest: 49, optimalMonths: [1, 2, 3, 4, 8, 9, 10] },
-  { plantDefId: "basil", name: "Graine Basilic", emoji: "🌿", price: 45, realDaysToHarvest: 88, optimalMonths: [3, 4, 5] },
-  { plantDefId: "pepper", name: "Graine Piment", emoji: "🌶️", price: 55, realDaysToHarvest: 130, optimalMonths: [1, 2, 3, 4] },
+  { id:"seed-tomato",     plantDefId:"tomato",     name:"Paquet Graines Tomate",   emoji:"🍅", price:50, brand:"Vilmorin",  packetImage:"/packets/card-tomato.png",     cardImage:"/cards/card-tomato.png",     realDaysToHarvest:109, optimalMonths:[2,3,4],        category:"vegetable" },
+  { id:"seed-carrot",     plantDefId:"carrot",     name:"Paquet Graines Carotte",  emoji:"🥕", price:40, brand:"Clause",    packetImage:"/packets/card-carrot.png",     cardImage:"/cards/card-carrot.png",     realDaysToHarvest:114, optimalMonths:[2,3,4,5,8,9],  category:"vegetable" },
+  { id:"seed-strawberry", plantDefId:"strawberry", name:"Paquet Graines Fraise",   emoji:"🍓", price:60, brand:"Truffaut",  packetImage:"/packets/card-strawberry.png", cardImage:"/cards/card-strawberry.png", realDaysToHarvest:123, optimalMonths:[2,3,4,8,9],        category:"vegetable" },
+  { id:"seed-lettuce",    plantDefId:"lettuce",    name:"Paquet Graines Salade",   emoji:"🥬", price:30, brand:"Jardiland", packetImage:"/packets/card-lettuce.png",    cardImage:"/cards/card-lettuce.png",    realDaysToHarvest:49,  optimalMonths:[1,2,3,4,8,9,10], category:"vegetable" },
+  { id:"seed-basil",      plantDefId:"basil",      name:"Paquet Graines Basilic",  emoji:"🌿", price:45, brand:"St Marthe", packetImage:"/packets/card-basil.png",      cardImage:"/cards/card-basil.png",      realDaysToHarvest:88,  optimalMonths:[3,4,5],             category:"aromatic" },
+  { id:"seed-pepper",     plantDefId:"pepper",     name:"Paquet Graines Piment",  emoji:"🌶️", price:55, brand:"Kokopelli", packetImage:"/packets/card-pepper.png",     cardImage:"/cards/card-pepper.png",     realDaysToHarvest:130, optimalMonths:[1,2,3,4],        category:"vegetable" },
+  // Arbres fruitiers
+  { id:"seed-apple",      plantDefId:"apple",      name:"Paquet Graines Pommier",  emoji:"🍎", price:120, brand:"Guignard",  packetImage:"/packets/card-apple.png",      cardImage:"/cards/card-apple.png",      realDaysToHarvest:730, optimalMonths:[10,11,12],        category:"fruit-tree" },
+  { id:"seed-pear",       plantDefId:"pear",       name:"Paquet Graines Poirier",  emoji:"🍐", price:130, brand:"Guignard",  packetImage:"/packets/card-pear.png",       cardImage:"/cards/card-pear.png",       realDaysToHarvest:800, optimalMonths:[10,11],               category:"fruit-tree" },
+  { id:"seed-cherry",     plantDefId:"cherry",     name:"Paquet Graines Cerisier", emoji:"🍒", price:150, brand:"INRAE",    packetImage:"/packets/card-cherry.png",     cardImage:"/cards/card-cherry.png",     realDaysToHarvest:900, optimalMonths:[10,11],               category:"fruit-tree" },
+  { id:"seed-walnut",     plantDefId:"walnut",    name:"Paquet Graines Noyer",    emoji:"🥜", price:100, brand:"INRAE",    packetImage:"/packets/card-walnut.png",     cardImage:"/cards/card-walnut.png",     realDaysToHarvest:1095,optimalMonths:[10,11],              category:"fruit-tree" },
+  { id:"seed-oak",        plantDefId:"oak",        name:"Paquet Graines Chene",    emoji:"🌳", price:80,  brand:"INRAE",    packetImage:"/packets/card-oak.png",        cardImage:"/cards/card-oak.png",        realDaysToHarvest:1095,optimalMonths:[10,11,12],        category:"fruit-tree" },
+];
+
+// Auto-resolve image path from item id + type (new items auto-get their path)
+export function resolveItemImage(itemId: string, type: string): string {
+  if (type === "variety") return "/cards/" + itemId + ".png";
+  if (type === "seed")    return "/packets/" + itemId + ".png";
+  if (type === "plantule") return "/cards/" + itemId + ".png";
+  return "/cards/card-unknown.png";
+}
+export function resolvePacketImage(id: string): string { return "/packets/" + id + ".png"; }
+export function resolveCardImage(id: string): string { return "/cards/" + id + ".png"; }
+
+// Auto-assign brand from shop or plant type
+export const DEFAULT_BRANDS = ["Vilmorin","Clause","Truffaut","Jardiland","St Marthe","Kokopelli","Biau Germe","Guignard","INRAE"];
+export function autoBrandFor(plantDefId: string, shopId?: string): string {
+  if (shopId) { const s = SEED_SHOPS.find((x) => x.id === shopId); if (s) return s.name; }
+  const m: Record<string,string> = {tomato:"Vilmorin",carrot:"Clause",lettuce:"Jardiland",strawberry:"Truffaut",basil:"St Marthe",pepper:"Kokopelli",apple:"Guignard",pear:"Guignard",cherry:"INRAE",walnut:"INRAE",oak:"INRAE"};
+  return m[plantDefId] || DEFAULT_BRANDS[Math.floor(Math.random() * DEFAULT_BRANDS.length)];
+}
+
+// Auto image path for any new boutique item
+export function autoImagePath(itemId: string, type: string): string {
+  const slug = itemId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
+  return type === "packet" ? "/packets/" + slug + ".png" : "/cards/" + slug + ".png";
+}
+
+// Equipment cards
+export const EQUIPMENT_CARDS = [
+  { id:"greenhouse",     name:"Serre de Jardin",          emoji:"🏠", cardImage:"/cards/card-greenhouse.png",     type:"serre" },
+  { id:"mini-serre",     name:"Mini Serre (24 slots)",    emoji:"🌱", cardImage:"/cards/card-mini-serre.png",     type:"equipment" },
+  { id:"chambre-small",  name:"Chambre de Culture 60cm",  emoji:"📦", cardImage:"/cards/card-chambre-small.png",  type:"equipment" },
+  { id:"chambre-medium", name:"Chambre de Culture 80cm",  emoji:"📦", cardImage:"/cards/card-chambre-medium.png", type:"equipment" },
+  { id:"chambre-large",  name:"Chambre de Culture 120cm", emoji:"🛖", cardImage:"/cards/card-chambre-large.png",  type:"equipment" },
 ];
 
 export interface PlantuleItem {
@@ -534,8 +843,8 @@ export interface GameState {
   pendingTransplant: { serreId: string; row: number; col: number; plantDefId: string; plantName: string; plantEmoji: string } | null;
 
   // Actions
-  initGame: () => void;
-  buySeeds: (plantDefId: string) => boolean;
+  initGame: (freshStart?: boolean) => void;
+  buySeeds: (itemIdOrPlantDefId: string) => boolean;
   buyPlantule: (plantDefId: string) => boolean;
   buySeedVariety: (varietyId: string) => boolean;
   unlockSeedVariety: (varietyId: string) => boolean;
@@ -602,6 +911,9 @@ function uid(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Track last saved day to avoid spamming localStorage
+let lastSavedDay = 0;
+
 // ═══ Persistence ═══
 
 // Time Persistence: sync game day with real elapsed time
@@ -613,8 +925,15 @@ function loadDay(): number {
     if (isNaN(savedDay) || isNaN(savedTs)) return getTodayDayOfYear();
     const elapsedMs = Date.now() - savedTs;
     const elapsedDays = Math.floor(elapsedMs / 86_400_000);
-    const bonusDays = Math.max(0, Math.min(elapsedDays, 30));
-    return savedDay + bonusDays;
+    // Cap bonus days to prevent huge jumps (max 3 days catch-up)
+    const bonusDays = Math.max(0, Math.min(elapsedDays, 3));
+    const newDay = savedDay + bonusDays;
+    // If we've crossed into a new year or jumped too far, reset to today
+    const today = getTodayDayOfYear();
+    if (newDay > 365 || newDay < 1 || Math.abs(newDay - today) > 30) {
+      return today;
+    }
+    return newDay;
   } catch { return getTodayDayOfYear(); }
 }
 
@@ -980,14 +1299,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Shop ──
 
-  buySeeds: (plantDefId: string) => {
+  buySeeds: (itemIdOrPlantDefId: string) => {
     const state = get();
-    const item = SEED_CATALOG.find((s) => s.plantDefId === plantDefId);
+    const item = SEED_CATALOG.find((s) => s.id === itemIdOrPlantDefId || s.plantDefId === itemIdOrPlantDefId);
     if (!item) return false;
     if (state.coins < item.price) return false;
 
+    const key = item.id;
     const newCollection = { ...state.seedCollection };
-    newCollection[plantDefId] = (newCollection[plantDefId] || 0) + Math.ceil(item.price / 15);
+    newCollection[key] = (newCollection[key] || 0) + Math.ceil(item.price / 15);
     const newCoins = state.coins - item.price;
 
     saveCoins(newCoins);
@@ -2059,7 +2379,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newScore = state.score + scoreGain;
     const newBest = Math.max(state.bestScore, newScore);
     if (newBest > state.bestScore) saveBestScore(newBest);
-    saveDay(newDay);
+    // Only save day if it changed (avoid localStorage spam at high speeds)
+    if (newDay !== lastSavedDay) {
+      saveDay(newDay);
+      lastSavedDay = newDay;
+    }
 
     // Admin: diseases toggle — strip all diseases/pests if disabled
     let finalGarden = newGardenPlants;
