@@ -83,6 +83,8 @@ function AnalogClock() {
 
 export function GameHUD() {
   const day = useGameStore((s) => s.day);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const season = useGameStore((s) => s.season);
   const speed = useGameStore((s) => s.speed);
   const setSpeed = useGameStore((s) => s.setSpeed);
@@ -150,7 +152,9 @@ export function GameHUD() {
           <AnalogClock />
           <div>
             <p className="text-[8px] text-stone-400 font-bold leading-none">DATE</p>
-            <p className="text-xs font-black leading-tight">{getRealDateDisplay(day)}</p>
+            <p className="text-xs font-black leading-tight" suppressHydrationWarning>
+              {mounted ? getRealDateDisplay(day) : "—"}
+            </p>
           </div>
         </div>
 
