@@ -604,6 +604,28 @@ function uid(): string {
 
 // ═══ Persistence ═══
 
+// Time Persistence: sync game day with real elapsed time
+function loadDay(): number {
+  if (typeof window === 'undefined') return getTodayDayOfYear();
+  try {
+    const savedDay = parseInt(localStorage.getItem('jardin-culture-day') || '', 10);
+    const savedTs = parseInt(localStorage.getItem('jardin-culture-day-ts') || '', 10);
+    if (isNaN(savedDay) || isNaN(savedTs)) return getTodayDayOfYear();
+    const elapsedMs = Date.now() - savedTs;
+    const elapsedDays = Math.floor(elapsedMs / 86_400_000);
+    const bonusDays = Math.max(0, Math.min(elapsedDays, 30));
+    return savedDay + bonusDays;
+  } catch { return getTodayDayOfYear(); }
+}
+
+function saveDay(day: number) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('jardin-culture-day', String(day));
+    localStorage.setItem('jardin-culture-day-ts', String(Date.now()));
+  } catch { /* ignore */ }
+}
+
 function loadCoins(): number {
   if (typeof window === "undefined") return 200;
   try {
@@ -870,7 +892,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   plantuleCollection: {},
   seedVarieties: {},
 
-  day: getTodayDayOfYear(),
+  day: loadDay(),
   season: getSeason(getTodayDayOfYear()),
   weather: WEATHER_TYPES["sunny"],
   realWeather: null,
@@ -913,6 +935,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         "jardin-culture-serre-tiles",
         "jardin-culture-chambres",
         "jardin-culture-active-chambre",
+        "jardin-culture-day",
+        "jardin-culture-day-ts",
         "jardin-culture-best-score",
         "jardin-culture-garden",
       ];
@@ -941,7 +965,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       seedCollection: loadSeedCollection(),
       plantuleCollection: loadPlantuleCollection(),
       seedVarieties: loadSeedVarieties(),
-      day: today,
+      day: loadDay(),
       season: todaySeason,
       weather: generateWeatherForMonth(getMonthFromDay(today)),
       alerts: [],
@@ -2035,6 +2059,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newScore = state.score + scoreGain;
     const newBest = Math.max(state.bestScore, newScore);
     if (newBest > state.bestScore) saveBestScore(newBest);
+    saveDay(newDay);
 
     // Admin: diseases toggle — strip all diseases/pests if disabled
     let finalGarden = newGardenPlants;
