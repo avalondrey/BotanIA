@@ -1,0 +1,61 @@
+ LISTE COMPLÈTE DES ASSETS À GÉNÉRER
+ 
+ PAQUETS (20 variétés) ✅ FAIT
+Clause (4) : California Wonder, Batavia, Marketer, Black Beauty
+Kokopelli (6) : Cherokee Purple, Rose de Berne, Noire de Crimée, Green Zebra, Longue Violette, Butternut Coco
+Le Biau (6) : Marmande, Carotte de Guérande, Rob Ver, Feuille de Chêne, Haricot Coco Blanc, Chou de Milan
+Sainte Marthe (4) : Basilic Génois, Doux de France, Basilic Marseillais, Fraise Ciflorette
+CARDS GRAINES (20 variétés) - À FAIRE
+(Même liste que paquets)
+STAGES DE CROISSANCE (~110 images) - À FAIRE
+Clause : 4 variétés × 5 stages = 20 images
+Kokopelli : 6 variétés × 6 stages = 36 images
+Le Biau : 5 variétés × 6 stages + 1 × 5 stages = 35 images
+Sainte Marthe : 2 × 5 stages + 2 × 6 stages = 22 images
+ARBRES (3 variétés × 7 images = 21 images) - À FAIRE
+Pommier : 1 card + 6 stages
+Citronnier : 1 card + 6 stages
+Cerisier : 1 card + 6 stages
+SHOPS (7 cards) - Partiellement fait
+Kokopelli ✅
+Pépinières Bordas ✅
+Arbres Tissot ✅
+Fruitiers Forest ✅
+La Ferme de Sainte Marthe ✅ (Image 13)
+Clause - À faire
+Le Biau - À faire
+ÉQUIPEMENTS - À FAIRE
+Mini-serre (style ornemental)
+
+
+🔄 PROCÉDURE DE GÉNÉRATION
+Tester un premier asset avec le prompt template
+Valider le style avec l'utilisateur
+Générer par lots (4-6 images à la fois)
+Vérifier la cohérence entre les assets
+Organiser dans les dossiers selon la structure
+Commit & Push sur GitHub
+
+POINTS IMPORTANTS
+✅ Toujours respecter :
+Format 512x512px
+Style manga cel-shade cohérent
+Bordures noires épaisses
+Fond beige kraft
+Esthétique kawaii
+✅ Sur les paquets :
+TOUJOURS mettre l'illustration du légume
+Logo fournisseur visible
+Nom de variété lisible
+Angle isométrique
+✅ Pour les stages :
+Progression logique visible
+Pots terracotta cohérents
+Taille croissante de la plante
+Fruits aux stages appropriés
+📝 NOTES SUPPLÉMENTAIRES
+Mini-serre : Pour Clause et Le Biau (laitue/basilic) → 5 stages
+Jardin : Pour la plupart → 6 stages
+Arbres : Pots plus grands, croissance plus lente
+Fraises : Culture sur tablette/palette
+Cette documentation est à conserver précieusement pour toutes les futures générations d'assets BotanIA ! 

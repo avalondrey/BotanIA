@@ -1,0 +1,203 @@
+DOCUMENTATION COMPLÈTE - BOTANIA ASSETS
+Voici la procédure complète à conserver pour les futures générations :
+🎨 STYLES GRAPHIQUES BOTANIA
+1. PAQUETS DE GRAINES (Seed Packets)
+
+
+Style : Manga cel-shade isométrique
+Format : 512x512px
+Fond : Beige kraft texturé
+Bordures : Noires épaisses style manga
+Éléments obligatoires :
+  - Logo fournisseur en haut (CLAUSE, KOKOPELLI, LE BIAU, SAINTE MARTHE)
+  - Nom de la variété
+  - Illustration du légume/fruit au centre
+  - Angle isométrique 3/4
+  - Esthétique kawaii
+  
+  
+ "manga-style seed packet illustration, {SUPPLIER} brand logo at top, 
+"{VARIETY}" variety text, drawing of a {VEGETABLE} on the front of the packet, 
+cel-shaded, thick black manga borders, beige kraft paper background, 
+isometric angle, kawaii aesthetic, 512x512px, BotanIA game style" 
+
+
+Variables :
+{SUPPLIER} : CLAUSE, KOKOPELLI, LE BIAU, LA FERME DE SAINTE MARTHE
+{VARIETY} : Nom de la variété (ex: "California Wonder", "Cherokee Purple")
+{VEGETABLE} : Description du légume (ex: "green bell pepper", "purple tomato", "orange carrot")
+
+2. CARDS GRAINES (Seed Cards - à l'ouverture des paquets)
+
+Style : Manga cel-shade frontal
+Format : 512x512px
+Fond : Beige kraft
+Bordures : Noires épaisses
+Éléments :
+  - Illustration manga du légume/plante
+  - Nom de la variété
+  - Badge fournisseur
+  - Style carte à collectionner
+  
+  
+  
+ Prompt Template : 
+ 
+ "manga-style collectible card illustration, {VEGETABLE} {VARIETY}, 
+{SUPPLIER} brand badge, cel-shaded, thick black manga borders, 
+beige kraft paper background, kawaii aesthetic, 
+512x512px, BotanIA game style"
+
+
+3. PLANTS - STAGES DE CROISSANCE
+
+Style : Manga cel-shade
+Format : 512x512px
+Fond : Beige uni
+Bordures : Noires épaisses
+Éléments :
+  - Plante en pot (terracotta)
+  - 6 stages pour la plupart (jardin)
+  - 5 stages pour Clause/Le Biau (mini-serre)
+  - Progression visible entre les stages
+  
+  
+  
+ "manga-style plant growth stage {STAGE_NUMBER} of {TOTAL_STAGES}, 
+{VEGETABLE} {VARIETY} in terracotta pot, cel-shaded, 
+thick black manga borders, beige background, 
+kawaii aesthetic, 512x512px, BotanIA game style" 
+
+
+Stages :
+Stage 1 : Germination/jeune plantule
+Stage 2 : Premières feuilles
+Stage 3 : Croissance végétative
+Stage 4 : Développement/flowers
+Stage 5 : Premiers fruits (mini-serre) ou maturité
+Stage 6 : Pleine maturité/récolte (jardin)
+
+
+
+4. ARBRES FRUITIERS
+
+
+Style : Manga cel-shade
+Format : 512x512px
+Fond : Beige uni
+Bordures : Noires épaisses
+Éléments :
+  - Arbre en pot (plus grand que les plants)
+  - 6 stages de croissance
+  - Fruits visibles aux stages 4-6
+  
+  
+ "manga-style {TREE_TYPE} tree growth stage {STAGE_NUMBER} of 6, 
+in terracotta pot with {FRUITS}, cel-shaded, 
+thick black manga borders, beige background, 
+kawaii aesthetic, 512x512px, BotanIA game style"
+
+
+
+ 5. CARDS SHOPS (Fournisseurs)
+ Style : Manga kawaii avec mascotte
+Format : 512x512px ou rectangulaire
+Fond : Beige texturé
+Bordures : Végétales décoratives
+Éléments :
+  - Nom du shop en arc-en-ciel ou coloré
+  - Mascotte personnage kawaii
+  - Éléments végétaux décoratifs
+  - Logo/identité du fournisseur
+  
+  
+  "manga-style kawaii shop card, {SHOP_NAME} logo with colorful typography, 
+cute character mascot holding {PLANTS}, decorative floral border, 
+cel-shaded, beige kraft background, botanical illustrations, 
+512x512px, BotanIA game style"
+
+
+Shops :
+KOKOPELLI → Arc-en-ciel, graines bio
+CLAUSE → Style professionnel
+LE BIAU → Style traditionnel
+LA FERME DE SAINTE MARTHE → Style rustique
+PÉPINIÈRES BORDAS → Arbres fruitiers
+ARBRES TISSOT → Pommiers/poiriers
+FRUITIERS FOREST → Vergers
+
+
+
+6. ÉQUIPEMENTS - SERRES
+
+Style : Ornemental baroque vintage
+Format : Rectangulaire vertical
+Cadre : Ornemental complexe (vignettes florales)
+Éléments :
+  - Titre en haut (ex: "SERRE")
+  - Vue perspective de la serre
+  - Plantes multiples à l'intérieur
+  - Porte ouverte
+  - Lumière naturelle
+  - Style carte encyclopédie ancienne
+  
+  
+  "vintage botanical encyclopedia card style, ornate baroque frame 
+with floral decorations, {EQUIPMENT_NAME} title at top, 
+greenhouse with multiple plants inside, perspective view, 
+open door, sunlight rays, detailed illustration, 
+beige aged paper background, 512x512px, BotanIA game style"
+
+
+
+public/
+├── packets/
+│   ├── clause/
+│   │   ├── packet-tomato-california-wonder.png
+│   │   ├── packet-lettuce-batavia.png
+│   │   └── ...
+│   ├── kokopelli/
+│   │   ├── packet-tomato-cherokee-purple.png
+│   │   ├── packet-tomato-rose-de-berne.png
+│   │   └── ...
+│   ├── lebiau/
+│   │   ├── packet-tomato-marmande.png
+│   │   ├── packet-carrot-guerande.png
+│   │   └── ...
+│   └── sainte-marthe/
+│       ├── packet-basil-Genois.png
+│       ├── packet-pepper-doux-france.png
+│       └── ...
+├── cards/
+│   ├── seeds/
+│   │   └── (même structure que packets)
+│   ├── shops/
+│   │   ├── card-shop-kokopelli.png
+│   │   ├── card-shop-clause.png
+│   │   ├── card-shop-lebiau.png
+│   │   ├── card-shop-sainte-marthe.png
+│   │   ├── card-shop-pepinieres-bordas.png
+│   │   ├── card-shop-arbres-tissot.png
+│   │   └── card-shop-fruitiers-forest.png
+│   └── trees/
+│       ├── card-tree-apple.png
+│       ├── card-tree-lemon.png
+│       └── card-tree-cherry.png
+├── plants/
+│   ├── clause/
+│   │   ├── lettuce-batavia-stage-1.png
+│   │   └── ... (5 stages)
+│   ├── kokopelli/
+│   │   ├── tomato-cherokee-purple-stage-1.png
+│   │   └── ... (6 stages)
+│   ├── lebiau/
+│   │   ├── tomato-marmande-stage-1.png
+│   │   └── ... (6 stages, sauf laitue: 5)
+│   └── sainte-marthe/
+│       ├── basil-Genois-stage-1.png
+│       └── ... (5 stages pour basilic, 6 pour autres)
+├── trees/
+│   ├── apple-stage-1.png
+│   └── ... (6 stages)
+└── equipment/
+    └── mini-serre.png
