@@ -718,7 +718,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     stageDurations: [60,120,180,1095], realDaysToHarvest: 1455,
     optimalTemp: [8,22], waterNeed: 4.0, lightNeed: 7,
   },
-  // Pepinieres Bordas
+  // Pepinieres Bordas - Arbres d'ornement
   {
     id: "maple-acer-platanoides",
     plantDefId: "maple",
@@ -726,25 +726,11 @@ export const SEED_VARIETIES: SeedVariety[] = [
     name: "Erable Plane",
     emoji: "🍁",
     price: 140, grams: 1.5,
-    description: "Erable majestueux, feuillage dore en automne",
+    description: "Erable majestueux, feuillage dore en automne, croissance rapide",
     image: "/packets/pepinieres-bordas/packet-maple-platanoides.png", unlocked: true,
     stageDurations: [50,100,150,900], realDaysToHarvest: 1200,
     optimalTemp: [10,22], waterNeed: 4.5, lightNeed: 7,
   },
-  // INRAE - Chene
-  {
-    id: "oak-pedoncule",
-    plantDefId: "oak",
-    shopId: "inrae",
-    name: "Chene Pedoncule",
-    emoji: "🌳",
-    price: 120, grams: 2.0,
-    description: "Chene commun des forets francaises, croissance lente, bois noble",
-    image: "/packets/inrae/packet-oak-pedoncule.png", unlocked: true,
-    stageDurations: [60,120,180,1095], realDaysToHarvest: 1455,
-    optimalTemp: [8,22], waterNeed: 4.0, lightNeed: 7,
-  },
-  // Pepinieres Bordas - Arbres d'ornement
   {
     id: "birch-betula",
     plantDefId: "birch",
@@ -911,13 +897,38 @@ export interface SeedItem {
 
 // Seed packets avec marque fournisseur — par categorie
 export const SEED_CATALOG: SeedItem[] = [
-  // Graines classiques (paquets generiques)
+  // Graines génériques (legacy)
   { id:"seed-tomato",     plantDefId:"tomato",     name:"Paquet Graines Tomate",   emoji:"🍅", price:50, brand:"Vilmorin",  packetImage:"/packets/card-tomato.png",     cardImage:"/cards/card-tomato.png",     realDaysToHarvest:109, optimalMonths:[2,3,4],        category:"vegetable" },
   { id:"seed-carrot",     plantDefId:"carrot",     name:"Paquet Graines Carotte",  emoji:"🥕", price:40, brand:"Clause",    packetImage:"/packets/card-carrot.png",     cardImage:"/cards/card-carrot.png",     realDaysToHarvest:114, optimalMonths:[2,3,4,5,8,9],  category:"vegetable" },
-  { id:"seed-strawberry", plantDefId:"strawberry", name:"Paquet Graines Fraise",   emoji:"🍓", price:60, brand:"Truffaut",  packetImage:"/packets/card-strawberry.png", cardImage:"/cards/card-strawberry.png", realDaysToHarvest:123, optimalMonths:[2,3,4,8,9],    category:"vegetable" },
+  { id:"seed-strawberry", plantDefId:"strawberry", name:"Paquet Graines Fraise",   emoji:"🍓", price:60, brand:"Truffaut",  packetImage:"/packets/card-strawberry.png", cardImage:"/cards/card-strawberry.png", realDaysToHarvest:123, optimalMonths:[2,3,4,8,9],        category:"vegetable" },
   { id:"seed-lettuce",    plantDefId:"lettuce",    name:"Paquet Graines Salade",   emoji:"🥬", price:30, brand:"Jardiland", packetImage:"/packets/card-lettuce.png",    cardImage:"/cards/card-lettuce.png",    realDaysToHarvest:49,  optimalMonths:[1,2,3,4,8,9,10], category:"vegetable" },
-  { id:"seed-basil",      plantDefId:"basil",      name:"Paquet Graines Basilic",  emoji:"🌿", price:45, brand:"St Marthe", packetImage:"/packets/card-basil.png",      cardImage:"/cards/card-basil.png",      realDaysToHarvest:88,  optimalMonths:[3,4,5],        category:"aromatic" },
-  { id:"seed-pepper",     plantDefId:"pepper",     name:"Paquet Graines Piment",   emoji:"🌶️", price:55, brand:"Kokopelli", packetImage:"/packets/card-pepper.png",     cardImage:"/cards/card-pepper.png",     realDaysToHarvest:130, optimalMonths:[1,2,3,4],      category:"vegetable" },
+  { id:"seed-basil",      plantDefId:"basil",      name:"Paquet Graines Basilic",  emoji:"🌿", price:45, brand:"St Marthe", packetImage:"/packets/card-basil.png",      cardImage:"/cards/card-basil.png",      realDaysToHarvest:88,  optimalMonths:[3,4,5],             category:"aromatic" },
+  { id:"seed-pepper",     plantDefId:"pepper",     name:"Paquet Graines Piment",  emoji:"🌶️", price:55, brand:"Kokopelli", packetImage:"/packets/card-pepper.png",     cardImage:"/cards/card-pepper.png",     realDaysToHarvest:130, optimalMonths:[1,2,3,4],        category:"vegetable" },
+  // Arbres fruitiers
+  // === PAQUETS VARIÉTÉS (Clause) ===
+  { id:"packet-clause-california", plantDefId:"pepper", name:"Poivron California Wonder", emoji:"🌶️", price:65, brand:"Clause", packetImage:"/packets/clause/packet-pepper-california-wonder.png", cardImage:"/cards/seeds/clause/card-pepper-california-wonder.png", realDaysToHarvest:130, optimalMonths:[1,2,3], category:"vegetable" },
+  { id:"packet-clause-batavia", plantDefId:"lettuce", name:"Laitue Batavia", emoji:"🥬", price:35, brand:"Clause", packetImage:"/packets/clause/packet-lettuce-batavia.png", cardImage:"/cards/seeds/clause/card-lettuce-batavia.png", realDaysToHarvest:55, optimalMonths:[2,3,4,8,9], category:"vegetable" },
+  { id:"packet-clause-marketer", plantDefId:"cucumber", name:"Concombre Marketer", emoji:"🥒", price:40, brand:"Clause", packetImage:"/packets/clause/packet-cucumber-marketer.png", cardImage:"/cards/seeds/clause/card-cucumber-marketer.png", realDaysToHarvest:65, optimalMonths:[3,4,5], category:"vegetable" },
+  { id:"packet-clause-blackbeauty", plantDefId:"zucchini", name:"Courgette Black Beauty", emoji:"🥒", price:38, brand:"Clause", packetImage:"/packets/clause/packet-zucchini-black-beauty.png", cardImage:"/cards/seeds/clause/card-zucchini-black-beauty.png", realDaysToHarvest:60, optimalMonths:[3,4,5], category:"vegetable" },
+  // === PAQUETS VARIÉTÉS (Kokopelli) ===
+  { id:"packet-kokopelli-cherokee", plantDefId:"tomato", name:"Tomate Cherokee Purple", emoji:"🍅", price:75, brand:"Kokopelli", packetImage:"/packets/kokopelli/packet-tomato-cherokee-purple.png", cardImage:"/cards/seeds/kokopelli/card-tomato-cherokee-purple.png", realDaysToHarvest:115, optimalMonths:[2,3,4], category:"vegetable" },
+  { id:"packet-kokopelli-roseberne", plantDefId:"tomato", name:"Tomate Rose de Berne", emoji:"🍅", price:75, brand:"Kokopelli", packetImage:"/packets/kokopelli/packet-tomato-rose-de-berne.png", cardImage:"/cards/seeds/kokopelli/card-tomato-rose-de-berne.png", realDaysToHarvest:110, optimalMonths:[2,3,4], category:"vegetable" },
+  { id:"packet-kokopelli-blackk", plantDefId:"tomato", name:"Tomate Noire de Crimée", emoji:"🍅", price:75, brand:"Kokopelli", packetImage:"/packets/kokopelli/packet-tomato-blackk.png", cardImage:"/cards/seeds/kokopelli/card-tomato-blackk.png", realDaysToHarvest:120, optimalMonths:[2,3,4], category:"vegetable" },
+  { id:"packet-kokopelli-greenzebra", plantDefId:"tomato", name:"Tomate Green Zebra", emoji:"🍅", price:70, brand:"Kokopelli", packetImage:"/packets/kokopelli/packet-tomato-green-zebra.png", cardImage:"/cards/seeds/kokopelli/card-tomato-green-zebra.png", realDaysToHarvest:105, optimalMonths:[2,3,4], category:"vegetable" },
+  { id:"packet-kokopelli-eggplant", plantDefId:"eggplant", name:"Aubergine Longue Violette", emoji:"🍆", price:55, brand:"Kokopelli", packetImage:"/packets/kokopelli/packet-eggplant-long-violette.png", cardImage:"/cards/seeds/kokopelli/card-eggplant-long-violette.png", realDaysToHarvest:115, optimalMonths:[2,3,4], category:"vegetable" },
+  { id:"packet-kokopelli-butternut", plantDefId:"squash", name:"Courge Butternut Coco", emoji:"🎃", price:50, brand:"Kokopelli", packetImage:"/packets/kokopelli/packet-squash-butternut-coco.png", cardImage:"/cards/seeds/kokopelli/card-squash-butternut-coco.png", realDaysToHarvest:100, optimalMonths:[3,4,5], category:"vegetable" },
+  // === PAQUETS VARIÉTÉS (Le Biau) ===
+  { id:"packet-lebiau-marmande", plantDefId:"tomato", name:"Tomate Marmande", emoji:"🍅", price:55, brand:"Le Biau", packetImage:"/packets/lebiau/packet-tomato-marmande.png", cardImage:"/cards/seeds/lebiau/card-tomato-marmande.png", realDaysToHarvest:100, optimalMonths:[2,3,4], category:"vegetable" },
+  { id:"packet-lebiau-guerande", plantDefId:"carrot", name:"Carotte de Guérande", emoji:"🥕", price:40, brand:"Le Biau", packetImage:"/packets/lebiau/packet-carrot-guerande.png", cardImage:"/cards/seeds/lebiau/card-carrot-guerande.png", realDaysToHarvest:120, optimalMonths:[2,3,4,5,8,9], category:"vegetable" },
+  { id:"packet-lebiau-robver", plantDefId:"carrot", name:"Carotte Rob Ver", emoji:"🥕", price:38, brand:"Le Biau", packetImage:"/packets/lebiau/packet-carrot-robver.png", cardImage:"/cards/seeds/lebiau/card-carrot-robver.png", realDaysToHarvest:115, optimalMonths:[2,3,4,5,8,9], category:"vegetable" },
+  { id:"packet-lebiau-chene", plantDefId:"lettuce", name:"Laitue Feuille de Chêne", emoji:"🥬", price:32, brand:"Le Biau", packetImage:"/packets/lebiau/packet-lettuce-chene.png", cardImage:"/cards/seeds/lebiau/card-lettuce-chene.png", realDaysToHarvest:50, optimalMonths:[2,3,4,8,9], category:"vegetable" },
+  { id:"packet-lebiau-coco", plantDefId:"bean", name:"Haricot Coco Blanc", emoji:"🫘", price:42, brand:"Le Biau", packetImage:"/packets/lebiau/packet-bean-coco.png", cardImage:"/cards/seeds/lebiau/card-bean-coco.png", realDaysToHarvest:70, optimalMonths:[4,5,6], category:"vegetable" },
+  { id:"packet-lebiau-milan", plantDefId:"cabbage", name:"Chou de Milan", emoji:"🥬", price:45, brand:"Le Biau", packetImage:"/packets/lebiau/packet-cabbage-milan.png", cardImage:"/cards/seeds/lebiau/card-cabbage-milan.png", realDaysToHarvest:95, optimalMonths:[2,3,4,8], category:"vegetable" },
+  // === PAQUETS VARIÉTÉS (Sainte Marthe) ===
+  { id:"packet-saintemarthe-genoveois", plantDefId:"basil", name:"Basilic Génovéois", emoji:"🌿", price:48, brand:"Sainte Marthe", packetImage:"/packets/sainte-marthe/packet-basil-genoveois.png", cardImage:"/cards/seeds/sainte-marthe/card-basil-genoveois.png", realDaysToHarvest:60, optimalMonths:[3,4,5], category:"aromatic" },
+  { id:"packet-saintemarthe-douxfrance", plantDefId:"pepper", name:"Poivron Doux de France", emoji:"🌶️", price:58, brand:"Sainte Marthe", packetImage:"/packets/sainte-marthe/packet-pepper-doux-france.png", cardImage:"/cards/seeds/sainte-marthe/card-pepper-doux-france.png", realDaysToHarvest:125, optimalMonths:[1,2,3], category:"vegetable" },
+  { id:"packet-saintemarthe-marseillais", plantDefId:"basil", name:"Basilic Marseillais", emoji:"🌿", price:48, brand:"Sainte Marthe", packetImage:"/packets/sainte-marthe/packet-basil-marseillais.png", cardImage:"/cards/seeds/sainte-marthe/card-basil-marseillais.png", realDaysToHarvest:65, optimalMonths:[3,4,5], category:"aromatic" },
+  { id:"packet-saintemarthe-ciflorette", plantDefId:"strawberry", name:"Fraise Ciflorette", emoji:"🍓", price:65, brand:"Sainte Marthe", packetImage:"/packets/sainte-marthe/packet-strawberry-ciflorette.png", cardImage:"/cards/seeds/sainte-marthe/card-strawberry-ciflorette.png", realDaysToHarvest:120, optimalMonths:[2,3,8,9], category:"vegetable" },
 ];
 
 // Auto-resolve image path from item id + type (new items auto-get their path)

@@ -251,19 +251,47 @@ export function Boutique() {
 
                 if (!variety.unlocked) {
                   return (
-                    <div key={variety.id} className="relative bg-stone-50 border-[3px] border-stone-200 rounded-2xl overflow-hidden opacity-60">
-                      <div className="h-28 bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center">
-                        <div className="text-4xl">🔒</div>
+                    <div
+                      key={variety.id}
+                      layout
+                      className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all cursor-pointer
+                        ${canAfford ? "border-black shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc]"}`}
+                    >
+                      <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+                        style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+
+                      <div className="relative h-32 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                        <Image
+                          src={variety.packetImage}
+                          alt={variety.name}
+                          width={90}
+                          height={90}
+                          className="object-contain drop-shadow-lg"
+                        />
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                          <Coins className="w-3 h-3 text-yellow-400" />
+                          {variety.price}
+                        </div>
                       </div>
+
                       <div className="p-3 space-y-2">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xl">{variety.emoji}</span>
                           <div>
-                            <h3 className="text-sm font-black uppercase text-stone-400">{variety.name}</h3>
-                            <p className="text-[8px] text-stone-300">Variété verrouillée</p>
+                            <h3 className="text-sm font-black uppercase">{variety.name}</h3>
+                            <p className="text-[8px] text-stone-400">{parentPlant?.emoji} {parentPlant?.name} -- {variety.grams}g de semences</p>
                           </div>
                         </div>
-                      </div>
+
+                       
+                     
+
+
+
+
+
+
+					 </div>
                     </div>
                   );
                 }

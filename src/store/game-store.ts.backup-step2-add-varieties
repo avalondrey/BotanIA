@@ -718,7 +718,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     stageDurations: [60,120,180,1095], realDaysToHarvest: 1455,
     optimalTemp: [8,22], waterNeed: 4.0, lightNeed: 7,
   },
-  // Pepinieres Bordas
+  // Pepinieres Bordas - Arbres d'ornement
   {
     id: "maple-acer-platanoides",
     plantDefId: "maple",
@@ -726,25 +726,11 @@ export const SEED_VARIETIES: SeedVariety[] = [
     name: "Erable Plane",
     emoji: "🍁",
     price: 140, grams: 1.5,
-    description: "Erable majestueux, feuillage dore en automne",
+    description: "Erable majestueux, feuillage dore en automne, croissance rapide",
     image: "/packets/pepinieres-bordas/packet-maple-platanoides.png", unlocked: true,
     stageDurations: [50,100,150,900], realDaysToHarvest: 1200,
     optimalTemp: [10,22], waterNeed: 4.5, lightNeed: 7,
   },
-  // INRAE - Chene
-  {
-    id: "oak-pedoncule",
-    plantDefId: "oak",
-    shopId: "inrae",
-    name: "Chene Pedoncule",
-    emoji: "🌳",
-    price: 120, grams: 2.0,
-    description: "Chene commun des forets francaises, croissance lente, bois noble",
-    image: "/packets/inrae/packet-oak-pedoncule.png", unlocked: true,
-    stageDurations: [60,120,180,1095], realDaysToHarvest: 1455,
-    optimalTemp: [8,22], waterNeed: 4.0, lightNeed: 7,
-  },
-  // Pepinieres Bordas - Arbres d'ornement
   {
     id: "birch-betula",
     plantDefId: "birch",
