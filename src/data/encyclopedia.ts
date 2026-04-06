@@ -236,8 +236,274 @@ export const PLANT_DATA: Record<string, PlantEncyclopediaEntry> = {
     
     companions: ["basil", "carrot"],
     enemies: ["eggplant"],
-    
+
     waterNeeds: "medium", lightNeedsLUX: 40000, nutrientsNPK: [1, 2, 3]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ARBRES FRUITIERS
+  // ═══════════════════════════════════════════════════
+
+  apple: {
+    plantDefId: "apple",
+    botanicalName: "Malus domestica",
+
+    // Arbre fruitier rustique
+    tempBaseC: 8, tempOptimalC: 18, tempMaxC: 35, frostResistance: -25,
+
+    // Arbre - pas de semis direct, plantation en pot
+    sowingDepthCm: 0,
+    sowingMonthsIndoor: [], // Acheté en pot
+    sowingMonthsOutdoor: [10, 11, 2, 3], // Plantation racines nues
+
+    // Croissance très lente - 5 stages sur plusieurs années
+    daysToGermination: 0, // N/A - planté en pot
+    daysToTransplant: 0, // N/A
+    daysToHarvest: 730, // 2 ans pour première récolte (accéléré jeu)
+
+    spacingBetweenPlantsCm: 400, // 4m entre pommiers
+    spacingBetweenRowsCm: 500,
+
+    companions: [],
+    enemies: ["walnut"], // Juglone
+
+    waterNeeds: "medium", lightNeedsLUX: 50000, nutrientsNPK: [1, 1, 2]
+  },
+
+  pear: {
+    plantDefId: "pear",
+    botanicalName: "Pyrus communis",
+
+    tempBaseC: 10, tempOptimalC: 18, tempMaxC: 35, frostResistance: -25,
+
+    sowingDepthCm: 0,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [10, 11, 2, 3],
+
+    daysToGermination: 0,
+    daysToTransplant: 0,
+    daysToHarvest: 800, // 2+ ans
+
+    spacingBetweenPlantsCm: 400,
+    spacingBetweenRowsCm: 500,
+
+    companions: ["apple"], // Pollinisation croisée
+    enemies: ["walnut"],
+
+    waterNeeds: "medium", lightNeedsLUX: 50000, nutrientsNPK: [1, 1, 2]
+  },
+
+  cherry: {
+    plantDefId: "cherry",
+    botanicalName: "Prunus avium",
+
+    tempBaseC: 10, tempOptimalC: 18, tempMaxC: 35, frostResistance: -20,
+
+    sowingDepthCm: 0,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [10, 11],
+
+    daysToGermination: 0,
+    daysToTransplant: 0,
+    daysToHarvest: 900, // 2+ ans
+
+    spacingBetweenPlantsCm: 600, // 6m
+    spacingBetweenRowsCm: 700,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "medium", lightNeedsLUX: 55000, nutrientsNPK: [1, 1, 2]
+  },
+
+  lemon: {
+    plantDefId: "lemon",
+    botanicalName: "Citrus limon",
+
+    // Agrume - gélif
+    tempBaseC: 12, tempOptimalC: 22, tempMaxC: 38, frostResistance: -5,
+
+    sowingDepthCm: 1,
+    sowingMonthsIndoor: [2, 3, 4],
+    sowingMonthsOutdoor: [4, 5],
+
+    daysToGermination: 21,
+    daysToTransplant: 90,
+    daysToHarvest: 1095, // 3 ans
+
+    spacingBetweenPlantsCm: 300, // Culture intensive
+    spacingBetweenRowsCm: 400,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "high", lightNeedsLUX: 60000, nutrientsNPK: [1, 1, 2]
+  },
+
+  orange: {
+    plantDefId: "orange",
+    botanicalName: "Citrus sinensis",
+
+    tempBaseC: 12, tempOptimalC: 22, tempMaxC: 38, frostResistance: -5,
+
+    sowingDepthCm: 1,
+    sowingMonthsIndoor: [2, 3, 4],
+    sowingMonthsOutdoor: [4, 5],
+
+    daysToGermination: 21,
+    daysToTransplant: 90,
+    daysToHarvest: 1095, // 3 ans
+
+    spacingBetweenPlantsCm: 350,
+    spacingBetweenRowsCm: 450,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "high", lightNeedsLUX: 60000, nutrientsNPK: [1, 1, 2]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ARBRES FORESTIERS & ORNEMENT
+  // ═══════════════════════════════════════════════════
+
+  walnut: {
+    plantDefId: "walnut",
+    botanicalName: "Juglans regia",
+
+    // Arbre forestier très rustique
+    tempBaseC: 8, tempOptimalC: 18, tempMaxC: 38, frostResistance: -30,
+
+    sowingDepthCm: 3,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [10, 11],
+
+    daysToGermination: 60,
+    daysToTransplant: 180,
+    daysToHarvest: 1095, // 3 ans (noix)
+
+    spacingBetweenPlantsCm: 1000, // 10m
+    spacingBetweenRowsCm: 1200,
+
+    companions: [],
+    enemies: ["apple", "pear", "cherry"], // Juglone
+
+    waterNeeds: "medium", lightNeedsLUX: 45000, nutrientsNPK: [1, 1, 1]
+  },
+
+  oak: {
+    plantDefId: "oak",
+    botanicalName: "Quercus robur",
+
+    tempBaseC: 8, tempOptimalC: 18, tempMaxC: 38, frostResistance: -25,
+
+    sowingDepthCm: 2,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [10, 11],
+
+    daysToGermination: 45,
+    daysToTransplant: 120,
+    daysToHarvest: 1455, // 4 ans
+
+    spacingBetweenPlantsCm: 1500, // 15m
+    spacingBetweenRowsCm: 2000,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "medium", lightNeedsLUX: 40000, nutrientsNPK: [1, 1, 1]
+  },
+
+  maple: {
+    plantDefId: "maple",
+    botanicalName: "Acer platanoides",
+
+    tempBaseC: 5, tempOptimalC: 16, tempMaxC: 35, frostResistance: -30,
+
+    sowingDepthCm: 2,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [3, 4, 9, 10],
+
+    daysToGermination: 30,
+    daysToTransplant: 90,
+    daysToHarvest: 1200, // ornemental
+
+    spacingBetweenPlantsCm: 800,
+    spacingBetweenRowsCm: 1000,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "medium", lightNeedsLUX: 35000, nutrientsNPK: [1, 1, 1]
+  },
+
+  birch: {
+    plantDefId: "birch",
+    botanicalName: "Betula pendula",
+
+    tempBaseC: 5, tempOptimalC: 15, tempMaxC: 35, frostResistance: -40,
+
+    sowingDepthCm: 0.5,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [3, 4, 9, 10],
+
+    daysToGermination: 21,
+    daysToTransplant: 60,
+    daysToHarvest: 970, // ornemental
+
+    spacingBetweenPlantsCm: 600,
+    spacingBetweenRowsCm: 800,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "medium", lightNeedsLUX: 40000, nutrientsNPK: [1, 1, 1]
+  },
+
+  pine: {
+    plantDefId: "pine",
+    botanicalName: "Pinus sylvestris",
+
+    tempBaseC: 5, tempOptimalC: 15, tempMaxC: 38, frostResistance: -40,
+
+    sowingDepthCm: 1,
+    sowingMonthsIndoor: [],
+    sowingMonthsOutdoor: [3, 4, 9, 10],
+
+    daysToGermination: 28,
+    daysToTransplant: 90,
+    daysToHarvest: 1475,
+
+    spacingBetweenPlantsCm: 500,
+    spacingBetweenRowsCm: 700,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "low", lightNeedsLUX: 50000, nutrientsNPK: [1, 1, 1]
+  },
+
+  magnolia: {
+    plantDefId: "magnolia",
+    botanicalName: "Magnolia grandiflora",
+
+    tempBaseC: 10, tempOptimalC: 18, tempMaxC: 35, frostResistance: -15,
+
+    sowingDepthCm: 2,
+    sowingMonthsIndoor: [2, 3],
+    sowingMonthsOutdoor: [4, 5],
+
+    daysToGermination: 45,
+    daysToTransplant: 120,
+    daysToHarvest: 1660, // très lent
+
+    spacingBetweenPlantsCm: 400,
+    spacingBetweenRowsCm: 500,
+
+    companions: [],
+    enemies: [],
+
+    waterNeeds: "high", lightNeedsLUX: 40000, nutrientsNPK: [2, 1, 1]
   }
 };
 

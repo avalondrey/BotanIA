@@ -122,11 +122,11 @@ export interface GardenCell {
 
 // ═══ Realistic Garden (cm-based) ═══
 
-export const DEFAULT_GARDEN_WIDTH_CM = 1000;  // 10m
-export const DEFAULT_GARDEN_HEIGHT_CM = 500;   // 5m = 50m²
-export const MAX_GARDEN_WIDTH_CM = 2500;
-export const MAX_GARDEN_HEIGHT_CM = 2000;
-export const GRID_UNIT_CM = 5;
+export const DEFAULT_GARDEN_WIDTH_CM = 2750;  // 27.5m
+export const DEFAULT_GARDEN_HEIGHT_CM = 2000;  // 20m = 550m²
+export const MAX_GARDEN_WIDTH_CM = 3500;
+export const MAX_GARDEN_HEIGHT_CM = 3000;
+export const GRID_UNIT_CM = 10;  // Agrandir la grille unité pour 550m²
 
 export interface GardenPlant {
   id: string;
@@ -142,6 +142,47 @@ export interface SerreZone {
   y: number;  // cm
   width: number;  // cm
   height: number; // cm
+}
+
+// ═══ Garden Objects (Arbres, Haies, Cuves, Cabanes) ═══
+
+export interface GardenTree {
+  id: string;
+  type: 'apple' | 'pear' | 'cherry' | 'plum' | 'oak' | 'pine';
+  x: number;  // cm
+  y: number;  // cm
+  diameter: number;  // cm (largeur de la couronne)
+  age: number;  // jours depuis plantation
+}
+
+export interface GardenHedge {
+  id: string;
+  type: 'laurel' | 'cypress' | 'boxwood' | 'bamboo';
+  x: number;  // cm (point de départ)
+  y: number;  // cm
+  length: number;  // cm (longueur de la haie)
+  orientation: 'horizontal' | 'vertical';
+  height: number;  // cm (hauteur visuelle)
+}
+
+export interface GardenTank {
+  id: string;
+  type: 'water' | 'compost';
+  x: number;  // cm
+  y: number;  // cm
+  width: number;  // cm
+  height: number;  // cm
+  capacity: number;  // litres
+  currentLevel: number;  // litres
+}
+
+export interface GardenShed {
+  id: string;
+  type: 'tool_shed' | 'garden_shed' | 'storage';
+  x: number;  // cm
+  y: number;  // cm
+  width: number;  // cm
+  height: number;  // cm
 }
 
 // ═══ Mini Serre (6×4 = 24 slots) ═══
@@ -653,7 +694,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍎",
     price: 150, grams: 0.5,
     description: "Variete classic, chair douce et juteuse, Bonne conservation",
-    image: "/packets/guignard/packet-apple-golden.png", unlocked: true,
+    image: "/pots/guignard/pot-apple-golden.png", unlocked: true,
     stageDurations: [30,60,120,360], realDaysToHarvest: 730,
     optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -665,7 +706,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍎",
     price: 160, grams: 0.5,
     description: "Variete croquante et sucree,tres瑞 populaire",
-    image: "/packets/guignard/packet-apple-gala.png", unlocked: true,
+    image: "/pots/guignard/pot-apple-gala.png", unlocked: true,
     stageDurations: [28,56,110,340], realDaysToHarvest: 700,
     optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -677,7 +718,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍐",
     price: 170, grams: 0.5,
     description: "Variete tres瑞 ancienne, chair fondante et parfumee",
-    image: "/packets/guignard/packet-pear-williams.png", unlocked: true,
+    image: "/pots/guignard/pot-pear-williams.png", unlocked: true,
     stageDurations: [30,65,130,380], realDaysToHarvest: 800,
     optimalTemp: [10,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -689,7 +730,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍒",
     price: 180, grams: 0.4,
     description: "Cerise rouge fonce, chair ferme et tres douce et sucree",
-    image: "/packets/inrae/packet-cherry-bing.png", unlocked: true,
+    image: "/pots/inrae/cherry-bing-pot.png", unlocked: true,
     stageDurations: [35,70,140,420], realDaysToHarvest: 900,
     optimalTemp: [10,24], waterNeed: 5.0, lightNeed: 7,
   },
@@ -778,7 +819,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍎",
     price: 155, grams: 0.6,
     description: "Variete ancienne rustique, pommes parfumees, excellente conservation",
-    image: "/packets/arbres-tissot/packet-apple-reine-reinettes.png", unlocked: true,
+    image: "/pots/arbres-tissot/pot-apple-reine-reinettes.png", unlocked: true,
     stageDurations: [30,60,120,380], realDaysToHarvest: 750,
     optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -790,7 +831,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍎",
     price: 150, grams: 0.6,
     description: "Pommes jaunes douces, floraison spectaculaire, tres productive",
-    image: "/packets/arbres-tissot/packet-apple-belle-fleur.png", unlocked: true,
+    image: "/pots/arbres-tissot/pot-apple-belle-fleur.png", unlocked: true,
     stageDurations: [28,58,115,360], realDaysToHarvest: 720,
     optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -802,7 +843,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍐",
     price: 165, grams: 0.7,
     description: "Variete anglaise, chair fondante et sucree, autofertile",
-    image: "/packets/arbres-tissot/packet-pear-conference.png", unlocked: true,
+    image: "/pots/arbres-tissot/pot-pear-conference.png", unlocked: true,
     stageDurations: [32,65,130,400], realDaysToHarvest: 820,
     optimalTemp: [10,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -814,7 +855,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
     emoji: "🍐",
     price: 160, grams: 0.7,
     description: "Poire ancienne fondante, chair blanche juteuse, tres parfumee",
-    image: "/packets/arbres-tissot/packet-pear-louise-bonne.png", unlocked: true,
+    image: "/pots/arbres-tissot/pot-pear-louise-bonne.png", unlocked: true,
     stageDurations: [30,62,125,390], realDaysToHarvest: 800,
     optimalTemp: [10,22], waterNeed: 5.0, lightNeed: 7,
   },
@@ -990,6 +1031,10 @@ export interface GameState {
   gardenHeightCm: number;
   gardenPlants: GardenPlant[];
   gardenSerreZones: SerreZone[];
+  gardenTrees: GardenTree[];
+  gardenHedges: GardenHedge[];
+  gardenTanks: GardenTank[];
+  gardenSheds: GardenShed[];
 
   // Pépinière (seedling nursery)
   pepiniere: PlantState[];
@@ -1419,7 +1464,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   weatherError: null,
 
   coins: 200,
-  speed: 1,
+  speed: 0,  // 0 = pause (speed desactivee par defaut)
   isPaused: false,
   alerts: [],
   harvested: 0,
@@ -1470,11 +1515,56 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Clear old grid data
     try { localStorage.removeItem("jardin-culture-garden"); } catch { /* ignore */ }
 
+    // Test plants if garden is empty
+    const testPlants: GardenPlant[] = savedGardenPlants && savedGardenPlants.length > 0
+      ? savedGardenPlants
+      : [
+          {
+            id: 'test-1',
+            plantDefId: 'tomato',
+            x: 50,
+            y: 50,
+            plant: { ...createInitialPlantState('tomato'), stage: 3, waterLevel: 65, daysSincePlanting: 19 } as PlantState,
+          },
+          {
+            id: 'test-2',
+            plantDefId: 'tomato',
+            x: 150,
+            y: 50,
+            plant: { ...createInitialPlantState('tomato'), stage: 2, waterLevel: 25, daysSincePlanting: 16 } as PlantState,
+          },
+          {
+            id: 'test-3',
+            plantDefId: 'tomato',
+            x: 250,
+            y: 50,
+            plant: { ...createInitialPlantState('tomato'), stage: 5, waterLevel: 80, daysSincePlanting: 35 } as PlantState,
+          },
+          {
+            id: 'test-4',
+            plantDefId: 'tomato',
+            x: 50,
+            y: 150,
+            plant: { ...createInitialPlantState('tomato'), stage: 1, waterLevel: 45, daysSincePlanting: 5 } as PlantState,
+          },
+          {
+            id: 'test-5',
+            plantDefId: 'tomato',
+            x: 150,
+            y: 150,
+            plant: { ...createInitialPlantState('tomato'), stage: 6, waterLevel: 55, daysSincePlanting: 45, isHarvestable: true } as PlantState,
+          },
+        ];
+
     set({
       gardenWidthCm: savedGardenDims?.widthCm || DEFAULT_GARDEN_WIDTH_CM,
       gardenHeightCm: savedGardenDims?.heightCm || DEFAULT_GARDEN_HEIGHT_CM,
-      gardenPlants: savedGardenPlants || [],
+      gardenPlants: testPlants,
       gardenSerreZones: savedGardenSerreZones || [],
+      gardenTrees: [],
+      gardenHedges: [],
+      gardenTanks: [],
+      gardenSheds: [],
       pepiniere: savedPepiniere || [],
       miniSerres: savedMiniSerres || [],
       serreTiles: loadSerreTiles(),
@@ -1489,7 +1579,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       alerts: [],
       harvested: 0,
       isPaused: false,
-      speed: 1,
+      speed: 0,  // 0 = pause (speed desactivee par defaut)
       score: 0,
       bestScore: loadBestScore(),
       coins: loadCoins(),

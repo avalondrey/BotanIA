@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
-import { JardinGrid } from "@/components/game/JardinGrid";
 import { Pepiniere } from "@/components/game/Pepiniere";
 import { SerreJardinView } from "@/components/game/SerreJardinView";
 import { GameHUD } from "@/components/game/GameHUD";
 import { EnhancedHUD } from "@/components/game/EnhancedHUD";
 import { Boutique } from "@/components/game/Boutique";
 import { GrainCollection } from "@/components/game/GrainCollection";
+import { IAJardinier } from "@/components/game/IAJardinier";
+import { Jardin } from "@/components/game/Jardin";
+import { WeatherEffects } from "@/components/game/WeatherEffects";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdminPanel, AdminButton, AdminModeBanner } from "@/components/game/AdminPanel";
 import {
@@ -144,7 +146,9 @@ export default function GamePage() {
   // Game tick
   useEffect(() => {
     if (tickRef.current) clearInterval(tickRef.current);
-    if (!isPaused) {
+    
+    // CRITICAL FIX: Ne rien faire si speed = 0 (pause complete)
+    if (!isPaused && speed > 0) {
       // 1 day = 20 seconds at 1x speed
       // At speed N: run N days per 20 seconds
       // Use batch ticks to avoid blocking: max 10 ticks per 50ms interval
@@ -173,6 +177,33 @@ export default function GamePage() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  // FIX CRITIQUE : Pause automatique quand onglet inactif
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Onglet cache -> PAUSE AUTOMATIQUE
+        const currentState = useGameStore.getState();
+        if (!currentState.isPaused && currentState.speed > 0) {
+          console.log("Onglet inactif detecte - Pause automatique activee");
+          useGameStore.getState().togglePause();
+          // Stocker qu'on a fait une pause auto
+          sessionStorage.setItem("botania_auto_paused", "true");
+        }
+      } else {
+        // Onglet visible -> Reprendre SEULEMENT si pause etait auto
+        const wasAutoPaused = sessionStorage.getItem("botania_auto_paused");
+        if (wasAutoPaused === "true") {
+          console.log("Onglet actif - Reprise de la simulation");
+          useGameStore.getState().togglePause();
+          sessionStorage.removeItem("botania_auto_paused");
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   return (
@@ -311,7 +342,14 @@ export default function GamePage() {
           </TabsList>
 
           <TabsContent value="jardin" className="mt-4">
-            {showSerreView ? <SerreJardinView /> : <JardinGrid />}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                {showSerreView ? <SerreJardinView /> : <Jardin />}
+              </div>
+              <div className="lg:col-span-1">
+                <IAJardinier />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="serre" className="mt-4">
@@ -358,6 +396,9 @@ export default function GamePage() {
 
       {/* Admin Panel — rendered via portal to body (z-99999) */}
       <AdminPanel />
+
+      {/* Effets météo */}
+      <WeatherEffects />
     </div>
   );
 }

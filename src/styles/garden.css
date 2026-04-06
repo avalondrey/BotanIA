@@ -1,0 +1,770 @@
+/* ============================================
+   🌱 BOTANIA - Garden Manga Styles
+   ============================================ */
+
+/* Container principal */
+.garden-page-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3e6cb 100%);
+  padding: 20px;
+}
+
+/* Header */
+.garden-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.garden-title {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+/* Toggle Buttons */
+.view-toggle-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.toggle-btn {
+  padding: 12px 24px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Stats Bar */
+.garden-stats-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.stat-icon {
+  font-size: 16px;
+}
+
+.stat-value {
+  color: #2d3748;
+}
+
+/* ============================================
+   📍 VUE PLAN (Terrain)
+   ============================================ */
+
+.plan-view-container {
+  position: relative;
+  min-height: 600px;
+  background: linear-gradient(
+    135deg, 
+    #e8f5e9 0%, 
+    #c8e6c9 50%, 
+    #a5d6a7 100%
+  );
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.garden-grid {
+  position: relative;
+  min-height: 500px;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+  border-radius: 12px;
+}
+
+.plant-sprite-container {
+  position: absolute;
+  width: 120px;
+  height: 140px;
+  cursor: pointer;
+  transform-origin: center bottom;
+}
+
+.plant-shadow {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.plant-sprite-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  transition: filter 0.3s ease;
+}
+
+/* Day Badge */
+.day-badge-manga {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #ffb6c1, #ff69b4);
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.4);
+  z-index: 5;
+}
+
+/* Water Bar */
+.water-bar-manga {
+  position: absolute;
+  top: 40px;
+  right: -8px;
+  width: 10px;
+  height: 50px;
+  background: rgba(255,255,255,0.6);
+  border: 2px solid #4ecdc4;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.water-fill-manga {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  transition: height 0.5s ease;
+}
+
+/* Stage Dots */
+.stage-dots {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.stage-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.stage-dot.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 0 4px rgba(102, 126, 234, 0.6);
+}
+
+/* Empty State */
+.empty-garden-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #718096;
+}
+
+.empty-emoji {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+/* ============================================
+   🎴 VUE CARTES (Collection)
+   ============================================ */
+
+.cards-view-container {
+  padding: 20px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.plant-card-manga {
+  position: relative;
+  background: #fff9f0;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Rarity Borders */
+.border-common { box-shadow: 0 0 0 3px #a0aec0; }
+.border-rare { box-shadow: 0 0 0 3px #4299e1; }
+.border-epic { box-shadow: 0 0 0 3px #9f7aea; }
+.border-legendary { 
+  box-shadow: 0 0 0 3px #f6e05e, 0 0 20px rgba(246, 224, 94, 0.5);
+}
+
+.card-gradient-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 3px;
+  background: linear-gradient(
+    45deg,
+    #ff6b9d,
+    #4ecdc4,
+    #45b7d1,
+    #96e6a1,
+    #ff6b9d
+  );
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.card-inner-content {
+  position: relative;
+  padding: 16px;
+  background: white;
+  border-radius: 20px;
+  margin: 3px;
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stage-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #2e7d32;
+}
+
+.stage-emoji {
+  font-size: 14px;
+}
+
+.days-badge-card {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #ffb6c1, #ff69b4);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 12px;
+  color: white;
+}
+
+/* Card Image */
+.card-image-container {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f5f7fa, #e8f5e9);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-plant-image {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+/* Plant Name */
+.plant-name-card {
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  margin: 8px 0 12px;
+  color: #2d3748;
+}
+
+/* Stats Container */
+.card-stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-row-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-icon {
+  font-size: 14px;
+  width: 20px;
+}
+
+.stat-bar-bg {
+  flex: 1;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.stat-bar-fill.water {
+  background: linear-gradient(90deg, #4ecdc4, #44a08d);
+}
+
+.stat-bar-fill.health {
+  background: linear-gradient(90deg, #ff6b9d, #f093fb);
+}
+
+.stat-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a5568;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Card Actions */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f7fafc;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.water-btn:hover { background: #bee3f8; }
+.info-btn:hover { background: #e6fffa; }
+.harvest-btn {
+  background: linear-gradient(135deg, #9ae6b4, #68d391) !important;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Empty Cards State */
+.empty-cards-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #a0aec0;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* SERRE ZONES (Greenhouse overlays on garden grid) */
+/* ═══════════════════════════════════════════════════════════ */
+
+.serre-zone-overlay {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(139, 195, 74, 0.15));
+  border: 3px dashed #4CAF50;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  z-index: 1;
+}
+
+.serre-zone-overlay:hover {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25), rgba(139, 195, 74, 0.25));
+  border-color: #66BB6A;
+  transform: scale(1.02);
+}
+
+.serre-icon {
+  font-size: 48px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  animation: serre-float 3s ease-in-out infinite;
+}
+
+@keyframes serre-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.serre-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2E7D32;
+  text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px;
+  border: 2px solid #4CAF50;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* PLACEMENT CONTROLS */
+/* ═══════════════════════════════════════════════════════════ */
+
+.placement-controls {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.control-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.label-icon {
+  font-size: 18px;
+}
+
+.mode-toggle-btn {
+  position: relative;
+  width: 200px;
+  height: 48px;
+  border-radius: 24px;
+  border: 2px solid #e2e8f0;
+  background: #f7fafc;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.mode-toggle-btn:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.mode-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 92px;
+  height: 38px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1;
+}
+
+.mode-labels {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 100%;
+  z-index: 2;
+}
+
+.mode-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #718096;
+  transition: color 0.3s;
+  padding: 0 12px;
+}
+
+.mode-label.active {
+  color: #2d3748;
+}
+
+.mode-description {
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-left: 4px solid #4CAF50;
+  border-radius: 8px;
+}
+
+.description-text {
+  font-size: 13px;
+  color: #2d3748;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Responsive */
+@media (max-width: 768px) {
+  .garden-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .view-toggle-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .plant-sprite-container {
+    width: 100px;
+    height: 120px;
+  }
+}/* ═══════════════════════════════════════════════════════════ */
+/* WEATHER EFFECTS (Soleil, Nuages, Pluie) */
+/* ═══════════════════════════════════════════════════════════ */
+
+.weather-effects-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+/* SOLEIL */
+.sun-effect {
+  position: absolute;
+  top: 50px;
+  right: 100px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, #FFD700, #FFA500, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.6);
+  animation: pulse-sun 8s ease-in-out infinite;
+}
+
+@keyframes pulse-sun {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.sun-rays {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: -40px;
+  left: -40px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg, #FFD700 10deg,
+    transparent 20deg, transparent 40deg,
+    #FFD700 50deg, transparent 60deg,
+    transparent 80deg, #FFD700 90deg,
+    transparent 100deg
+  );
+  border-radius: 50%;
+  animation: rotate-rays 20s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes rotate-rays {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* NUAGES */
+.clouds-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
+  border-radius: 100px;
+  filter: blur(2px);
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 100px;
+}
+
+.cloud-1 {
+  width: 150px;
+  height: 60px;
+  top: 30px;
+}
+
+.cloud-1::before {
+  width: 80px;
+  height: 80px;
+  top: -40px;
+  left: 20px;
+}
+
+.cloud-1::after {
+  width: 100px;
+  height: 70px;
+  top: -30px;
+  right: 20px;
+}
+
+.cloud-2 {
+  width: 200px;
+  height: 80px;
+  top: 80px;
+}
+
+.cloud-2::before {
+  width: 100px;
+  height: 100px;
+  top: -50px;
+  left: 30px;
+}
+
+.cloud-2::after {
+  width: 120px;
+  height: 90px;
+  top: -40px;
+  right: 30px;
+}
+
+.cloud-3 {
+  width: 180px;
+  height: 70px;
+  top: 140px;
+}
+
+.cloud-3::before {
+  width: 90px;
+  height: 90px;
+  top: -45px;
+  left: 25px;
+}
+
+.cloud-3::after {
+  width: 110px;
+  height: 80px;
+  top: -35px;
+  right: 25px;
+}
+
+/* PLUIE */
+.rain-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(174, 194, 224, 0.8), transparent);
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════ */

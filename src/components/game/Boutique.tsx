@@ -209,9 +209,9 @@ export function Boutique() {
       {/* Graines Tab — Multi-shop varieties */}
       {activeTab === "graines" && (
         <div className="space-y-3">
-          {/* Shop Selector */}
+          {/* Shop Selector - ONLY seed shops (no tree shops) */}
           <div className="flex gap-2">
-            {allShops.map((shop) => (
+            {allShops.filter(shop => !["guignard", "inrae", "pepinieres-bordas", "arbres-tissot", "fruitiers-forest"].includes(shop.id)).map((shop) => (
               <button
                 key={shop.id}
                 onClick={() => setSelectedShopId(shop.id)}
@@ -232,7 +232,7 @@ export function Boutique() {
           {/* Selected Shop Banner */}
           <div className={`p-3 bg-gradient-to-br ${selectedShop.color} ${selectedShop.borderColor} border-[3px] rounded-2xl shadow-[4px_4px_0_0_#000]`}>
             <div className="flex items-center gap-3">
-              <Image src={selectedShop.image} alt={selectedShop.name} width={48} height={48} className="object-contain rounded-lg" />
+              <Image src={selectedShop.image} alt={selectedShop.name} width={100} height={48} className="object-contain rounded-lg" />
               <div>
                 <h3 className="text-sm font-black uppercase">{selectedShop.emoji} {selectedShop.name}</h3>
                 <p className="text-[8px] text-stone-500">{selectedShop.description}</p>
@@ -260,13 +260,13 @@ export function Boutique() {
                       <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
                         style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
 
-                      <div className="relative h-32 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                      <div className="relative h-48 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
                         <Image
                           src={variety.packetImage}
                           alt={variety.name}
-                          width={90}
-                          height={90}
-                          className="object-contain drop-shadow-lg"
+                          width={180}
+                          height={180}
+                          className="object-cover drop-shadow-1g"
                         />
                         <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
                           <Coins className="w-3 h-3 text-yellow-400" />
@@ -310,7 +310,7 @@ export function Boutique() {
                       <Image
                         src={variety.image}
                         alt={variety.name}
-                        width={90}
+                        width={220}
                         height={90}
                         className="object-contain drop-shadow-lg"
                       />
@@ -406,7 +406,7 @@ export function Boutique() {
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <h3 className="text-[10px] font-black uppercase text-stone-500 tracking-wider">Graines classiques (paquet x3)</h3>
+              <h3 className="text-[18px] font-black uppercase text-stone-500 tracking-wider">Graines classiques (paquet x3)</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
               {SEED_CATALOG.map((item) => {
@@ -426,8 +426,8 @@ export function Boutique() {
                       <Image
                         src={item.packetImage}
                         alt={item.name}
-                        width={80}
-                        height={48}
+                        width={85}
+                        height={100}
                         className="object-contain drop-shadow-lg"
                       />
                       <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-red-600 text-white text-[6px] font-black uppercase rounded-sm tracking-wider shadow-md">
@@ -493,13 +493,13 @@ export function Boutique() {
       {/* Arbres Fruitiers Tab */}
       {activeTab === "arbres" && (
         <div className="space-y-3">
-          {/* Shop Selector for fruit trees */}
+          {/* Shop Selector for fruit trees - UNIQUEMENT shops d'arbres */}
           <div className="flex gap-2 flex-wrap">
-            {[SEED_SHOPS.find(s => s.id === "guignard"), SEED_SHOPS.find(s => s.id === "inrae"), SEED_SHOPS.find(s => s.id === "saintemarthe")].filter(Boolean).map((shop) => (
+            {[SEED_SHOPS.find(s => s.id === "guignard"), SEED_SHOPS.find(s => s.id === "inrae"), SEED_SHOPS.find(s => s.id === "pepinieres-bordas"), SEED_SHOPS.find(s => s.id === "arbres-tissot"), SEED_SHOPS.find(s => s.id === "fruitiers-forest")].filter(Boolean).map((shop) => (
               <button
                 key={shop!.id}
                 onClick={() => setSelectedShopId(shop!.id)}
-                className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl border-2 transition-all flex items-center gap-2
+                className={`flex-1 py-2 px-3 rounded-xl border-2 transition-all flex items-center gap-2
                   ${selectedShopId === shop!.id
                     ? `bg-gradient-to-br ${shop!.color} ${shop!.borderColor} shadow-[2px_2px_0_0_#000]`
                     : "bg-white border-stone-200 hover:border-stone-400"}`}
@@ -507,6 +507,7 @@ export function Boutique() {
                 <span className="text-lg">{shop!.emoji}</span>
                 <div className="text-left">
                   <p className={`text-[10px] font-black uppercase ${selectedShopId === shop!.id ? "text-black" : "text-stone-500"}`}>{shop!.name}</p>
+                  <p className={`text-[7px] font-bold ${selectedShopId === shop!.id ? "text-stone-600" : "text-stone-300"}`}>{shop!.description.slice(0, 40)}…</p>
                 </div>
               </button>
             ))}
@@ -519,7 +520,7 @@ export function Boutique() {
             return (
               <div className={`p-3 bg-gradient-to-br ${shop.color} ${shop.borderColor} border-[3px] rounded-2xl shadow-[4px_4px_0_0_#000]`}>
                 <div className="flex items-center gap-3">
-                  <Image src={shop.image} alt={shop.name} width={48} height={48} className="object-contain rounded-lg" />
+                  <Image src={shop.image} alt={shop.name} width={100} height={48} className="object-contain rounded-lg" />
                   <div>
                     <h3 className="text-sm font-black uppercase">{shop.emoji} {shop.name}</h3>
                     <p className="text-[8px] text-stone-500">{shop.description}</p>
@@ -529,39 +530,32 @@ export function Boutique() {
             );
           })()}
 
-          {/* Fruit Tree Seed Cards */}
+          {/* Fruit Tree Cards */}
           {(() => {
-            const fruitSeeds = SEED_CATALOG.filter(s => s.category === "fruit-tree");
-            const shopFruitVarieties = SEED_VARIETIES.filter(v =>
-              (v.shopId === "guignard" || v.shopId === "inrae" || v.shopId === "saintemarthe" || v.shopId === "kokopelli") &&
-              fruitSeeds.some(s => s.plantDefId === v.plantDefId)
+            // Tree shops ONLY (pas saintemarthe qui est dans graines)
+            const treeShopIds = ["guignard", "inrae", "pepinieres-bordas", "arbres-tissot", "fruitiers-forest"];
+            // Filter by selected shop if it's a tree shop
+            const treeVarieties = SEED_VARIETIES.filter(v =>
+              treeShopIds.includes(v.shopId) &&
+              (treeShopIds.includes(selectedShopId) ? v.shopId === selectedShopId : true)
             );
-            const treePlants = [...fruitSeeds.map(s => ({
-              ...s,
-              isPacket: true,
-              owned: seedCollection[s.id] || 0,
-              canAfford: coins >= s.price,
-              boughtKey: `seed-${s.id}`,
-            })), ...shopFruitVarieties.map(v => {
-              const parentSeed = fruitSeeds.find(s => s.plantDefId === v.plantDefId);
-              return {
-                id: v.id,
-                plantDefId: v.plantDefId,
-                name: v.name,
-                emoji: v.emoji,
-                price: v.price,
-                brand: v.shopId ? (allShops.find(s => s.id === v.shopId)?.name || v.shopId) : "Inconnu",
-                packetImage: v.image,
-                cardImage: v.image,
-                realDaysToHarvest: v.realDaysToHarvest,
-                category: "fruit-tree" as const,
-                isPacket: false,
-                owned: seedVarieties[v.id] || 0,
-                canAfford: coins >= v.price,
-                boughtKey: `variety-${v.id}`,
-                stageDurations: v.stageDurations,
-              };
-            })];
+            const treePlants = treeVarieties.map(v => ({
+              id: v.id,
+              plantDefId: v.plantDefId,
+              name: v.name,
+              emoji: v.emoji,
+              price: v.price,
+              brand: v.shopId ? (allShops.find(s => s.id === v.shopId)?.name || v.shopId) : "Inconnu",
+              packetImage: v.image,
+              cardImage: v.image,
+              realDaysToHarvest: v.realDaysToHarvest,
+              category: "fruit-tree" as const,
+              isPacket: false,
+              owned: seedVarieties[v.id] || 0,
+              canAfford: coins >= v.price,
+              boughtKey: `variety-${v.id}`,
+              stageDurations: v.stageDurations,
+            }));
 
             if (treePlants.length === 0) {
               return <p className="text-center text-stone-400 text-sm py-8">Aucun arbre fruitier disponible dans cette boutique.</p>;
@@ -574,47 +568,49 @@ export function Boutique() {
                     key={item.boughtKey}
                     layout
                     className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
-                      ${item.canAfford ? "border-green-600 shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+                      ${item.canAfford ? "border-green-600 shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
                   >
-                    <div className="relative h-20 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+                      style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+
+                    <div className="relative h-48 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
                       <Image
                         src={item.packetImage}
                         alt={item.name}
-                        width={80}
-                        height={48}
-                        className="object-contain drop-shadow-lg"
+                        width={180}
+                        height={180}
+                        className="object-cover drop-shadow-lg"
                       />
-                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-emerald-600 text-white text-[6px] font-black uppercase rounded-sm tracking-wider shadow-md">
-                        {item.brand}
-                      </div>
-                      <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-black text-white text-[8px] font-black rounded-lg flex items-center gap-0.5">
-                        <Coins className="w-2.5 h-2.5 text-yellow-400" />
+                      <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                        <Coins className="w-3 h-3 text-yellow-400" />
                         {item.price}
                       </div>
                       {item.owned > 0 && (
-                        <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-black rounded-lg">
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-black rounded-lg">
                           x{item.owned}
                         </div>
                       )}
                     </div>
-                    <div className="p-2 space-y-1.5">
-                      <div className="flex items-center gap-1">
-                        <span className="text-base">{item.emoji}</span>
-                        <h3 className="text-[9px] font-black uppercase truncate">{item.name}</h3>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xl">{item.emoji}</span>
+                        <div>
+                          <h3 className="text-sm font-black uppercase">{item.name}</h3>
+                          <p className="text-[8px] text-stone-400">🌳 Arbre · {item.brand}</p>
+                        </div>
                       </div>
-                      <p className="text-[7px] text-stone-400">Arbre · Recolte: {item.realDaysToHarvest}j</p>
                       <motion.button
                         whileHover={item.canAfford ? { scale: 1.05 } : {}}
                         whileTap={item.canAfford ? { scale: 0.95 } : {}}
-                        onClick={() => item.isPacket ? buySeeds(item.id) : buySeedVariety(item.id)}
+                        onClick={() => buySeedVariety(item.id)}
                         disabled={!item.canAfford}
-                        className={`w-full py-1.5 text-[9px] font-black uppercase rounded-lg border-2 transition-all flex items-center justify-center gap-1
+                        className={`w-full py-2 text-[10px] font-black uppercase rounded-lg border-2 transition-all flex items-center justify-center gap-1
                           ${item.canAfford
                             ? "bg-gradient-to-b from-green-500 to-green-600 text-white border-green-700 shadow-[2px_2px_0_0_#000] hover:from-green-400 hover:to-green-500"
                             : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
                           }`}
                       >
-                        <ShoppingCart className="w-3 h-3" />
+                        <ShoppingCart className="w-3.5 h-3.5" />
                         Acheter
                       </motion.button>
                     </div>
