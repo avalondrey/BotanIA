@@ -122,11 +122,11 @@ export interface GardenCell {
 
 // ═══ Realistic Garden (cm-based) ═══
 
-export const DEFAULT_GARDEN_WIDTH_CM = 2750;  // 27.5m
-export const DEFAULT_GARDEN_HEIGHT_CM = 2000;  // 20m = 550m²
-export const MAX_GARDEN_WIDTH_CM = 3500;
-export const MAX_GARDEN_HEIGHT_CM = 3000;
-export const GRID_UNIT_CM = 10;  // Agrandir la grille unité pour 550m²
+export const DEFAULT_GARDEN_WIDTH_CM = 1400;  // 14m de large
+export const DEFAULT_GARDEN_HEIGHT_CM = 3900;  // 39m de long = 546m²
+export const MAX_GARDEN_WIDTH_CM = 2000;
+export const MAX_GARDEN_HEIGHT_CM = 5000;
+export const GRID_UNIT_CM = 10;  // Agrandir la grille unité pour 546m²
 
 export interface GardenPlant {
   id: string;

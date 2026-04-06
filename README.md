@@ -1,196 +1,210 @@
-﻿# BotanIA - Simulateur de Jardinage Botanique Realiste
+# BotanIA — Simulateur de Jardinage Botanique Réaliste
 
-> Simulateur de jardinage botanique francais connecte a la meteo reelle et a des donnees agricoles verifiees.
+> Simulateur de jardinage botanique **hardcore** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-0.10.0-green)
+![Version](https://img.shields.io/badge/version-0.12.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![Turbopack](https://img.shields.io/badge/Turbopack-ok-ff69b4)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)
 ![Tailwind](https://img.shields.io/badge/UI-Tailwind-06b6d4)
+![IA](https://img.shields.io/badge/IA-Groq%20%7C%20Ollama%20%7C%20Claude-purple)
 
 ---
 
 ## Concept
 
-BotanIA est un simulateur de jardinage **hardcore** qui reproduit fidelement le cycle de vie des plantes de A a Z, en s'appuyant sur des **donnees reelles** (INRAE, GNIS, fabricants de materiel horticole).
+BotanIA est un simulateur de jardinage qui reproduit fidèlement le cycle de vie des plantes, connecté à votre **jardin réel** via la photo, le GPS et l'IA.
 
 ### Philosophie
+- **Dates réelles** : saisons, gelées, calendrier lunaire
+- **Météo réelle** : Open-Meteo + GPS, vos conditions locales affectent les plantes
+- **Biologie vérifiée** : données INRAE, GNIS, temp min/opt/max, espacements, jours de germination
+- **Jardin réel** : photographiez, tracez vos rangs, identifiez vos plantes par IA
+- **IA locale ET cloud** : Groq, Ollama, Plant.id, Claude Vision
 
-- **Dates reelles** : le jeu suit le calendrier reel, les saisons, et les gelées
-- **Meteo reelle** : connecte a Open-Meteo avec GPS, les conditions de votre lieu affectent vos plantes
-- **Biologie verifiee** : temperature min/opt/max, espacements, profondeurs de semis, jours de germination
-- **Materiel specifique** : tentes de culture (Gorilla, Pure Tent), serres pro, panneaux LED avec specs PPFD, duree de vie, spectre
-- **Semenciers reels** : Vilmorin, Clause, Kokopelli, Le Biau Germe, Ferme de Sainte Marthe
+---
 
-## Plantes
+## Fonctionnalités principales
 
-| Plante | Emoji | Germ. | Jours recolte | Espace | Besoins |
-|---|---|---|---|---|---|
-| **Tomate** | 🍅 | 8j | 110j | 60x80cm | Eau ++ |
-| **Carotte** | 🥕 | 14j | 110j | 5x25cm | Sol leger |
-| **Laitue** | 🥬 | 4j | 55j | 25x30cm | Azote |
-| **Fraisier** | 🍓 | 20j | 120j | 30x50cm | Eau ++ |
-| **Basilic** | 🌿 | 7j | 60j | 25x30cm | Chaleur |
-| **Piment** | 🌶️ | 14j | 120j | 40x60cm | Soleil |
-
-### Compagnonnage
-
-Les plantes interagissent entre elles :
-- ✅ **Basilic + Tomate** : le basilic repousse les parasites sur les tomates
-- ✅ **Carotte + Laitue** : association benefique
-- ❌ **Piment + Aubergine** : memes maladies
-
-## Materiel horticole
-
-Le jeu integre du materiel avec des specifications techniques reelles :
-
-### Eclairage LED
-- **Panneau LED 100W** : Mars Hydro, PPFD 450 µmol/m²/s a 30cm, 50 000h de duree de vie
-- **Panneau LED 240W** : Spider Farmer, PPFD 850 µmol/m²/s a 30cm, 60 000h
-- Spectre Full Spectrum, dimmable, faible degagement de chaleur
-
-### Tentes de culture (Grow Tents)
-- **Gorilla Grow Tent 60x60** : 160-235cm, cadre acier, Mylar 1680D (isolation 0.9)
-- **Gorilla Grow Tent 90x90** : 160-235cm, cadre acier, Mylar 1680D
-
-### Serres professionnelles
-- **Serre Tunnel 3x4m** : Tube acier Ø32 galvanise, polyethyle
-e 200µ, isolation 0.4
-
-## Boutiques de semences
-
-| Boutique | Specialite |
+### 🌱 Simulation
+| Feature | Détail |
 |---|---|
-| 🌱 **Vilmorin** | Jardinier depuis 1814 — Leader francais des semences |
-| 🌸 **Clause** | Semences et plants potagers — Qualite professionnelle |
-| 🌿 **Kokopelli** | Bio, libre, reproductible — +25 ans de biodiversite |
-| 🌾 **Le Biau Germe** | Paysan bio depuis 1981 — 12 fermes en France |
-| 🏡 **Sainte Marthe** | Patrimoine varietal depuis 1973 |
+| 6 plantes potagères | Tomate, Carotte, Laitue, Fraisier, Basilic, Piment |
+| Arbres fruitiers | Pommier, Poirier, Cerisier (croissance multi-année) |
+| Arbres forestiers | Noyer, Chêne, Érable, Bouleau |
+| 5-6 stades de croissance | Graine → Récolte |
+| Météo temps réel | Open-Meteo, GPS auto-détecté |
+| Simulation accélérée | x1 → x100, pause/reprendre |
 
-### Varietes exclusives
+### 📸 Jardin Réel (v0.12.0)
+| Feature | Détail |
+|---|---|
+| Marquage des rangs | Photo ou caméra + dessin au doigt |
+| Palette 8 couleurs | Orange, Rose, Noir, Jaune, Vert, Bleu, Blanc, Rouge |
+| GPS automatique | Lecture EXIF de la photo, sinon GPS du device |
+| Sync grille jardin | Les rangs colorés s'affichent dans la Vue Plan |
+| Nommage des rangs | "Carottes", "Tomates"... avec modale |
 
-- **Kokopelli** : Cherokee Purple, Rose de Berne
-- **Biau Germe** : Marmande, Carotte de Guerande
-- **Sainte Marthe** : Basilic Genois, Poivron Doux de France
+### 🔍 Identificateur de Plantes (v0.12.0)
+| Moteur | Type | Coût |
+|---|---|---|
+| ⚡ Groq llama-3.2-vision | Cloud vision | 🆓 Gratuit |
+| 🏠 Ollama local (llava) | Local, privé | 🆓 Gratuit |
+| 🌿 Plant.id API | Spécialisé plantes | 🆓 100/jour |
+| 🤖 Claude Vision | Précis | 💳 Clé API |
+
+### 🏪 Boutiques
+| Boutique | Type |
+|---|---|
+| 🌱 Vilmorin, 🌺 Clause | Semenciers historiques |
+| 🌿 Kokopelli, 🌾 Biau Germe, 🏡 Ste Marthe | Bio & paysannes |
+| 🌳 Guignard, 🔬 INRAE, 🌲 Bordas | Arbres fruitiers |
+| 🌴 Arbres Tissot, 🍎 Fruitiers Forest | Vergers |
+
+---
 
 ## Stack technique
 
-| Technologie | Utilisation |
+| Technologie | Usage |
 |---|---|
-| **Next.js 16** + Turbopack | Framework web, HMR ultra-rapide |
+| **Next.js 16** + Turbopack | Framework |
 | **React 19** + TypeScript | UI type-safe |
-| **Zustand** | State management + persist localStorage |
+| **Zustand** + persist | State + localStorage |
 | **Tailwind CSS** + Framer Motion | Styles + animations |
-| **Open-Meteo** | Meteo gratuite sans cle API |
-| **Lucide React** | Icones |
+| **Open-Meteo** | Météo sans clé API |
+| **Groq API** | IA vision cloud (gratuit) |
+| **Ollama** | IA 100% locale |
+| **Plant.id** | Identification spécialisée |
+
+---
 
 ## Installation
 
-`ash
+```bash
 git clone https://github.com/avalondrey/BotanIA.git
 cd BotanIA
 npm install
+cp .env.local.example .env.local  # configurer clés API
 npm run dev
-`
+```
 
 Ouvrir **http://localhost:3000**
 
+### Variables d'environnement
+
+```env
+# Groq (gratuit — https://console.groq.com/keys)
+NEXT_PUBLIC_GROQ_API_KEY=gsk_...
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# Ollama (local, optionnel)
+OLLAMA_MODEL=llama3.2
+OLLAMA_URL=http://localhost:11434
+ENABLE_OLLAMA=true
+
+# Plant.id (optionnel, 100/jour sans clé)
+PLANTID_API_KEY=  # laisser vide pour mode gratuit
+
+# Claude Vision (optionnel)
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+---
+
 ## Gameplay
 
-`
-1. Acheter des graines a la Boutique
-2. Semer en Pepiniere ou Mini Serre (protection)
-3. Suivre la croissance (5 stades realistes)
-4. Transplanter au Jardin (conditions meteo reelles)
-5. Arroser, traiter, fertiliser
-6. Recolter -> Pieces + Score
-`
+```
+1. Boutique → acheter graines ou arbres
+2. Pépinière / Mini Serre → semer et suivre germination
+3. Jardin → transplanter, arroser, fertiliser
+4. Vue Rangs → photographier et tracer vos vrais rangs
+5. Identificateur → identifier une plante inconnue avec l'IA
+6. Récolter → Pièces + Score
+```
 
-**Controles rapides :**
-- [1-5] = Vitesse x1 a x5
-- [Espace] = Pause / Reprendre
-- [R] = Recharger les plantes
-- [A] = Panneau admin
-
-## Meteo reelle
-
-Le jeu recupere la meteo de votre position GPS :
-
-| Condition | Effet |
+**Contrôles clavier :**
+| Touche | Action |
 |---|---|
-| **Ciel degage** | Croissance optimale |
-| **Pluie** | Arrosage gratuit au jardin (+50% eau) |
-| **Gel (<=2°C)** | Stoppe la croissance |
-| **Canicule (>=30°C)** | Stress hydrique |
+| `1` à `5` | Vitesse x1 → x100 |
+| `Espace` | Pause / Reprendre |
+| `A` | Panneau admin |
 
-**Protection :**
-- **Serre** : +15% temperature, -70% pluie, +15% lumiere
-- **Pepiniere / Mini Serres** : environnement stable 20°C
+---
 
 ## Structure du projet
 
-`
+```
 BotanIA/
 ├── src/
-│   ├── app/                    # Next.js App Router
-│   ├── components/
-│   │   ├── game/               # Composants gameplay
-│   │   │   ├── JardinGrid.tsx        # Jardin coordonnees cm
-│   │   │   ├── Pepiniere.tsx         # Pepiniere 8 slots
-│   │   │   ├── SerreJardinView.tsx   # Serre + mini serres
-│   │   │   ├── Boutique.tsx          # Boutique multi-semenciers
-│   │   │   ├── GameHUD.tsx           # HUD stats + meteo
-│   │   │   ├── AdminPanel.tsx        # Panneau admin
-│   │   │   └── LiaAssistant.tsx      # Assistante IA Lia
-│   │   └── ui/
-│   ├── data/
-│   │   └── encyclopedia.ts     # Encyclopedie plante + materiel
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── identify-plant/   # 🆕 API identification IA (4 moteurs)
+│   │   │   ├── ollama/           # API Papy le Jardinier
+│   │   │   └── weather/          # API météo Open-Meteo
+│   │   └── page.tsx              # Page principale + onglets
+│   ├── components/game/
+│   │   ├── Jardin.tsx            # 🔄 + onglet 📸 Rangs
+│   │   ├── GardenPlanView.tsx    # 🔄 + overlay rangs colorés
+│   │   ├── SeedRowPainter.tsx    # 🆕 Dessin rangs sur photo
+│   │   ├── PlantIdentifier.tsx   # 🆕 Identificateur IA
+│   │   ├── GardenCardsView.tsx   # Vue cartes manga
+│   │   ├── IAJardinier.tsx       # Assistant Papy
+│   │   ├── Pepiniere.tsx         # Chambre de culture
+│   │   ├── Boutique.tsx          # Multi-semenciers
+│   │   └── ...
 │   ├── store/
-│   │   └── game-store.ts       # Zustand store complet
+│   │   ├── game-store.ts         # État principal du jeu
+│   │   └── photo-store.ts        # 🆕 Photos + GPS + rangs
 │   └── lib/
-│       ├── ai-engine.ts        # Moteur de simulation
-│       ├── weather-service.ts  # Service meteo Open-Meteo + GPS
-│       ├── environment-engine.ts
-│       └── lia-data.ts         # Conseils IA
+│       ├── weather-service.ts    # Open-Meteo
+│       ├── gps-extractor.ts      # 🆕 EXIF GPS + device GPS
+│       └── ai-engine.ts          # Moteur simulation
 ├── public/
-│   ├── cards/                  # Cartes semences/boutiques
-│   ├── stages/                 # Images stades de croissance
-│   ├── packets/                # Images paquets de graines
-│   ├── pots/                   # Images pots/godets
-│   ├── plants/                 # Images plantes
-│   └── manifest.json
-└── package.json
-`
+│   ├── plants/                   # Sprites plantes (stages 0-6)
+│   ├── pots/                     # Pots arbres fruitiers
+│   ├── cards/                    # Cards collection
+│   └── equipment/                # Équipement horticole
+└── CHANGELOG.md
+```
 
-## Design
+> 🆕 Nouveau en v0.12.0 · 🔄 Modifié en v0.12.0
 
-- Style "manga cartoon cel-shade"
-- Palette : beige sable, noir profond, vert emeraude, orange terre
-- Police : Space Mono + VT323 (retro-game)
-- Bordures noires, ombres portees, effets hover
-
-## Commandes
-
-`ash
-npm run dev          # Dev server (Turbopack)
-npm run build        # Build production
-npm start            # Start production
-`
+---
 
 ## Roadmap
 
-- [ ] Intégration des donnees d'encyclopedie dans le moteur (temp., espacements, saisonnalité)
-- [ ] Validation visuelle des semis (ligne rouge si graines insuffisantes)
-- [ ] Mode nuit visuel (22h-6h)
-- [ ] Particules de recolte animees
-- [ ] Gestion de l'ėclairage LED dans les chambres de culture (consommation, chaleur, PPFD)
-- [ ] Outil de déplacement des serres dans le jardin
-- [ ] Export/Import de sauvegarde
-- [ ] Achievements / defis saisonniers
+### ✅ Réalisé
+- [x] Données encyclopédiques (INRAE, GNIS)
+- [x] Boutiques multi-semenciers (10 boutiques)
+- [x] Arbres fruitiers + croissance multi-année
+- [x] Météo réelle Open-Meteo + GPS
+- [x] Vue Plan + Vue Cartes manga
+- [x] Effets météo visuels
+- [x] 📸 **Marquage rangs sur photo réelle (v0.12.0)**
+- [x] 📍 **GPS automatique EXIF + device (v0.12.0)**
+- [x] 🔍 **Identificateur IA 4 moteurs (v0.12.0)**
+
+### 🚀 Idées à implanter
+- [ ] **Calendrier lunaire** — affichage phase + conseil semis/récolte selon tradition
+- [ ] **Journal de jardin** — notes quotidiennes liées aux photos et aux rangs
+- [ ] **Compagnonnage** — alertes associations favorables/défavorables (tomate+basilic ✓)
+- [ ] **Plan 3D isométrique** — vue manga isométrique du jardin (style Manga Garden)
+- [ ] **Export GPX/KML** — exporter les rangs géoréférencés vers Google Earth
+- [ ] **Partage communautaire** — galerie photos identifications (mode partagé)
+- [ ] **Détection maladies** — identifier mildiou, pucerons sur photo avec l'IA
+- [ ] **Suivi récoltes** — log des récoltes réelles avec poids, date, rang associé
+- [ ] **Notifications arrosage** — rappels basés sur météo réelle et stade plante
+- [ ] **Mode hors-ligne** — PWA avec Service Worker pour usage au jardin sans réseau
+- [ ] **Scan QR rangs** — imprimer un QR code par rang, le scanner pour voir l'état
+- [ ] **Historique météo** — graphe température/pluie sur les 30 derniers jours
+- [ ] **Achievements** — badges jardinier (première récolte, jardin complet, etc.)
+- [ ] **Export/Import sauvegarde** — JSON dump complet du jardin
+- [ ] **Mode nuit** — thème sombre adaptatif
+
+---
 
 ## Licence
 
-Projet educatif. Semences et varietes issues de catalogues publics (Kokopelli, Biau Germe, Sainte Marthe, Vilmorin, Clause).
+Projet éducatif personnel. Données semences issues de catalogues publics (Kokopelli, Biau Germe, Sainte Marthe, Vilmorin, Clause, Guignard, INRAE).
 
-Fait avec ❤️ par avalondrey
+Fait avec ❤️ par **avalondrey**

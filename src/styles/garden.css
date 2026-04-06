@@ -768,3 +768,164 @@
 }
 
 /* ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════ */
+/* PLACEMENT TOOLS PANEL */
+/* ═══════════════════════════════════════════════════════════ */
+
+.placement-tools-panel {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.tools-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f7fafc;
+}
+
+.tools-icon {
+  font-size: 24px;
+}
+
+.tools-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2d3748;
+  flex: 1;
+}
+
+.tools-coins {
+  font-size: 14px;
+  font-weight: 700;
+  color: #d97706;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 12px;
+  border: 2px solid #f59e0b;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.tool-button {
+  position: relative;
+  padding: 16px;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.tool-button:hover:not(.disabled) {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.tool-button.active {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #4CAF50;
+  border-width: 3px;
+}
+
+.tool-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+.tool-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.tool-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tool-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.tool-cost {
+  font-size: 12px;
+  font-weight: 700;
+  color: #d97706;
+  padding: 2px 8px;
+  background: #fef3c7;
+  border-radius: 6px;
+}
+
+.tool-description {
+  font-size: 11px;
+  color: #718096;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.tool-active-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 3px solid #4CAF50;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.tool-instructions {
+  margin-top: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.instruction-text {
+  font-size: 13px;
+  color: #1e40af;
+  margin: 0;
+  font-weight: 600;
+}
+
+.cancel-button {
+  padding: 6px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+/* ═══════════════════════════════════════════════════════════ */

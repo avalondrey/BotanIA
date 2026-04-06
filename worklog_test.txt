@@ -1,0 +1,4 @@
+import { HologramEvolution } from '@/components/game/HologramEvolution';
+
+// Dans ton component
+<HologramEvolution plantType="tomato" />

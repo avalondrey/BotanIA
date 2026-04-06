@@ -1,0 +1,2 @@
+  // NOTE: Ces lignes remplacent l'import existant de Jardin et ajoutent PlantIdentifier
+  // Cherche la section imports dans page.tsx et ajoute ces deux lignes
