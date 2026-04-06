@@ -11,9 +11,14 @@ import { Boutique } from "@/components/game/Boutique";
 import { GrainCollection } from "@/components/game/GrainCollection";
 import { IAJardinier } from "@/components/game/IAJardinier";
 import { Jardin } from "@/components/game/Jardin";
+import PlantIdentifier from "@/components/game/PlantIdentifier";
 import { WeatherEffects } from "@/components/game/WeatherEffects";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdminPanel, AdminButton, AdminModeBanner } from "@/components/game/AdminPanel";
+import { HarvestTracker } from "@/components/game/HarvestTracker";
+import { GardenJournal } from "@/components/game/GardenJournal";
+import DiseaseDetector from "@/components/game/DiseaseDetector";
+import { LunarCalendar } from "@/components/game/LunarCalendar";
 import {
   fetchWeather,
   getGPSLocation,
@@ -22,7 +27,7 @@ import {
 } from "@/lib/weather-service";
 import {
   TreePine, ShoppingBag, Sprout, RefreshCw, MapPin, Loader2,
-  Warehouse, Home,
+  Warehouse, Home, ScanSearch, Moon, BookOpen, Scale, Bug,
 } from "lucide-react";
 import HarvestParticles from "@/components/ui/HarvestParticles";
 import { useNightMode, useAutoSave } from "@/lib/use-effects";
@@ -339,6 +344,41 @@ export default function GamePage() {
               <Sprout className="w-4 h-4" />
               🌱 Graines
             </TabsTrigger>
+            <TabsTrigger
+              value="identificateur"
+              className="data-[state=active]:bg-violet-100 data-[state=active]:border-violet-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <ScanSearch className="w-4 h-4" />
+              🔍 Identificateur
+            </TabsTrigger>
+            <TabsTrigger
+              value="journal"
+              className="data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <BookOpen className="w-4 h-4" />
+              📔 Journal
+            </TabsTrigger>
+            <TabsTrigger
+              value="recoltes"
+              className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <Scale className="w-4 h-4" />
+              ⚖️ Récoltes
+            </TabsTrigger>
+            <TabsTrigger
+              value="maladies"
+              className="data-[state=active]:bg-red-100 data-[state=active]:border-red-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <Bug className="w-4 h-4" />
+              🦠 Maladies
+            </TabsTrigger>
+            <TabsTrigger
+              value="lune"
+              className="data-[state=active]:bg-indigo-100 data-[state=active]:border-indigo-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <Moon className="w-4 h-4" />
+              🌙 Lune
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jardin" className="mt-4">
@@ -366,6 +406,28 @@ export default function GamePage() {
 
           <TabsContent value="graines" className="mt-4">
             <GrainCollection />
+          </TabsContent>
+
+          <TabsContent value="identificateur" className="mt-4">
+            <PlantIdentifier />
+          </TabsContent>
+
+          <TabsContent value="journal" className="mt-4">
+            <GardenJournal />
+          </TabsContent>
+
+          <TabsContent value="recoltes" className="mt-4">
+            <HarvestTracker />
+          </TabsContent>
+
+          <TabsContent value="maladies" className="mt-4">
+            <DiseaseDetector />
+          </TabsContent>
+
+          <TabsContent value="lune" className="mt-4">
+            <div className="max-w-2xl mx-auto">
+              <LunarCalendar />
+            </div>
           </TabsContent>
         </Tabs>
 
