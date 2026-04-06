@@ -120,3 +120,10 @@ src/data/arbres/{shopId}/{id}.ts
 - [x] birch-betula.ts ✅
 - [x] pine-sylvestris.ts ✅
 - [x] magnolia-grandiflora.ts ✅
+
+### Fruitiers Forest
+- [x] apple-reinette-du-canada.ts ✅
+- [x] pear-beurre-hardy.ts ✅
+- [x] cherry-montmorency.ts ✅
+- [x] lemon-meyer.ts ✅
+- [x] orange-valencia-late.ts ✅

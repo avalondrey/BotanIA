@@ -66,12 +66,15 @@ src/data/graines/{shopId}/{id}.ts
 
 ### Vilmorin
 - [x] tomato-cocktail.ts ✅
+- [x] tomato-coeur-de-boeuf.ts ✅
 
 ### Clause
 - [x] pepper-california-wonder.ts ✅
 - [x] lettuce-batavia.ts ✅
 - [x] cucumber-marketer.ts ✅
 - [x] zucchini-black-beauty.ts ✅
+- [x] radish-flamboyant.ts ✅
+- [x] carrot-nationale-2.ts ✅
 
 ### Kokopelli
 - [x] tomato-cherokee-purple.ts ✅
@@ -80,6 +83,7 @@ src/data/graines/{shopId}/{id}.ts
 - [x] tomato-green-zebra.ts ✅
 - [x] eggplant-longue-violette.ts ✅
 - [x] squash-butternut-coco.ts ✅
+- [x] tomato-brandywine.ts ✅
 
 ### Le Biau Germe
 - [x] tomato-marmande.ts ✅
@@ -88,9 +92,12 @@ src/data/graines/{shopId}/{id}.ts
 - [x] lettuce-feuille-de-chene.ts ✅
 - [x] bean-coco-blanc.ts ✅
 - [x] cabbage-chou-milan.ts ✅
+- [x] spinach-merlon-vert.ts ✅
+- [x] lettuce-romaine.ts ✅
 
 ### Sainte Marthe
 - [x] basil-genoveeis.ts ✅
 - [x] pepper-doux-de-france.ts ✅
 - [x] basil-marseillais.ts ✅
 - [x] strawberry-ciflorette.ts ✅
+- [x] pea-douce-provence.ts ✅
