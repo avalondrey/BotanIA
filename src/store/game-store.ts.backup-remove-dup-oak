@@ -732,6 +732,18 @@ export const SEED_VARIETIES: SeedVariety[] = [
     optimalTemp: [10,22], waterNeed: 4.5, lightNeed: 7,
   },
   // INRAE - Chene
+  {
+    id: "oak-pedoncule",
+    plantDefId: "oak",
+    shopId: "inrae",
+    name: "Chene Pedoncule",
+    emoji: "🌳",
+    price: 120, grams: 2.0,
+    description: "Chene commun des forets francaises, croissance lente, bois noble",
+    image: "/packets/inrae/packet-oak-pedoncule.png", unlocked: true,
+    stageDurations: [60,120,180,1095], realDaysToHarvest: 1455,
+    optimalTemp: [8,22], waterNeed: 4.0, lightNeed: 7,
+  },
   // Pepinieres Bordas - Arbres d'ornement
   {
     id: "birch-betula",
