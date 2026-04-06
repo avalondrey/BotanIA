@@ -190,7 +190,11 @@ if not nouvelles:
 
 # Trouver où insérer
 print("\n=== INSERTION DANS SEED_VARIETIES ===")
-lines = content.split('\n')
+
+# IMPORTANT: Travailler avec readlines() pour garder les \n
+with open(filepath, "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
 in_varieties = False
 last_variety_end = -1
 
@@ -213,12 +217,12 @@ code_a_ajouter = ""
 for var in nouvelles:
     code_a_ajouter += generer_code_variete(var)
 
-# Insérer
-lines.insert(last_variety_end + 1, code_a_ajouter.rstrip('\n'))
+# CRITIQUE: Insérer comme une seule STRING avec \n intégrés
+lines.insert(last_variety_end + 1, code_a_ajouter)
 
 # Sauvegarder
 with open(filepath, "w", encoding="utf-8") as f:
-    f.write('\n'.join(lines))
+    f.writelines(lines)  # writelines() pas write() + join()
 
 print(f"\n✅ {len(nouvelles)} variété(s) ajoutée(s) avec succès !")
 print(f"   {len(doublons)} doublon(s) ignoré(s)")

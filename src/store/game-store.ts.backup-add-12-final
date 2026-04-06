@@ -879,9 +879,6 @@ export const SEED_VARIETIES: SeedVariety[] = [
     stageDurations: [35,70,140,420], realDaysToHarvest: 850,
     optimalTemp: [10,24], waterNeed: 4.5, lightNeed: 7,
   },
-  // Pepinieres Bordas - Arbres d'ornement
-  // Arbres Tissot - Pommiers et Poiriers specialises
-  // Fruitiers Forest - Fruits a noyau et specialites
 ];
 
 // ═══ Seed shop items (legacy flat catalog) ═══

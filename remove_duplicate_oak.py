@@ -7,46 +7,53 @@ with open(filepath, "r", encoding="utf-8") as f:
     lines = f.readlines()
 
 # Backup
-with open(filepath + ".backup-remove-dup-oak", "w", encoding="utf-8") as f:
+with open(filepath + ".backup-clean-all-dups", "w", encoding="utf-8") as f:
     f.writelines(lines)
-print("Backup créé")
+print("Backup créé\n")
 
-# Trouver toutes les occurrences de oak-pedoncule
-oak_positions = []
-i = 0
-while i < len(lines):
-    if 'id: "oak-pedoncule"' in lines[i]:
-        # Trouver le début de cette variété (ligne avec { qui précède)
-        start = i
-        while start > 0 and lines[start].strip() not in ["{", "  {"]:
-            start -= 1
-        
-        # Trouver la fin (ligne avec },)
-        end = i
-        while end < len(lines) and "}," not in lines[end]:
-            end += 1
-        
-        oak_positions.append((start, end + 1))
-        i = end + 1
+# Liste des IDs à dédupliquer
+ids_to_deduplicate = [
+    "maple-acer-platanoides", "birch-betula", "pine-sylvestris", "magnolia-grandiflora",
+    "apple-reine-reinettes", "apple-belle-fleur", "pear-conference", "pear-louise-bonne",
+    "apricot-bergeron", "plum-reine-claude", "fig-goutte-or", "peach-sanguine", "quince-champion"
+]
+
+print("=== SUPPRESSION DES DOUBLONS ===")
+
+for target_id in ids_to_deduplicate:
+    occurrences = []
+    i = 0
+    
+    # Trouver toutes les occurrences
+    while i < len(lines):
+        if f'id: "{target_id}"' in lines[i]:
+            # Trouver le début { et la fin },
+            start = i
+            while start > 0 and lines[start].strip() not in ["{", "  {"]:
+                start -= 1
+            
+            end = i
+            while end < len(lines) and "}," not in lines[end]:
+                end += 1
+            
+            occurrences.append((start, end + 1))
+            i = end + 1
+        else:
+            i += 1
+    
+    if len(occurrences) > 1:
+        print(f"⚠️  {target_id}: {len(occurrences)} occurrences - suppression des doublons")
+        # Supprimer TOUTES sauf la première
+        for start, end in reversed(occurrences[1:]):
+            del lines[start:end]
+    elif len(occurrences) == 1:
+        print(f"✅ {target_id}: 1 occurrence (OK)")
     else:
-        i += 1
+        print(f"❌ {target_id}: MANQUANT")
 
-print(f"\n{len(oak_positions)} occurrence(s) de oak-pedoncule trouvée(s)")
+# Sauvegarder
+with open(filepath, "w", encoding="utf-8") as f:
+    f.writelines(lines)
 
-if len(oak_positions) > 1:
-    print(f"Suppression du doublon (occurrence 2/{len(oak_positions)})")
-    
-    # Supprimer la DEUXIÈME occurrence (garder la première)
-    start, end = oak_positions[1]
-    del lines[start:end]
-    
-    # Sauvegarder
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.writelines(lines)
-    
-    print("✅ Doublon supprimé")
-    print("\nRedémarre : npm run dev")
-elif len(oak_positions) == 1:
-    print("✅ Aucun doublon (une seule occurrence)")
-else:
-    print("⚠️  oak-pedoncule introuvable")
+print("\n✅ Nettoyage terminé")
+print("Redémarre : npm run dev")
