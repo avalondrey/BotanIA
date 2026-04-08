@@ -755,8 +755,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.40,
     pestResistance: 0.35,
   },
-
-};
+  },
 
   // ─── COURGE BUTTERNUT COCO ───
   squash: {
@@ -772,11 +771,11 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     lightNeedHours: 7,
     stageDurations: [8, 25, 30, 67],
     companions: [
-      { plantId: 'mais', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'haricot', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'capucine', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'pomme-de-terre', type: 'harmful', reason: 'Incompatible',
-      { plantId: 'autres-courges', type: 'harmful', reason: 'Incompatible'
+      { plantId: 'mais', type: 'beneficial', reason: 'Associe naturellement' },
+      { plantId: 'haricot', type: 'beneficial', reason: 'Associe naturellement' },
+      { plantId: 'capucine', type: 'beneficial', reason: 'Associe naturellement' },
+      { plantId: 'pomme-de-terre', type: 'harmful', reason: 'Incompatible' },
+      { plantId: 'autres-courges', type: 'harmful', reason: 'Incompatible' }
     ],
     diseaseRisks: [
       { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
@@ -792,6 +791,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     pestResistance: 0.50,
   },
 
+// ═══ FIN PLANT_CARDS ═══
 // ═══ FIN PLANT_CARDS ═══
 
 // ═══════════════════════════════════════════════════════════════
