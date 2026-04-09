@@ -1,5 +1,51 @@
 # BotanIA - Changelog
 
+## v0.16.0 - Lia Phénologie + iNaturalist + Crowdsourcing (2026-04-09)
+
+### ✨ Nouveau
+
+#### 🌸 Système d'événements phénologiques structurés (garden-memory.ts)
+- Nouveau type `PhenologicalEvent` : semis, levée, repiquage, récolte, gel, ravageur...
+- Section `## Phénologie` dans les fichiers MD de mémoire
+- Fonctions : `addPhenologicalEvent()`, `getPlantPhenology()`, `getSeasonCount()`, `getAverageEventDate()`
+- Parsing/formatage MD mis à jour
+
+#### 🤖 Lia répond sur la phénologie
+- `getPhenologicalSummary()` : "Tes tomates fleurissent en moyenne autour du 15 mai"
+- `getSeasonContext()` : "Tu en es à ta 3ème saison de tomates"
+- `getPlantEventSummary()` : date moyenne pour chaque type d'événement
+- `genResponse()` enrichi : reconnaît questions phénologiques (fleur, semis, gel...)
+
+#### 📅 UI événement phénologique dans Lia
+- Bouton "📅 Événement" dans le panneau Mémoire
+- Formulaire : type d'événement + date + notes + plante associée
+- Bouton "Activer iNaturalist ?" si pas encore fait
+
+#### 🦉 Intégration iNaturalist
+- **`src/lib/inaturalist.ts`** : client API complet
+  - `TAXON_MAP` : mapping BotanIA → taxon ID iNaturalist (40+ plantes)
+  - `submitObservation()` : POST vers iNaturalist
+  - `buildPhenologyDescription()`
+- **`src/app/api/inaturalist/route.ts`** : proxy API key (ne l'expose pas au client)
+- **`INatConsentPanel.tsx`** : modale de consentement + input clé API
+- Les événements phénologiques peuvent être soumis automatiquement à iNaturalist
+
+#### 🌐 Crowdsourcing anonyme local
+- **`src/lib/collective-data.ts`** : agrégation régionale anonyme
+  - `loadCollectiveStats()`, `contributeAnonymizedStats()`
+  - `compareToRegional()` : comparaison avec la moyenne de la région
+  - `regionFromPostcode()` : détermination de la région depuis code postal
+- **`src/app/api/collective/route.ts`** : API d'agrégation (moyennes pondérées)
+- **`Settings.tsx`** : panneau paramètres avec champ "Ma région" (code postal)
+
+### 🔧 Corrections Techniques
+- `LiaAssistant.tsx` : refonte complète — générique simplifié, imports enrichis, phénologie intégrée
+- Fix duplicate `handleSend` block dans LiaAssistant.tsx
+- Fix missing `isOpen` state dans LiaAssistant.tsx
+- `garden-memory.ts` : parsePlantMemory gèrent maintenant le nouveau champ `events`
+
+---
+
 ## v0.15.0 - Mémoire du Jardin + Phénologie + Dictée Terrain (2026-04-09)
 
 ### ✨ Nouveau
