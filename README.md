@@ -1,8 +1,8 @@
-# BotanIA — Simulateur de Jardinage Botanique Réaliste
+# BotanIA — Application de Jardinage Botanique Réaliste
 
-> Simulateur de jardinage botanique **hardcore** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
+> Application de jardinage botanique **scientifique** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-0.12.0-green)
+![Version](https://img.shields.io/badge/version-0.13.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)
@@ -13,28 +13,30 @@
 
 ## Concept
 
-BotanIA est un simulateur de jardinage qui reproduit fidèlement le cycle de vie des plantes, connecté à votre **jardin réel** via la photo, le GPS et l'IA.
+BotanIA est une **application de culture botanique** qui reproduit fidèlement le cycle de vie des plantes selon des données agronomiques réelles, connectée à votre **jardin réel** via la photo, le GPS et l'IA.
+
+Les données de croissance (GDD, besoins en eau, compagnonnage, risques sanitaires) sont basées sur des sources botaniques vérifiées : INRAE, FAO, filières maraîchage françaises.
 
 ### Philosophie
 - **Dates réelles** : saisons, gelées, calendrier lunaire
-- **Météo réelle** : Open-Meteo + GPS, vos conditions locales affectent les plantes
+- **Météo réelle** : Open-Meteo + GPS, vos conditions locales affectent les cultures
 - **Biologie vérifiée** : données INRAE, GNIS, temp min/opt/max, espacements, jours de germination
 - **Jardin réel** : photographiez, tracez vos rangs, identifiez vos plantes par IA
-- **IA locale ET cloud** : Groq, Ollama, Plant.id, Claude Vision
+- **IA locale ET cloud** : Groq, Ollama, Plant.id, Claude Vision + **Lia agent RAG (qwen2.5:7b + Qdrant)**
 
 ---
 
 ## Fonctionnalités principales
 
-### 🌱 Simulation
+### 🌱 Cultures & Arboriculture
 | Feature | Détail |
 |---|---|
 | 6 plantes potagères | Tomate, Carotte, Laitue, Fraisier, Basilic, Piment |
-| Arbres fruitiers | Pommier, Poirier, Cerisier (croissance multi-année) |
-| Arbres forestiers | Noyer, Chêne, Érable, Bouleau |
-| 5-6 stades de croissance | Graine → Récolte |
+| Arbres fruitiers | Pommier, Poirier, Cerisier, Prunier, Abricotier, Figuier, Pêcher, Coing |
+| Arbres forestiers | Chêne, Pin, Érable, Bouleau, Magnolia, Noyer |
+| 5-6 stades de croissance | Graine → Levée → Plantule → Croissance → Floraison → Récolte |
 | Météo temps réel | Open-Meteo, GPS auto-détecté |
-| Simulation accélérée | x1 → x100, pause/reprendre |
+| Données agronomiques | GDD (Growing Degree Days), ET0 (FAO), Kc (coefficient cultural) |
 
 ### 📸 Jardin Réel (v0.12.0)
 | Feature | Détail |
@@ -53,6 +55,18 @@ BotanIA est un simulateur de jardinage qui reproduit fidèlement le cycle de vie
 | 🌿 Plant.id API | Spécialisé plantes | 🆓 100/jour |
 | 🤖 Claude Vision | Précis | 💳 Clé API |
 
+### 🌿 Lia — Agent IA Local avec RAG (v0.17.0)
+| Composant | Détail |
+|---|---|
+| **Qdrant** | Base vectorielle locale (port 6333) — 5 collections : components, data, docs, memory, game_state |
+| **Ollama qwen2.5:7b** | Cerveau raisonné (32K contexte, excellent français) |
+| **RAG** | Indexation auto des .tsx/.md → réponses contextualisées sur TON jardin |
+| **Proactif** | Notifications auto : cuve basse, plantes assoiffées, gel, récoltes |
+| **Compréhension code** | Lia peut lire et expliquer HologramEvolution.tsx |
+| **Mode passif** | Si Ollama/Qdrant éteint → retour transparent Groq classique |
+
+**Activation :** bouton "🔮 Activer Super IA Locale" dans le header → 🟢 quand actif
+
 ### 🏪 Boutiques
 | Boutique | Type |
 |---|---|
@@ -60,6 +74,21 @@ BotanIA est un simulateur de jardinage qui reproduit fidèlement le cycle de vie
 | 🌿 Kokopelli, 🌾 Biau Germe, 🏡 Ste Marthe | Bio & paysannes |
 | 🌳 Guignard, 🔬 INRAE, 🌲 Bordas | Arbres fruitiers |
 | 🌴 Arbres Tissot, 🍎 Fruitiers Forest | Vergers |
+
+---
+
+## Architecture des Données Botaniques
+
+Les calculs agronomiques sont basés sur des sources scientifiques :
+
+| Paramètre | Source | Usage |
+|---|---|---|
+| **GDD** (Growing Degree Days) | FAO, INRAE | Accumulation thermique journalière — base 10°C pour tomate, 4°C pour carotte |
+| **ET0** (Évapotranspiration) | Hargreaves FAO | Calcul des besoins en eau par plante |
+| **Kc** (Coefficient cultural) | FAO Crop Coefficients | Multiplicateur par stade de développement |
+| **Températures seuils** | INRAE, filières | Tbase, Tcap, gel, développement optimal |
+| **Companonnage** | Matrice INRAE | Associations favorables/défavorables entre cultures |
+| **Maladies** | Modèles épidémiologiques | Risque mildiou (humidité + pluie), oïdium (humidité + vent) |
 
 ---
 
@@ -73,7 +102,8 @@ BotanIA est un simulateur de jardinage qui reproduit fidèlement le cycle de vie
 | **Tailwind CSS** + Framer Motion | Styles + animations |
 | **Open-Meteo** | Météo sans clé API |
 | **Groq API** | IA vision cloud (gratuit) |
-| **Ollama** | IA 100% locale |
+| **Ollama** | IA 100% locale + agent RAG |
+| **Qdrant** | Base vectorielle locale (RAG) |
 | **Plant.id** | Identification spécialisée |
 
 ---
@@ -97,10 +127,16 @@ Ouvrir **http://localhost:3000**
 NEXT_PUBLIC_GROQ_API_KEY=gsk_...
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# Ollama (local, optionnel)
-OLLAMA_MODEL=llama3.2
+# Ollama (local, optionnel — agent RAG)
+OLLAMA_MODEL=qwen2.5:7b
 OLLAMA_URL=http://localhost:11434
 ENABLE_OLLAMA=true
+
+# Ollama embeddings (pour RAG — optionnel)
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+
+# Qdrant (base vectorielle locale — pour agent RAG)
+NEXT_PUBLIC_QDRANT_URL=http://localhost:6333
 
 # Plant.id (optionnel, 100/jour sans clé)
 PLANTID_API_KEY=  # laisser vide pour mode gratuit
@@ -111,7 +147,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ---
 
-## Gameplay
+## Guide d'utilisation
 
 ```
 1. Boutique → acheter graines ou arbres
@@ -119,13 +155,13 @@ ANTHROPIC_API_KEY=sk-ant-...
 3. Jardin → transplanter, arroser, fertiliser
 4. Vue Rangs → photographier et tracer vos vrais rangs
 5. Identificateur → identifier une plante inconnue avec l'IA
-6. Récolter → Pièces + Score
+6. Récolter → Suivi des récoltes avec poids et qualité
 ```
 
 **Contrôles clavier :**
 | Touche | Action |
 |---|---|
-| `1` à `5` | Vitesse x1 → x100 |
+| `1` à `5` | Vitesse d'avancement x1 → x100 |
 | `Espace` | Pause / Reprendre |
 | `A` | Panneau admin |
 
@@ -138,43 +174,56 @@ BotanIA/
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── identify-plant/   # 🆕 API identification IA (4 moteurs)
-│   │   │   ├── ollama/           # API Papy le Jardinier
-│   │   │   └── weather/          # API météo Open-Meteo
+│   │   │   ├── identify-plant/   # API identification IA (4 moteurs)
+│   │   │   ├── ollama/           # API Assistant Papy le Jardinier
+│   │   │   ├── weather/           # API météo Open-Meteo
+│   │   │   └── agent/             # API Agent Lia (RAG: status, scan, rag, index-file)
 │   │   └── page.tsx              # Page principale + onglets
 │   ├── components/game/
-│   │   ├── Jardin.tsx            # 🔄 + onglet 📸 Rangs
-│   │   ├── GardenPlanView.tsx    # 🔄 + overlay rangs colorés
-│   │   ├── SeedRowPainter.tsx    # 🆕 Dessin rangs sur photo
-│   │   ├── PlantIdentifier.tsx   # 🆕 Identificateur IA
+│   │   ├── Jardin.tsx            # Onglet Jardin (Plan, Cartes, Rangs)
+│   │   ├── GardenPlanView.tsx    # Vue Plan avec overlay rangs
+│   │   ├── SeedRowPainter.tsx    # Dessin rangs sur photo
+│   │   ├── PlantIdentifier.tsx    # Identificateur IA
 │   │   ├── GardenCardsView.tsx   # Vue cartes manga
+│   │   ├── HologramEvolution.tsx # Carte de croissance botanique
 │   │   ├── IAJardinier.tsx       # Assistant Papy
 │   │   ├── Pepiniere.tsx         # Chambre de culture
 │   │   ├── Boutique.tsx          # Multi-semenciers
 │   │   └── ...
+│   ├── hooks/
+│   │   └── useAgroData.ts        # 🌾 Données agronomiques temps réel
 │   ├── store/
-│   │   ├── game-store.ts         # État principal du jeu
-│   │   └── photo-store.ts        # 🆕 Photos + GPS + rangs
+│   │   ├── game-store.ts         # État principal
+│   │   ├── photo-store.ts        # Photos + GPS + rangs
+│   │   ├── harvest-store.ts      # Suivi récoltes
+│   │   └── achievement-store.ts  # Badges jardinier
 │   └── lib/
+│       ├── agent/                 # Agent IA Lia (qdrant, ollama, rag-engine, code-scanner...)
+│       ├── ai-engine.ts          # Moteur botanique
 │       ├── weather-service.ts    # Open-Meteo
-│       ├── gps-extractor.ts      # 🆕 EXIF GPS + device GPS
-│       └── ai-engine.ts          # Moteur simulation
+│       ├── gdd-engine.ts         # 🌡️ Calcul GDD (FAO)
+│       ├── hydro-engine.ts        # 💧 Besoins en eau (ET0 FAO)
+│       ├── companion-matrix.ts    # 🤝 Matrice compagnonnage INRAE
+│       ├── soil-temperature.ts   # 🌡️ Température sol + semis
+│       ├── weather-dynamics.ts    # 🦠 Modèles maladies
+│       ├── water-budget.ts       # 💧 Budget hydrique
+│       ├── gps-extractor.ts      # 📍 EXIF GPS + device
+│       └── sound-manager.ts      # 🔊 Audio
 ├── public/
-│   ├── plants/                   # Sprites plantes (stages 0-6)
+│   ├── plants/                   # Sprites plantes (stades 0-6)
 │   ├── pots/                     # Pots arbres fruitiers
-│   ├── cards/                    # Cards collection
+│   ├── cards/                    # Cartes collection
 │   └── equipment/                # Équipement horticole
-└── CHANGELOG.md
+├── prisma/                       # Base de données
+└── CHANGELOG.md                  # Historique des versions
 ```
-
-> 🆕 Nouveau en v0.12.0 · 🔄 Modifié en v0.12.0
 
 ---
 
 ## Roadmap
 
 ### ✅ Réalisé
-- [x] Données encyclopédiques (INRAE, GNIS)
+- [x] Données botaniques réelles (INRAE, FAO Crop Coefficients)
 - [x] Boutiques multi-semenciers (10 boutiques)
 - [x] Arbres fruitiers + croissance multi-année
 - [x] Météo réelle Open-Meteo + GPS
@@ -183,23 +232,17 @@ BotanIA/
 - [x] 📸 **Marquage rangs sur photo réelle (v0.12.0)**
 - [x] 📍 **GPS automatique EXIF + device (v0.12.0)**
 - [x] 🔍 **Identificateur IA 4 moteurs (v0.12.0)**
+- [x] 🌾 **Carte de croissance botanique enrichie (v0.12.1)**
 
 ### 🚀 Idées à implanter
 - [ ] **Calendrier lunaire** — affichage phase + conseil semis/récolte selon tradition
 - [ ] **Journal de jardin** — notes quotidiennes liées aux photos et aux rangs
-- [ ] **Compagnonnage** — alertes associations favorables/défavorables (tomate+basilic ✓)
-- [ ] **Plan 3D isométrique** — vue manga isométrique du jardin (style Manga Garden)
 - [ ] **Export GPX/KML** — exporter les rangs géoréférencés vers Google Earth
-- [ ] **Partage communautaire** — galerie photos identifications (mode partagé)
-- [ ] **Détection maladies** — identifier mildiou, pucerons sur photo avec l'IA
-- [ ] **Suivi récoltes** — log des récoltes réelles avec poids, date, rang associé
+- [ ] **Partage communautaire** — galerie photos identifications
 - [ ] **Notifications arrosage** — rappels basés sur météo réelle et stade plante
-- [ ] **Mode hors-ligne** — PWA avec Service Worker pour usage au jardin sans réseau
-- [ ] **Scan QR rangs** — imprimer un QR code par rang, le scanner pour voir l'état
+- [ ] **Mode hors-ligne** — PWA avec Service Worker
 - [ ] **Historique météo** — graphe température/pluie sur les 30 derniers jours
-- [ ] **Achievements** — badges jardinier (première récolte, jardin complet, etc.)
-- [ ] **Export/Import sauvegarde** — JSON dump complet du jardin
-- [ ] **Mode nuit** — thème sombre adaptatif
+- [ ] **Export/Import sauvegarde** — JSON dump complet
 
 ---
 

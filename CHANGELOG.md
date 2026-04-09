@@ -1,5 +1,78 @@
 # BotanIA - Changelog
 
+## v0.17.0 - Super IA Locale (Ollama + Qdrant RAG) (2026-04-09)
+
+### ✨ Nouveau
+
+#### 🤖 Agent IA Unifié avec RAG (Lia)
+
+Infrastructure complète d'agent IA proactif avec base vectorielle locale :
+
+**Nouveaux fichiers (`src/lib/agent/`) :**
+- `qdrant.ts` — Client REST Qdrant (base vectorielle locale, pas de SDK)
+- `ollama.ts` — Client Ollama chat + embeddings (qwen2.5:7b + nomic-embed-text)
+- `persona.ts` — System prompt Lia + helpers de contexte jeu
+- `rag-engine.ts` — Moteur RAG complet : embed question → search Qdrant → generate Ollama
+- `code-scanner.ts` — Parse automatiquement les .tsx/.ts en vecteurs (comprend le code)
+- `proactive-agent.ts` — Boucle proactive : scan état jeu → notifications (eau, plantes, calendrier)
+- `fallback-chain.ts` — Fallback transparent vers Groq si Ollama/Qdrant indisponible
+- `action-executor.ts` — Exécute notifications + vibrations mobile
+- `memory-manager.ts` — Mémoire utilisateur → Qdrant (observations, décisions, flashcards)
+- `markdown-ingester.ts` — Parse et indexe automatiquement les .md du projet
+
+**Nouveaux fichiers (`src/components/agent/`) :**
+- `AgentInitializer.tsx` — Initialisation côté client (détecte Ollama + Qdrant au démarrage)
+- `LiaStatusIndicator.tsx` — Indicateur 🟢/🟡/🔴 dans le header
+- `LiaInterface.tsx` — Chat complet avec Lia (avec questions rapides)
+- `LiaPanel.tsx` — Panel suggestions proactives
+- `LiaNotifications.tsx` — Centre de notifications
+
+**Nouveaux fichiers (`src/app/api/agent/`) :**
+- `status/route.ts` — GET /api/agent/status — Estat Ollama + Qdrant
+- `scan/route.ts` — POST /api/agent/scan — Scan complet du code BotanIA
+- `rag/route.ts` — POST /api/agent/rag — RAG query
+- `index-file/route.ts` — POST /api/agent/index-file — Indexe 1 fichier
+
+**Nouveaux fichiers :**
+- `src/store/agent-store.ts` — State Zustand pour l'agent (notifications, suggestions, messages)
+- `src/lib/hooks/useAgent.ts` — Hook React pour utiliser Lia
+- `src/app/api/agent/` (4 routes API)
+
+#### 🎯 Fonctionnement
+
+- **Mode Super IA Locale** : bouton "🔮 Activer Super IA Locale" dans le header
+- **Mode passif** : si Ollama ou Qdrant éteint, retour transparent à Groq classique (zéro changement pour l'utilisateur)
+- **Indexation auto** : au démarrage, scanne automatiquement HologramEvolution.tsx, Jardin.tsx, etc. → stocke dans Qdrant
+- **Proactivité** : Lia scanne l'état du jeu toutes les 60s et notifie (cuve basse, plantes assoiffées, gel, récoltes prêtes)
+- **Compréhension du code** : Lia peut lire et expliquer HologramEvolution.tsx et les composants
+- **Mémoire persistante** : observations et décisions sont stockées dans Qdrant (utilisable ailleurs)
+- **Mobile ready** : vibration API + notifications push
+
+#### 📂 Collections Qdrant
+
+| Collection | Contenu |
+|---|---|
+| `botania_components` | Code parsé des .tsx/.ts (fonctions, interfaces, exports, onglets liés) |
+| `botania_data` | Données graines/arbres/encyclopedia |
+| `botania_docs` | Tous les .md du projet |
+| `botania_memory` | Observations, décisions, flashcards utilisateur |
+| `botania_game_state` | Snapshots périodiques de l'état du jeu |
+
+#### 🔧 Conditions d'activation
+
+- Ollama installé + `ollama serve` en background
+- Qdrant Desktop ou serveur sur port 6333
+- Optionnel : `ollama pull nomic-embed-text` (pour les embeddings)
+- 63Go RAM suffisants pour qwen2.5:7b + Qdrant + BotanIA
+
+#### 📝 Intégration page.tsx
+
+- Bouton "🔮 Activer Super IA Locale" ajouté dans le header (à côté de Admin)
+- Panel flottant Lia ajouté en bas à droite (w-80, collapsible)
+- `AgentInitializer` intégré dans layout.tsx
+
+---
+
 ## v0.16.0 - Lia Phénologie + iNaturalist + Crowdsourcing (2026-04-09)
 
 ### ✨ Nouveau

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { BuilderProvider } from "@/components/builder/builder-provider";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { AgentInitializer } from "@/components/agent/AgentInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,25 +17,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "🌱 Jardin Culture — Jeu de Cartes Botanique",
-  description: "Cultivez votre jardin virtuel dans ce jeu de cartes botanique ! Plantez, arrosez, protégez vos cultures et créez des combos pour maximiser votre récolte. Météo dynamique, maladies et saisons vous attendent.",
-  keywords: ["jardin", "jeu de cartes", "botanique", "cultivation", "simulation", "plantes", "manga", "jeu"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "🌱 BotanIA — Application de Jardinage Botanique",
+  description: "Application de culture botanique scientifique. Suivez la croissance de vos plantes avec des données agronomiques réelles : GDD, besoins en eau FAO, compagnonnage INRAE, risques phytosanitaires.",
+  keywords: ["jardin", "botanique", "culture", "plantes", "maraichage", "agronomie", "GDD", "FAO"],
+  authors: [{ name: "avalondrey" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "🌱 Jardin Culture — Jeu de Cartes Botanique",
-    description: "Cultivez votre jardin virtuel dans ce jeu de cartes botanique ! Plantez, arrosez, protégez vos cultures et créez des combos pour maximiser votre récolte.",
-    url: "https://chat.z.ai",
-    siteName: "Jardin Culture",
+    title: "🌱 BotanIA — Application de Jardinage Botanique",
+    description: "Application de culture botanique scientifique connectée à la météo réelle et à l'IA.",
+    url: "https://github.com/avalondrey/BotanIA",
+    siteName: "BotanIA",
     type: "website",
     locale: "fr_FR",
   },
   twitter: {
     card: "summary_large_image",
-    title: "🌱 Jardin Culture — Jeu de Cartes Botanique",
-    description: "Cultivez votre jardin virtuel dans ce jeu de cartes botanique ! Plantez, arrosez, protégez vos cultures.",
+    title: "🌱 BotanIA — Application de Jardinage Botanique",
+    description: "Application de culture botanique scientifique avec données agronomiques réelles.",
   },
 };
 
@@ -48,7 +51,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <ServiceWorkerRegister />
+        <AgentInitializer />
+        <BuilderProvider>
+          {children}
+        </BuilderProvider>
         <Toaster />
       </body>
     </html>

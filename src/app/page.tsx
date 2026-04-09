@@ -6,6 +6,7 @@ import { useGameStore } from "@/store/game-store";
 import { Pepiniere } from "@/components/game/Pepiniere";
 import { SerreJardinView } from "@/components/game/SerreJardinView";
 import { GameHUD } from "@/components/game/GameHUD";
+import { VisualEffectManager } from "@/components/game/VisualEffectManager";
 import { EnhancedHUD } from "@/components/game/EnhancedHUD";
 import { Boutique } from "@/components/game/Boutique";
 import { GrainCollection } from "@/components/game/GrainCollection";
@@ -16,9 +17,10 @@ import { WeatherEffects } from "@/components/game/WeatherEffects";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdminPanel, AdminButton, AdminModeBanner } from "@/components/game/AdminPanel";
 import { HarvestTracker } from "@/components/game/HarvestTracker";
-import { GardenJournal } from "@/components/game/GardenJournal";
+import { GardenJournalLunar } from "@/components/game/GardenJournalLunar";
 import DiseaseDetector from "@/components/game/DiseaseDetector";
 import { LunarCalendar } from "@/components/game/LunarCalendar";
+import { GardenSaveManager } from "@/components/game/GardenSaveManager";
 import {
   fetchWeather,
   getGPSLocation,
@@ -27,10 +29,13 @@ import {
 } from "@/lib/weather-service";
 import {
   TreePine, ShoppingBag, Sprout, RefreshCw, MapPin, Loader2,
-  Warehouse, Home, ScanSearch, Moon, BookOpen, Scale, Bug,
+  Warehouse, Home, ScanSearch, Moon, BookOpen, Scale, Bug, Save,
 } from "lucide-react";
 import HarvestParticles from "@/components/ui/HarvestParticles";
 import { useNightMode, useAutoSave } from "@/lib/use-effects";
+import { useSlotAutoSave } from "@/hooks/useSlotAutoSave";
+import { LiaInterface } from "@/components/agent/LiaInterface";
+import { LiaToggleButton } from "@/components/agent/LiaStatusIndicator";
 
 export default function GamePage() {
   const initGame = useGameStore((s) => s.initGame);
@@ -46,13 +51,12 @@ export default function GamePage() {
   const setWeatherError = useGameStore((s) => s.setWeatherError);
   const activeTab = useGameStore((s) => s.activeTab);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
-  const showSerreView = useGameStore((s) => s.showSerreView);
-  const toggleSerreView = useGameStore((s) => s.toggleSerreView);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const weatherRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useNightMode();
   useAutoSave();
+  useSlotAutoSave();
 
   const [harvestTrigger, setHarvestTrigger] = useState(0);
 
@@ -230,7 +234,7 @@ export default function GamePage() {
             >
               🌱 Jardin Culture
             </motion.h1>
-            <span className="px-2 py-0.5 bg-black text-white text-[8px] font-black uppercase rounded">v0.10.0</span>
+            <span className="px-2 py-0.5 bg-black text-white text-[8px] font-black uppercase rounded">v0.13.0</span>
             <span className="hidden md:inline-block px-2 py-0.5 bg-amber-100 text-amber-800 text-[7px] font-bold uppercase rounded border border-amber-300">alpha</span>
             <span className="hidden sm:inline-block px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black uppercase rounded border border-green-300">
               🌤️ Météo Réelle
@@ -267,6 +271,7 @@ export default function GamePage() {
             )}
 
             <AdminButton />
+            <LiaToggleButton />
             <button
               onClick={() => { if (confirm("Recommencer ? Toutes les données seront réinitialisées.")) useGameStore.getState().initGame(true); }}
               className="px-2 py-1 border-2 border-black bg-stone-100 text-[9px] font-black uppercase rounded-lg hover:bg-stone-200 transition-colors"
@@ -304,6 +309,7 @@ export default function GamePage() {
       {/* MAIN */}
       <div className="relative z-10 max-w-[1400px] mx-auto px-3 py-3 md:py-4">
         <GameHUD />
+        <VisualEffectManager />
         <EnhancedHUD />
 
         {/* Tabs */}
@@ -353,10 +359,10 @@ export default function GamePage() {
             </TabsTrigger>
             <TabsTrigger
               value="journal"
-              className="data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+              className="data-[state=active]:bg-indigo-100 data-[state=active]:border-indigo-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
               <BookOpen className="w-4 h-4" />
-              📔 Journal
+              📔🌙 Journal
             </TabsTrigger>
             <TabsTrigger
               value="recoltes"
@@ -373,18 +379,18 @@ export default function GamePage() {
               🦠 Maladies
             </TabsTrigger>
             <TabsTrigger
-              value="lune"
-              className="data-[state=active]:bg-indigo-100 data-[state=active]:border-indigo-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+              value="sauvegardes"
+              className="data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
             >
-              <Moon className="w-4 h-4" />
-              🌙 Lune
+              <Save className="w-4 h-4" />
+              💾 Sauvegardes
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jardin" className="mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2">
-                {showSerreView ? <SerreJardinView /> : <Jardin />}
+                <Jardin />
               </div>
               <div className="lg:col-span-1">
                 <IAJardinier />
@@ -413,7 +419,7 @@ export default function GamePage() {
           </TabsContent>
 
           <TabsContent value="journal" className="mt-4">
-            <GardenJournal />
+            <GardenJournalLunar />
           </TabsContent>
 
           <TabsContent value="recoltes" className="mt-4">
@@ -424,10 +430,8 @@ export default function GamePage() {
             <DiseaseDetector />
           </TabsContent>
 
-          <TabsContent value="lune" className="mt-4">
-            <div className="max-w-2xl mx-auto">
-              <LunarCalendar />
-            </div>
+          <TabsContent value="sauvegardes" className="mt-4">
+            <GardenSaveManager />
           </TabsContent>
         </Tabs>
 
@@ -461,6 +465,11 @@ export default function GamePage() {
 
       {/* Effets météo */}
       <WeatherEffects />
+
+      {/* Lia Chat Panel — Floating */}
+      <div className="fixed bottom-4 right-4 z-50 w-80">
+        <LiaInterface initialOpen={false} />
+      </div>
     </div>
   );
 }
