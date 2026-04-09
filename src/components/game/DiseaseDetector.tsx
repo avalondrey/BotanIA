@@ -5,6 +5,45 @@
 
 'use client';
 
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onend: () => void;
+  onerror: (event: Event) => void;
+  start: () => void;
+  stop: () => void;
+}
+declare var SpeechRecognition: {
+  prototype: SpeechRecognition;
+  new(): SpeechRecognition;
+};
+declare var webkitSpeechRecognition: {
+  prototype: SpeechRecognition;
+  new(): SpeechRecognition;
+};
+
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoStore, type GardenPhoto } from '@/store/photo-store';
@@ -12,7 +51,7 @@ import { getBestGPS } from '@/lib/gps-extractor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, CheckCircle, XCircle, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Info, Mic, MicOff, Send } from 'lucide-react';
 
 // ─── Moteurs disponibles (mêmes que PlantIdentifier) ─────────────────────────
 const ENGINES = [
@@ -54,6 +93,10 @@ export default function DiseaseDetector() {
   const [liveGps, setLiveGps] = useState<{lat:number;lon:number;source:string}|null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [engineError, setEngineError] = useState<string|null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceText, setVoiceText] = useState('');
+  const [voiceHistory, setVoiceHistory] = useState<{text:string; time:Date}[]>([]);
+  const [showVoiceInput, setShowVoiceInput] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -95,6 +138,59 @@ export default function DiseaseDetector() {
       const gps = gpsResult ? { lat: gpsResult.lat, lon: gpsResult.lon, source: gpsResult.source } : undefined;
       addPhoto({ dataUrl: url, gps: gps as any, source: 'identificateur' });
     });
+  };
+
+  // ── Voice dictation ──────────────────────────────────────────────
+  const recognitionRef = useRef<SpeechRecognition|null>(null);
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Dictée vocale non supportée par ce navigateur.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = '';
+      let final = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      setVoiceText(final || interim);
+    };
+
+    recognition.onend = () => {
+      if (isRecording) {
+        // restart if still recording
+        try { recognition.start(); } catch {}
+      }
+    };
+
+    recognition.onerror = () => setIsRecording(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const stopVoiceInput = () => {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
+    if (voiceText.trim()) {
+      setVoiceHistory(prev => [{ text: voiceText.trim(), time: new Date() }, ...prev]);
+      setVoiceText('');
+    }
+  };
+
+  const submitVoiceText = () => {
+    if (!voiceText.trim()) return;
+    setVoiceHistory(prev => [{ text: voiceText.trim(), time: new Date() }, ...prev]);
+    setVoiceText('');
   };
 
   const analyze = async (photo: GardenPhoto) => {
@@ -170,6 +266,83 @@ export default function DiseaseDetector() {
           {gpsStatus === 'none' && <AlertDescription>📍 Aucun GPS intégré dans cette photo</AlertDescription>}
         </Alert>
       )}
+
+      {/* ── Voice dictation ── */}
+      <div className="dd-voice-section">
+        <Button
+          variant={showVoiceInput ? "secondary" : "outline"}
+          onClick={() => setShowVoiceInput(v => !v)}
+          className="w-full"
+        >
+          {showVoiceInput ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+          🎙️ Mode Dictée Terrain
+        </Button>
+
+        {showVoiceInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-3 p-4 border rounded-lg bg-muted/30 space-y-3"
+          >
+            <p className="text-sm text-muted-foreground">
+              Parlez pour noter vos observations dans le journal. L'IA analysera vos mots.
+            </p>
+
+            {/* Recording controls */}
+            <div className="flex gap-2">
+              {!isRecording ? (
+                <Button onClick={startVoiceInput} className="flex-1">
+                  <Mic className="h-4 w-4 mr-2" /> Commencer
+                </Button>
+              ) : (
+                <Button onClick={stopVoiceInput} variant="destructive" className="flex-1">
+                  <MicOff className="h-4 w-4 mr-2" /> Arrêter
+                </Button>
+              )}
+            </div>
+
+            {/* Live transcription */}
+            {isRecording && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-red-700">Enregistrement...</span>
+                </div>
+                <p className="text-sm italic text-red-600">{voiceText || "Parlez maintenant..."}</p>
+              </div>
+            )}
+
+            {/* Manual text input */}
+            {!isRecording && voiceText && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={voiceText}
+                  onChange={e => setVoiceText(e.target.value)}
+                  placeholder="Éditez ou tapez votre observation..."
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                />
+                <Button size="sm" onClick={submitVoiceText}><Send className="h-4 w-4" /></Button>
+              </div>
+            )}
+
+            {/* History */}
+            {voiceHistory.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">📖 Journal d'observations</h4>
+                {voiceHistory.map((entry, i) => (
+                  <div key={i} className="p-2 bg-background border rounded text-sm">
+                    <div className="text-xs text-muted-foreground mb-1">
+                      {entry.time.toLocaleDateString('fr-FR')} — {entry.time.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <p>{entry.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </div>
 
       {/* ── Erreur moteur ── */}
       {engineError && (

@@ -2,14 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send } from 'lucide-react';
+import { X, Send, BookOpen, Plus } from 'lucide-react';
 import { generateTip, type LiaTip } from '@/lib/lia-data';
+import { loadAllPlantMemories, addObservationRecord, getPersonalizedTip, getDiseaseWarning, type PlantMemory } from '@/lib/garden-memory';
 
 export default function LiaAssistant({ plants = [], weather }: { plants?: any[]; weather?: { temperature?: number; isRaining?: boolean } }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<LiaTip[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [memories, setMemories] = useState<PlantMemory[]>([]);
+  const [showMemory, setShowMemory] = useState(false);
+  const [memoryNote, setMemoryNote] = useState('');
+  const [memoryCategory, setMemoryCategory] = useState<'growth' | 'problem' | 'treatment' | 'weather' | 'general'>('general');
   const endRef = useRef<HTMLDivElement>(null);
 
   // Auto-give tip on init
@@ -35,11 +40,68 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
     return () => clearInterval(interval);
   }, [isOpen, plants, weather]);
 
+  // Load garden memories on mount
+  useEffect(() => {
+    loadAllPlantMemories().then(setMemories).catch(() => {});
+  }, []);
+
+  // Add personalized memory tip when memories are loaded
+  useEffect(() => {
+    if (memories.length === 0) return;
+    // Check if we already added a memory tip recently
+    const hasMemoryTip = messages.some(m => m.id.startsWith('mem-'));
+    if (hasMemoryTip) return;
+    // Add personalized tip for first plant with data
+    for (const mem of memories) {
+      if (mem.harvests.length >= 2) {
+        const tip = getPersonalizedTip(mem.name, memories);
+        if (tip) {
+          const msg: LiaTip = {
+            id: 'mem-' + Date.now(),
+            type: 'general',
+            priority: 'low',
+            title: '📖 Mémoire du jardin',
+            message: tip,
+            icon: '📖',
+          };
+          setTimeout(() => addMessage(msg), 2000);
+        }
+        break;
+      }
+    }
+    const warnTip = getDiseaseWarning(memories);
+    if (warnTip) {
+      const msg: LiaTip = {
+        id: 'warn-' + Date.now(),
+        type: 'disease',
+        priority: 'medium',
+        title: '⚠️ Alerte historique',
+        message: warnTip,
+        icon: '📖',
+      };
+      setTimeout(() => addMessage(msg), 3500);
+    }
+  }, [memories]);
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const addMessage = (tip: LiaTip) => {
     setIsTyping(true);
     setTimeout(() => { setMessages((prev) => [...prev, tip]); setIsTyping(false); }, 800);
+  };
+
+  const saveObservation = async () => {
+    if (!memoryNote.trim()) return;
+    const entry = { date: new Date().toISOString().split('T')[0], text: memoryNote.trim(), category: memoryCategory };
+    await addObservationRecord('general', entry);
+    const mems = await loadAllPlantMemories();
+    setMemories(mems);
+    setMemoryNote('');
+    const confirmMsg: LiaTip = {
+      id: 'confirm-' + Date.now(), type: 'general', priority: 'low',
+      title: '✅ Mémoire enregistrée', message: `Observation notée: "${entry.text}"`, icon: '📖',
+    };
+    addMessage(confirmMsg);
   };
 
   const handleSend = () => {
@@ -52,7 +114,7 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
     setChatInput('');
     setIsTyping(true);
     setTimeout(() => {
-      setMessages((p) => [...p, genResponse(chatInput, plants)]);
+      setMessages((p) => [...p, genResponse(chatInput, plants, memories)]);
       setIsTyping(false);
     }, 1200);
   };
@@ -96,6 +158,7 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 flex items-center gap-3">
             <span className="text-2xl">🌱</span>
             <div className="flex-1"><h3 className="text-white font-bold">Lia</h3><p className="text-green-100 text-xs">Assistante de jardinage</p></div>
+            <button onClick={() => setShowMemory(v => !v)} className="text-white/80 hover:text-white mr-1" title="Mémoire du jardin"><BookOpen className="w-4 h-4" /></button>
             <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white"><X className="w-5 h-5" /></button>
           </div>
 
@@ -127,7 +190,44 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
             <div ref={endRef} />
           </div>
 
-          {/* Input */}
+          {/* Memory panel */}
+          {showMemory && (
+            <div className="p-3 border-t border-gray-200 bg-gradient-to-b from-amber-50/50 to-white">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-bold flex items-center gap-1"><BookOpen className="w-4 h-4" /> Mémoire du jardin</h4>
+                <button onClick={() => setShowMemory(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+              </div>
+              <p className="text-xs text-gray-500 mb-2">Note une observation pour que Lia apprenne de ton jardin.</p>
+              <div className="flex gap-1 flex-wrap mb-2">
+                {(['general', 'growth', 'problem', 'treatment', 'weather'] as const).map(cat => (
+                  <button key={cat} onClick={() => setMemoryCategory(cat)}
+                    className={`px-2 py-0.5 rounded text-xs ${memoryCategory === cat ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                    {cat === 'growth' ? '🌱 Croissance' : cat === 'problem' ? '⚠️ Problème' : cat === 'treatment' ? '💊 Traitement' : cat === 'weather' ? '🌤️ Météo' : '💬 Général'}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <input type="text" value={memoryNote} onChange={e => setMemoryNote(e.target.value)}
+                  placeholder="Ex: Tomate du rang 3, jaunissement..."
+                  className="flex-1 px-2 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-green-400"
+                  onKeyDown={e => e.key === 'Enter' && saveObservation()} />
+                <button onClick={saveObservation} className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-2 py-1.5"><Plus className="w-4 h-4" /></button>
+              </div>
+              {memories.length > 0 && (
+                <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
+                  {memories.slice(0, 5).map(mem => (
+                    <div key={mem.plantId} className="text-xs p-1.5 bg-white rounded border">
+                      <span className="font-medium">{mem.name}</span>
+                      <span className="text-gray-400 ml-1">({mem.harvests.length} récolte{mem.harvests.length !== 1 ? 's' : ''})</span>
+                      {mem.harvests.length >= 2 && (
+                        <span className="text-green-600 ml-1">→ {mem.averages.avgDaysToMaturity}j avg</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="p-2.5 border-t border-gray-200 flex gap-2">
             <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder="Pose une question à Lia..." className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500/30 text-sm" />
             <button onClick={handleSend} disabled={!chatInput.trim()} className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-lg px-3 transition">
@@ -140,13 +240,29 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
   </>);
 }
 
-function genResponse(input: string, plants: any[]): LiaTip {
+function genResponse(input: string, plants: any[], memories: PlantMemory[]): LiaTip {
   const l = input.toLowerCase();
+
+  // Check if user asks about a plant that has memory data
+  for (const mem of memories) {
+    if (l.includes(mem.name.toLowerCase()) && mem.harvests.length >= 2) {
+      return {
+        id: 'memres-' + Date.now(),
+        type: 'general',
+        priority: 'low',
+        title: `📖 ${mem.name}`,
+        message: `D'après ${mem.harvests.length} saisons sur ton terrain: maturité en ~${mem.averages.avgDaysToMaturity}j, rendement ~${mem.averages.avgYield} kg/m².`,
+        icon: '📖',
+      };
+    }
+  }
+
   const r: [string[], LiaTip][] = [
     [['arroser', 'eau', 'water'], { id: 'rw', type: 'water', priority: 'medium', title: '💧 Arrosage', message: "Arrose tôt le matin ou tard le soir pour limiter l'évaporation.", icon: '🌱' }],
     [['maladie', 'malade'], { id: 'rd', type: 'disease', priority: 'high', title: '🦠 Maladies', message: "Isole les plantes atteintes et vérifie l'humidité.", icon: '🌱' }],
     [['récolte', 'recolt'], { id: 'rh', type: 'harvest', priority: 'medium', title: '🌾 Récolte', message: "Récolte quand les fruits sont colorés et légèrement souples.", icon: '🌱' }],
     [['serre', 'intérieur'], { id: 'rg', type: 'general', priority: 'medium', title: '🏡 Serre', message: "Aère quotidiennement. Maintiens 18-25°C.", icon: '🌱' }],
+    [['mémoire', 'historique', 'saison'], { id: 'rm', type: 'general', priority: 'low', title: '📖 Mémoire', message: "Je retiens tout ce que tu me dis sur tes plantes. Plus j'ai de données, plus mes conseils sont personnalisés !", icon: '📖' }],
   ];
   for (const [ks, v] of r) if (ks.some((k) => l.includes(k))) return v;
   return { id: 'rd-' + Date.now(), type: 'general', priority: 'low', title: '🌱 Lia', message: ['Questionne-moi sur le jardinage !', 'Le jardinage demande de la patience.', 'As-tu arrosé tes plantes ?'][Math.floor(Math.random() * 3)], icon: '🌱' };
