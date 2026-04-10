@@ -6,17 +6,19 @@ import { useGameStore } from '@/store/game-store';
 import GardenPlanView from './GardenPlanView';
 import GardenCardsView from './GardenCardsView';
 import JardinPlacementControls from './JardinPlacementControls';
-import PlacementTools from './PlacementTools';
 import SeedRowPainter, { type SeedRow } from './SeedRowPainter';
 import { usePhotoStore } from '@/store/photo-store';
 import '@/styles/garden.css';
 
 type GardenView = 'plan' | 'cards' | 'rangs';
-type PlacementTool = 'none' | 'serre' | 'tree' | 'hedge' | 'tank' | 'shed';
+export type ActiveTool = 'none' | 'zone' | 'zone_hedge' | 'zone_water' | 'zone_grass' | 'zone_fleur';
+export type EditMode = 'place' | 'select';
 
 export const Jardin: React.FC = () => {
   const [view, setView] = useState<GardenView>('plan');
-  const [activeTool, setActiveTool] = useState<PlacementTool>('none');
+  const [activeTool, setActiveTool] = useState<ActiveTool>('none');
+  const [editMode, setEditMode] = useState<EditMode>('place');
+  const [selectedInfo, setSelectedInfo] = useState<{ type: string; id: string } | null>(null);
   const [seedRows, setSeedRows] = useState<SeedRow[]>([]);
   const gardenPlants = useGameStore((s) => s.gardenPlants);
   const photoCount = usePhotoStore((s) => s.photos.filter(p => p.source === 'jardin').length);
@@ -38,8 +40,12 @@ export const Jardin: React.FC = () => {
           <button onClick={() => setView('cards')} className={`toggle-btn ${view === 'cards' ? 'active' : ''}`}>
             🎴 Vue Cartes
           </button>
-          <button onClick={() => setView('rangs')} className={`toggle-btn toggle-btn-camera ${view === 'rangs' ? 'active' : ''}`}>
-            📸 Rangs {seedRows.length > 0 && <span className="toggle-badge">{seedRows.length}</span>}
+          <button
+            onClick={() => setView('rangs')}
+            className={`toggle-btn toggle-btn-camera ${view === 'rangs' ? 'active' : ''}`}
+            title="Marquer ses plants/semences"
+          >
+            🏷️ GrainTag {seedRows.length > 0 && <span className="toggle-badge">{seedRows.length}</span>}
             {photoCount > 0 && <span className="toggle-badge-photo">📷{photoCount}</span>}
           </button>
         </div>
@@ -59,8 +65,14 @@ export const Jardin: React.FC = () => {
       </div>
 
       {/* ── Contrôles placement (seulement vue plan) ── */}
-      {view !== 'rangs' && <JardinPlacementControls />}
-      {view !== 'rangs' && <PlacementTools onToolSelect={setActiveTool} activeTool={activeTool} />}
+      {view !== 'rangs' && (
+        <JardinPlacementControls
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
+          editMode={editMode}
+          onEditModeChange={setEditMode}
+        />
+      )}
 
       {/* ── Contenu principal ── */}
       <AnimatePresence mode="wait">
@@ -69,7 +81,13 @@ export const Jardin: React.FC = () => {
           <motion.div key="plan-view"
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <GardenPlanView seedRows={seedRows} />
+            <GardenPlanView
+              seedRows={seedRows}
+              activeTool={activeTool}
+              editMode={editMode}
+              onToolUsed={() => setActiveTool('none')}
+              onSelectElement={(type, id) => setSelectedInfo({ type, id })}
+            />
           </motion.div>
         )}
 

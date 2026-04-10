@@ -1,4 +1,7 @@
 import { create } from "zustand";
+import { useAchievementStore } from './achievement-store';
+import { useSoundManager } from '@/lib/sound-manager';
+import { triggerVisualEffect } from '@/components/game/VisualEffectManager';
 import {
   type PlantState,
   type AlertData,
@@ -35,6 +38,8 @@ import {
   saveGPSCoords,
   isFrostRisk,
 } from "@/lib/weather-service";
+import { checkCompanionForNewPlant } from "@/lib/companion-matrix";
+import { loadPlotHistory, findOrCreatePlot, getPlotRotationSuggestion, recordPlanting } from '@/lib/crop-rotation';
 import {
   getEnvironmentForMonth,
   getEnvironmentWithDailyVariation,
@@ -174,6 +179,12 @@ export interface GardenTank {
   height: number;  // cm
   capacity: number;  // litres
   currentLevel: number;  // litres
+  // ── Nouveaux champs récupération pluie ──
+  name?: string;           // nom affiché
+  roofAreaM2?: number;     // m² toiture connectée
+  efficiency?: number;     // 0.8 = 80%
+  color?: string;          // couleur HUD
+  isRainTank?: boolean;    // cuve récup pluie active
 }
 
 export interface GardenShed {
@@ -183,6 +194,25 @@ export interface GardenShed {
   y: number;  // cm
   width: number;  // cm
   height: number;  // cm
+}
+
+export interface GardenDrum {
+  id: string;
+  x: number;  // cm
+  y: number;  // cm
+  width: number;  // cm
+  height: number;  // cm
+  capacity: number;  // litres (225)
+}
+
+export interface GardenZone {
+  id: string;
+  type: 'uncultivated' | 'cultivated' | 'path' | 'hedge' | 'water_recovery' | 'grass' | 'fleur';
+  x: number;  // cm
+  y: number;  // cm
+  width: number;  // cm
+  height: number;  // cm
+  label?: string;
 }
 
 // ═══ Mini Serre (6×4 = 24 slots) ═══
@@ -285,7 +315,7 @@ export interface SeedVariety {
   emoji: string;
   price: number;
   grams: number;
-  seedCount: number; // Nombre de graines dans le paquet
+  seedCount?: number; // Nombre de graines dans le paquet (optionnel pour compatibilité)
   description: string;
   image: string;
   unlocked: boolean;
@@ -388,6 +418,675 @@ export const SEED_SHOPS: SeedShop[] = [
     borderColor: "border-red-300",
     image: "/assets/shops/card-shop-fruitiers-forest.png",
     description: "Vergers et petits fruits — Gamme complète d'arbres fruitiers",
+  },
+  // ═══ Achats Locaux & Pepinieres ═══
+  {
+    id: "pepiniere-locale",
+    name: "Pépinière",
+    emoji: "🏡",
+    color: "from-amber-50 to-yellow-50",
+    borderColor: "border-amber-300",
+    image: "/assets/shops/card-shop-pepiniere-locale.png",
+    description: "Plants élevés à la ferme — Arbres, arbustes et plantules de saison",
+  },
+  {
+    id: "les-pepineres-quissac",
+    name: "Les Pépinières Quissac",
+    emoji: "🌿",
+    color: "from-green-50 to-emerald-50",
+    borderColor: "border-emerald-300",
+    image: "/assets/shops/card-shop-quissac.png",
+    description: "Pépiniériste local — Plants et arbustes cultivés en Occitanie",
+  },
+  {
+    id: "leaderplant",
+    name: "Leaderplant",
+    emoji: "🌳",
+    color: "from-teal-50 to-cyan-50",
+    borderColor: "border-teal-300",
+    image: "/assets/shops/card-shop-leaderplant.png",
+    description: "Pépinière spécialisée — Fruitiers, petits fruits et plantes vivaces",
+  },
+  {
+    id: "marche-producteurs",
+    name: "Marché Producteurs",
+    emoji: "🧺",
+    color: "from-orange-50 to-red-50",
+    borderColor: "border-orange-300",
+    image: "/assets/shops/card-shop-marche.png",
+    description: "Ventes directes — Plants et plantules de maraîchers locaux",
+  },
+  {
+    id: "jardin-partage",
+    name: "Jardin Partagé",
+    emoji: "🌾",
+    color: "from-green-50 to-emerald-50",
+    borderColor: "border-green-300",
+    image: "/assets/shops/card-shop-jardin-partage.png",
+    description: "Échange entre jardiniers — Plants et semis cultivés localement",
+  },
+  // ═══ Bientôt disponible ═══
+  {
+    id: "bientot-dispo",
+    name: "Bientôt dispo",
+    emoji: "🔜",
+    color: "from-stone-100 to-stone-200",
+    borderColor: "border-stone-300",
+    image: "/assets/shops/card-shop-placeholder.png",
+    description: "Ce magasin arrive bientôt — Restez attentifs !",
+  },
+  // ═══ Magasins Plantules ═══
+  {
+    id: "jardiland",
+    name: "Jardiland",
+    emoji: "🏡",
+    color: "from-green-50 to-emerald-50",
+    borderColor: "border-green-300",
+    image: "/assets/shops/card-shop-jardiland.png",
+    description: "Le spécialiste jardin — Plants et plantules de saison",
+  },
+  {
+    id: "gamm-vert",
+    name: "Gamm Vert",
+    emoji: "🌿",
+    color: "from-lime-50 to-green-50",
+    borderColor: "border-lime-300",
+    image: "/assets/shops/card-shop-gamm-vert.png",
+    description: "Proche de chez vous — Gamme complète jardin et extérieur",
+  },
+  {
+    id: "esat-antes",
+    name: 'E.S.A.T. "Les Antes"',
+    emoji: "🌻",
+    color: "from-yellow-50 to-amber-50",
+    borderColor: "border-amber-300",
+    image: "/assets/shops/card-shop-esat-antes.png",
+    description: "Etablissement et Service d'Aide par le Travail — Plants adaptés",
+  },
+  {
+    id: "jardi-leclerc",
+    name: "Jardi E.Leclerc",
+    emoji: "🛒",
+    color: "from-red-50 to-orange-50",
+    borderColor: "border-red-300",
+    image: "/assets/shops/card-shop-jardi-leclerc.png",
+    description: "Jardin et animalerie — Large choix à petits prix",
+  },
+];
+
+// ═══ Plantules Locales (pour achats-locaux) ═══
+export const PLANTULES_LOCALES: SeedVariety[] = [
+  // Tomates locales
+  {
+    id: "plantule-tomate-coeur-boeuf",
+    plantDefId: "tomato",
+    shopId: "jardiland",
+    name: "Tomate Coeur de Boeuf",
+    emoji: "🍅",
+    price: 90,
+    grams: 0,
+    description: "Plantule élevée en local — Variété charnue et parfumée, excellente pour salade",
+    image: "/plantules/plantule-tomate-coeur-boeuf.png",
+    unlocked: true,
+    stageDurations: [8, 22, 20, 45],
+    realDaysToHarvest: 95,
+    optimalTemp: [16, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "plantule-tomate-ananas",
+    plantDefId: "tomato",
+    shopId: "jardiland",
+    name: "Tomate Ananas",
+    emoji: "🍅",
+    price: 95,
+    grams: 0,
+    description: "Plantule locale — Chair jaune orangée, douce et sucrée, variété ancienne",
+    image: "/plantules/plantule-tomate-ananas.png",
+    unlocked: true,
+    stageDurations: [10, 25, 25, 55],
+    realDaysToHarvest: 115,
+    optimalTemp: [18, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  // Courgettes et squash locaux
+  {
+    id: "plantule-courgette-rond",
+    plantDefId: "zucchini",
+    shopId: "jardiland",
+    name: "Courgette Ronde de Nice",
+    emoji: "🥒",
+    price: 75,
+    grams: 0,
+    description: "Plantule locale — Variété provençale, idéale pour farcir",
+    image: "/plantules/plantule-courgette-rond.png",
+    unlocked: true,
+    stageDurations: [6, 16, 20, 42],
+    realDaysToHarvest: 84,
+    optimalTemp: [18, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "plantule-potimarron",
+    plantDefId: "squash",
+    shopId: "jardiland",
+    name: "Potimarron",
+    emoji: "🎃",
+    price: 80,
+    grams: 0,
+    description: "Plantule locale — Courge douce, chair orangée, excellente conservation",
+    image: "/plantules/plantule-potimarron.png",
+    unlocked: true,
+    stageDurations: [8, 20, 30, 60],
+    realDaysToHarvest: 118,
+    optimalTemp: [15, 26],
+    waterNeed: 4.5,
+    lightNeed: 7,
+  },
+  // Poivrons et piments locaux
+  {
+    id: "plantule-poivron-corne",
+    plantDefId: "pepper",
+    shopId: "jardiland",
+    name: "Poivron Corne de Boeuf",
+    emoji: "🌶️",
+    price: 85,
+    grams: 0,
+    description: "Plantule locale — Chair épaisse, doux, idéal pourfarcir",
+    image: "/plantules/plantule-poivron-corne.png",
+    unlocked: true,
+    stageDurations: [10, 26, 26, 58],
+    realDaysToHarvest: 120,
+    optimalTemp: [20, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "plantule-piment-espelette",
+    plantDefId: "pepper",
+    shopId: "gamm-vert",
+    name: "Piment d'Espelette",
+    emoji: "🌶️",
+    price: 95,
+    grams: 0,
+    description: "Plantule du Pays Basque — AOP, saveur douce et légèrement épicée",
+    image: "/plantules/plantule-piment-espelette.png",
+    unlocked: true,
+    stageDurations: [12, 28, 30, 65],
+    realDaysToHarvest: 135,
+    optimalTemp: [20, 30],
+    waterNeed: 4.5,
+    lightNeed: 8,
+  },
+  // Aubergines locales
+  {
+    id: "plantule-aubergine-barbentane",
+    plantDefId: "eggplant",
+    shopId: "jardiland",
+    name: "Aubergine de Barbentane",
+    emoji: "🍆",
+    price: 80,
+    grams: 0,
+    description: "Plantule locale — Variété provençale, productive et parfumée",
+    image: "/plantules/plantule-aubergine-barbentane.png",
+    unlocked: true,
+    stageDurations: [10, 24, 25, 55],
+    realDaysToHarvest: 114,
+    optimalTemp: [20, 30],
+    waterNeed: 5.5,
+    lightNeed: 8,
+  },
+  // Salades locales
+  {
+    id: "plantule-laitue-feuille-chene",
+    plantDefId: "lettuce",
+    shopId: "gamm-vert",
+    name: "Laitue Feuille de Chêne",
+    emoji: "🥬",
+    price: 55,
+    grams: 0,
+    description: "Plantule de maraîcher — Feuille croquante, résiste à la chaleur",
+    image: "/plantules/plantule-laitue-chene.png",
+    unlocked: true,
+    stageDurations: [4, 10, 14, 22],
+    realDaysToHarvest: 50,
+    optimalTemp: [12, 20],
+    waterNeed: 3.5,
+    lightNeed: 6,
+  },
+  {
+    id: "plantule-laitue-romaine",
+    plantDefId: "lettuce",
+    shopId: "jardiland",
+    name: "Laitue Romaine",
+    emoji: "🥬",
+    price: 55,
+    grams: 0,
+    description: "Plantule locale — Coeur ferme et croquant, variety classique",
+    image: "/plantules/plantule-laitue-romaine.png",
+    unlocked: true,
+    stageDurations: [4, 12, 16, 28],
+    realDaysToHarvest: 60,
+    optimalTemp: [12, 20],
+    waterNeed: 3.5,
+    lightNeed: 6,
+  },
+  // Carottes locales
+  {
+    id: "plantule-carotte-guerande",
+    plantDefId: "carrot",
+    shopId: "gamm-vert",
+    name: "Carotte de Guérande",
+    emoji: "🥕",
+    price: 70,
+    grams: 0,
+    description: "Plantule de maraîcher breton — Douce et croquante, sols sableux",
+    image: "/plantules/plantule-carotte-guerande.png",
+    unlocked: true,
+    stageDurations: [10, 28, 26, 52],
+    realDaysToHarvest: 116,
+    optimalTemp: [15, 22],
+    waterNeed: 4.0,
+    lightNeed: 6,
+  },
+  // Fraises locales
+  {
+    id: "plantule-fraise-gariguette",
+    plantDefId: "strawberry",
+    shopId: "jardiland",
+    name: "Fraise Gariguette",
+    emoji: "🍓",
+    price: 90,
+    grams: 0,
+    description: "Plantule locale — La plus parfumée, chair fondante,抢手",
+    image: "/plantules/plantule-fraise-gariguette.png",
+    unlocked: true,
+    stageDurations: [6, 14, 20, 40],
+    realDaysToHarvest: 80,
+    optimalTemp: [14, 24],
+    waterNeed: 4.0,
+    lightNeed: 7,
+  },
+  // Fraises spécialisées locales
+  {
+    id: "fraise-ostara",
+    plantDefId: "strawberry",
+    shopId: "les-pepineres-quissac",
+    name: "Fraise Ostara",
+    emoji: "🍓",
+    price: 92, grams: 0,
+    description: "Variété remontante, production de juin jusqu'aux gelées, productive",
+    image: "/plantules/plantule-fraise-ostara.png", unlocked: true,
+    stageDurations: [6, 14, 20, 45], realDaysToHarvest: 85,
+    optimalTemp: [14, 26], waterNeed: 4.0, lightNeed: 7,
+  },
+  {
+    id: "fraise-cirafine",
+    plantDefId: "strawberry",
+    shopId: "les-pepineres-quissac",
+    name: "Fraise Cirafine",
+    emoji: "🍓",
+    price: 88, grams: 0,
+    description: "Petits fruits allongés, parfum très prononcé, idéale confitures",
+    image: "/plantules/plantule-fraise-cirafine.png", unlocked: true,
+    stageDurations: [6, 14, 22, 42], realDaysToHarvest: 84,
+    optimalTemp: [14, 24], waterNeed: 4.0, lightNeed: 7,
+  },
+  {
+    id: "fraise-rabunda",
+    plantDefId: "strawberry",
+    shopId: "les-pepineres-quissac",
+    name: "Fraise Rabunda",
+    emoji: "🍓",
+    price: 85, grams: 0,
+    description: "Chair ferme, fruits coniques, bonne conservation, productive",
+    image: "/plantules/plantule-fraise-rabunda.png", unlocked: true,
+    stageDurations: [6, 14, 20, 40], realDaysToHarvest: 80,
+    optimalTemp: [14, 25], waterNeed: 4.0, lightNeed: 7,
+  },
+  {
+    id: "fraise-anabelle",
+    plantDefId: "strawberry",
+    shopId: "les-pepineres-quissac",
+    name: "Fraise Anabelle",
+    emoji: "🍓",
+    price: 90, grams: 0,
+    description: "Gros fruits ronds, chair juteuse, très sucrée, variété grand terroir",
+    image: "/plantules/plantule-fraise-anabelle.png", unlocked: true,
+    stageDurations: [6, 14, 22, 45], realDaysToHarvest: 87,
+    optimalTemp: [14, 24], waterNeed: 4.0, lightNeed: 7,
+  },
+  {
+    id: "plantule-fraise-mara-des-bois",
+    plantDefId: "strawberry",
+    shopId: "gamm-vert",
+    name: "Fraise Mara des Bois",
+    emoji: "🍓",
+    price: 95,
+    grams: 0,
+    description: "Plantule de maraîcher — Parfum intense, petits fruits elongues",
+    image: "/plantules/plantule-fraise-mara.png",
+    unlocked: true,
+    stageDurations: [6, 14, 22, 45],
+    realDaysToHarvest: 87,
+    optimalTemp: [14, 24],
+    waterNeed: 4.0,
+    lightNeed: 7,
+  },
+  // Basilic local
+  {
+    id: "plantule-basilic-genovee",
+    plantDefId: "basil",
+    shopId: "gamm-vert",
+    name: "Basilic Génovéis",
+    emoji: "🌿",
+    price: 75,
+    grams: 0,
+    description: "Plantule de maraîcher — Feuilles larges et parfum intense, le vrai pesto",
+    image: "/plantules/plantule-basilic-genovee.png",
+    unlocked: true,
+    stageDurations: [6, 18, 20, 40],
+    realDaysToHarvest: 84,
+    optimalTemp: [20, 27],
+    waterNeed: 4.0,
+    lightNeed: 6,
+  },
+  // Baies et petits fruits
+  {
+    id: "plantule-goji-amber-sweet",
+    plantDefId: "goji",
+    shopId: "les-pepineres-quissac",
+    name: "Goji 'Amber Sweet'",
+    emoji: "🍒",
+    price: 120,
+    grams: 0,
+    description: "Lycium Barbarum — Baies dorées, douces et sans amertume. Plante vivace",
+    image: "/plantules/plantule-goji.png",
+    unlocked: true,
+    stageDurations: [10, 24, 30, 45],
+    realDaysToHarvest: 109,
+    optimalTemp: [15, 28],
+    waterNeed: 3.5,
+    lightNeed: 7,
+  },
+  {
+    id: "plantule-lyciet-rouge",
+    plantDefId: "lycium",
+    shopId: "les-pepineres-quissac",
+    name: "Lyciet Rouge",
+    emoji: "🍇",
+    price: 110,
+    grams: 0,
+    description: "Lycium ruthenicum — Petites baies violettes, très résistant au froid",
+    image: "/plantules/plantule-lyciet.png",
+    unlocked: true,
+    stageDurations: [8, 22, 26, 40],
+    realDaysToHarvest: 96,
+    optimalTemp: [12, 30],
+    waterNeed: 3.0,
+    lightNeed: 6,
+  },
+  {
+    id: "plantule-mirabellier-nancy",
+    plantDefId: "mirabellier",
+    shopId: "pepiniere-locale",
+    name: "Mirabellier de Nancy",
+    emoji: "🫐",
+    price: 150,
+    grams: 0,
+    description: "Variété de Varmonzey — Chair fine et sucrée, productive et rustique",
+    image: "/plantules/plantule-mirabellier.png",
+    unlocked: true,
+    stageDurations: [18, 35, 55, 80],
+    realDaysToHarvest: 188,
+    optimalTemp: [10, 25],
+    waterNeed: 4.5,
+    lightNeed: 7,
+  },
+  {
+    id: "plantule-mirabellier-pointue",
+    plantDefId: "mirabellier",
+    shopId: "pepiniere-locale",
+    name: "Mirabellier Pointue",
+    emoji: "🫐",
+    price: 155,
+    grams: 0,
+    description: "Origine Billy-sous-les-Côtes (Meuse) — Chair parfumée, légèrement acidulée",
+    image: "/plantules/plantule-mirabellier-pointue.png",
+    unlocked: true,
+    stageDurations: [18, 35, 55, 80],
+    realDaysToHarvest: 188,
+    optimalTemp: [10, 25],
+    waterNeed: 4.5,
+    lightNeed: 7,
+  },
+  // Arbres fruitiers locaux
+  {
+    id: "arbre-pommier-reinette",
+    plantDefId: "apple",
+    shopId: "jardiland",
+    name: "Pommier Reinette",
+    emoji: "🍎",
+    price: 180,
+    grams: 0,
+    description: "Arbre élevé en pépinière locale — Variété ancienne, chair acidulée",
+    image: "/pots/locaux/pot-pommier-reinette.png",
+    unlocked: true,
+    stageDurations: [30, 60, 120, 360],
+    realDaysToHarvest: 730,
+    optimalTemp: [8, 22],
+    waterNeed: 5.0,
+    lightNeed: 7,
+  },
+  {
+    id: "arbre-poirier-comice",
+    plantDefId: "pear",
+    shopId: "jardiland",
+    name: "Poirier Comice",
+    emoji: "🍐",
+    price: 190,
+    grams: 0,
+    description: "Arbre élevé en pépinière locale — Chair fondante et sucrée, variété premium",
+    image: "/pots/locaux/pot-poirier-comice.png",
+    unlocked: true,
+    stageDurations: [30, 60, 120, 360],
+    realDaysToHarvest: 1095,
+    optimalTemp: [7, 24],
+    waterNeed: 5.0,
+    lightNeed: 7,
+  },
+  {
+    id: "arbre-cerisier-montmorency",
+    plantDefId: "cherry",
+    shopId: "gamm-vert",
+    name: "Cerisier Montmorency",
+    emoji: "🍒",
+    price: 200,
+    grams: 0,
+    description: "Arbre de producteur local — Cerise acide parfaite pour tarte et confiture",
+    image: "/pots/locaux/pot-cerisier-montmorency.png",
+    unlocked: true,
+    stageDurations: [30, 60, 120, 360],
+    realDaysToHarvest: 1460,
+    optimalTemp: [8, 25],
+    waterNeed: 4.0,
+    lightNeed: 7,
+  },
+  // Arbustes et petits fruits
+  {
+    id: "plantule-groseillier",
+    plantDefId: "currant",
+    shopId: "jardiland",
+    name: "Groseillier Rouge",
+    emoji: "🍎",
+    price: 120,
+    grams: 0,
+    description: "Arbuste local — Petits fruits acidules, ideales pour confiture",
+    image: "/plantules/plantule-groseillier.png",
+    unlocked: true,
+    stageDurations: [15, 30, 60, 180],
+    realDaysToHarvest: 365,
+    optimalTemp: [10, 20],
+    waterNeed: 3.5,
+    lightNeed: 6,
+  },
+  {
+    id: "plantule-murier",
+    plantDefId: "blackberry",
+    shopId: "gamm-vert",
+    name: "Murier Sans Epines",
+    emoji: "🫐",
+    price: 130,
+    grams: 0,
+    description: "Plantule de producteur — Baies noires sucrées, sans épines",
+    image: "/plantules/plantule-murier.png",
+    unlocked: true,
+    stageDurations: [15, 30, 60, 180],
+    realDaysToHarvest: 365,
+    optimalTemp: [12, 24],
+    waterNeed: 4.0,
+    lightNeed: 7,
+  },
+  // Plants du marché - échange jardin partagé
+  {
+    id: "echange-cepes-semis",
+    plantDefId: "tomato",
+    shopId: "esat-antes",
+    name: "Semis de Tomates (Échange)",
+    emoji: "🍅",
+    price: 0,
+    grams: 0,
+    description: "Échange gratuit — Semis de tomates variées, provenants de jardiniers locaux",
+    image: "/plantules/echange-tomates.png",
+    unlocked: true,
+    stageDurations: [8, 22, 20, 45],
+    realDaysToHarvest: 95,
+    optimalTemp: [16, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "echange-salades",
+    plantDefId: "lettuce",
+    shopId: "esat-antes",
+    name: "Plants de Salades (Échange)",
+    emoji: "🥬",
+    price: 0,
+    grams: 0,
+    description: "Échange gratuit — Plants de salades diverses, surplus de jardiniers",
+    image: "/plantules/echange-salades.png",
+    unlocked: true,
+    stageDurations: [4, 10, 14, 22],
+    realDaysToHarvest: 50,
+    optimalTemp: [12, 20],
+    waterNeed: 3.5,
+    lightNeed: 6,
+  },
+  // ═══ Jardi E.Leclerc ═══
+  {
+    id: "plantule-tomate-rouge-grappe",
+    plantDefId: "tomato",
+    shopId: "jardi-leclerc",
+    name: "Tomate Rouge Grappe",
+    emoji: "🍅",
+    price: 85,
+    grams: 0,
+    description: "Plantule E.Leclerc — Variété classique, productive et parfumée",
+    image: "/plantules/plantule-tomate-grappe.png",
+    unlocked: true,
+    stageDurations: [8, 22, 20, 45],
+    realDaysToHarvest: 95,
+    optimalTemp: [16, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "plantule-concombre-americain",
+    plantDefId: "cucumber",
+    shopId: "jardi-leclerc",
+    name: "Concombre Américain",
+    emoji: "🥒",
+    price: 75,
+    grams: 0,
+    description: "Plantule E.Leclerc — Fruits longs et lisses, idéal pour salade",
+    image: "/plantules/plantule-concombre.png",
+    unlocked: true,
+    stageDurations: [6, 14, 20, 40],
+    realDaysToHarvest: 80,
+    optimalTemp: [18, 25],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "plantule-poivron-og主席",
+    plantDefId: "pepper",
+    shopId: "jardi-leclerc",
+    name: "Poivron Rouge",
+    emoji: "🌶️",
+    price: 80,
+    grams: 0,
+    description: "Plantule E.Leclerc — Chair épaisse, doux et juteux",
+    image: "/plantules/plantule-poivron-rouge.png",
+    unlocked: true,
+    stageDurations: [10, 26, 26, 58],
+    realDaysToHarvest: 120,
+    optimalTemp: [20, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+  },
+  {
+    id: "plantule-fraise-ciflorette",
+    plantDefId: "strawberry",
+    shopId: "jardi-leclerc",
+    name: "Fraise Ciflorette",
+    emoji: "🍓",
+    price: 88,
+    grams: 0,
+    description: "Plantule E.Leclerc — Chair fondante, sucrée et très parfumée",
+    image: "/plantules/plantule-fraise-ciflorette.png",
+    unlocked: true,
+    stageDurations: [6, 14, 20, 40],
+    realDaysToHarvest: 80,
+    optimalTemp: [14, 24],
+    waterNeed: 4.0,
+    lightNeed: 7,
+  },
+  {
+    id: "plantule-basilic-thailandais",
+    plantDefId: "basil",
+    shopId: "jardi-leclerc",
+    name: "Basilic Thailandais",
+    emoji: "🌿",
+    price: 78,
+    grams: 0,
+    description: "Plantule E.Leclerc — Arôme citronné, idéal pour cuisine asiatique",
+    image: "/plantules/plantule-basilic-thai.png",
+    unlocked: true,
+    stageDurations: [6, 18, 20, 40],
+    realDaysToHarvest: 84,
+    optimalTemp: [20, 27],
+    waterNeed: 4.0,
+    lightNeed: 6,
+  },
+  {
+    id: "plantule-chou-fleur",
+    plantDefId: "cabbage",
+    shopId: "jardi-leclerc",
+    name: "Chou Fleur",
+    emoji: "🥬",
+    price: 72,
+    grams: 0,
+    description: "Plantule E.Leclerc — Pommé blanc, riche en vitamine C",
+    image: "/plantules/plantule-chou-fleur.png",
+    unlocked: true,
+    stageDurations: [8, 20, 30, 60],
+    realDaysToHarvest: 118,
+    optimalTemp: [12, 20],
+    waterNeed: 4.5,
+    lightNeed: 6,
   },
 ];
 
@@ -920,12 +1619,193 @@ export const SEED_VARIETIES: SeedVariety[] = [
     stageDurations: [35,70,140,420], realDaysToHarvest: 850,
     optimalTemp: [10,24], waterNeed: 4.5, lightNeed: 7,
   },
-  // Pepinieres Bordas - Arbres d'ornement
+  // Leaderplant - Arbres etarbustes de haie
+  {
+    id: "photinia-panache-louise",
+    plantDefId: "photinia",
+    shopId: "leaderplant",
+    name: "Photinia panaché 'Louise'",
+    emoji: "🌿",
+    price: 85, grams: 0,
+    description: "Feuillage panaché vert et crème, port compact, ideal haie decorate",
+    image: "/pots/leaderplant/pot-photinia-louise.png", unlocked: true,
+    stageDurations: [21,40,60,90], realDaysToHarvest: 211,
+    optimalTemp: [5,30], waterNeed: 3.0, lightNeed: 6,
+  },
+  {
+    id: "photinia-carre-rouge",
+    plantDefId: "photinia",
+    shopId: "leaderplant",
+    name: "Photinia Carré Rouge",
+    emoji: "🌿",
+    price: 80, grams: 0,
+    description: "Jeunes feuilles rouge intense, cultivar français très colore",
+    image: "/pots/leaderplant/pot-photinia-carre-rouge.png", unlocked: true,
+    stageDurations: [21,40,60,90], realDaysToHarvest: 211,
+    optimalTemp: [5,30], waterNeed: 3.0, lightNeed: 6,
+  },
+  {
+    id: "eleagnus-gilt-edge",
+    plantDefId: "eleagnus",
+    shopId: "leaderplant",
+    name: "Eleagnus 'Gilt Edge'",
+    emoji: "🌾",
+    price: 75, grams: 0,
+    description: "Feuillage doré très lumineux, croissance rapide, très rustique",
+    image: "/pots/leaderplant/pot-eleagnus-gilt-edge.png", unlocked: true,
+    stageDurations: [21,45,60,90], realDaysToHarvest: 216,
+    optimalTemp: [5,35], waterNeed: 2.5, lightNeed: 6,
+  },
+  {
+    id: "photinia-red-robin",
+    plantDefId: "photinia",
+    shopId: "leaderplant",
+    name: "Photinia Red Robin",
+    emoji: "🌿",
+    price: 70, grams: 0,
+    description: "Le plus populaire, jeunes pousses rouge vif, persistant",
+    image: "/pots/leaderplant/pot-photinia-red-robin.png", unlocked: true,
+    stageDurations: [21,40,60,90], realDaysToHarvest: 211,
+    optimalTemp: [5,30], waterNeed: 3.0, lightNeed: 6,
+  },
+  {
+    id: "eleagnus-viveleg",
+    plantDefId: "eleagnus",
+    shopId: "leaderplant",
+    name: "Eleagnus panaché Viveleg",
+    emoji: "🌾",
+    price: 78, grams: 0,
+    description: "Feuillage panaché argenté, port vigoureux, bord de mer ok",
+    image: "/pots/leaderplant/pot-eleagnus-viveleg.png", unlocked: true,
+    stageDurations: [21,45,60,90], realDaysToHarvest: 216,
+    optimalTemp: [5,35], waterNeed: 2.5, lightNeed: 6,
+  },
+  {
+    id: "photinia-red-select",
+    plantDefId: "photinia",
+    shopId: "leaderplant",
+    name: "Photinia Red Select",
+    emoji: "🌿",
+    price: 72, grams: 0,
+    description: "Selection pour couleur rouge plus intense et reguliere",
+    image: "/pots/leaderplant/pot-photinia-red-select.png", unlocked: true,
+    stageDurations: [21,40,60,90], realDaysToHarvest: 211,
+    optimalTemp: [5,30], waterNeed: 3.0, lightNeed: 6,
+  },
+  {
+    id: "laurus-sauce",
+    plantDefId: "laurus",
+    shopId: "leaderplant",
+    name: "Laurier Sauce",
+    emoji: "🌿",
+    price: 65, grams: 0,
+    description: "Aromatique classique, feuilles pour cuisine, arbuste persistant",
+    image: "/pots/leaderplant/pot-laurus-sauce.png", unlocked: true,
+    stageDurations: [21,50,70,100], realDaysToHarvest: 241,
+    optimalTemp: [5,30], waterNeed: 3.0, lightNeed: 5,
+  },
+  {
+    id: "eleagnus-chalef",
+    plantDefId: "eleagnus",
+    shopId: "leaderplant",
+    name: "Eleagnus - Chalef",
+    emoji: "🌾",
+    price: 60, grams: 0,
+    description: "Espèce type, rustique -20°C, tolérance vent et sec",
+    image: "/pots/leaderplant/pot-eleagnus-chalef.png", unlocked: true,
+    stageDurations: [21,45,60,90], realDaysToHarvest: 216,
+    optimalTemp: [5,35], waterNeed: 2.5, lightNeed: 6,
+  },
+  {
+    id: "ragouminier",
+    plantDefId: "eleagnus",
+    shopId: "leaderplant",
+    name: "Argousier / Ragouminier",
+    emoji: "🫐",
+    price: 95, grams: 0,
+    description: "Baies orange très vitaminées, plante pionnière, fixateur d'azote",
+    image: "/pots/leaderplant/pot-ragouminier.png", unlocked: true,
+    stageDurations: [21,45,60,90], realDaysToHarvest: 216,
+    optimalTemp: [5,35], waterNeed: 2.5, lightNeed: 6,
+  },
+  {
+    id: "cornouillier",
+    plantDefId: "cornus",
+    shopId: "leaderplant",
+    name: "Cornouillier",
+    emoji: "🌸",
+    price: 90, grams: 0,
+    description: "Floraison printanière blanche, berries rouges décoratifs, haie libre",
+    image: "/pots/leaderplant/pot-cornouillier.png", unlocked: true,
+    stageDurations: [21,45,70,100], realDaysToHarvest: 236,
+    optimalTemp: [5,28], waterNeed: 3.5, lightNeed: 6,
+  },
+  {
+    id: "poirier-londres",
+    plantDefId: "pear",
+    shopId: "leaderplant",
+    name: "Poirier Londres",
+    emoji: "🍐",
+    price: 165, grams: 0.7,
+    description: "Variété anglaise chair fondante, productive, mauvaise conservation",
+    image: "/pots/leaderplant/pot-poirier-londres.png", unlocked: true,
+    stageDurations: [30,62,130,400], realDaysToHarvest: 822,
+    optimalTemp: [10,22], waterNeed: 5.0, lightNeed: 7,
+  },
+  {
+    id: "pommier-ambroise",
+    plantDefId: "apple",
+    shopId: "leaderplant",
+    name: "Pommier Ambroise de Lesogra",
+    emoji: "🍎",
+    price: 175, grams: 0.6,
+    description: "Colonnaire, arbre compact ideal balcon et petit jardin, fruits croquants",
+    image: "/pots/leaderplant/pot-pommier-ambroise.png", unlocked: true,
+    stageDurations: [28,55,110,350], realDaysToHarvest: 730,
+    optimalTemp: [8,22], waterNeed: 5.0, lightNeed: 7,
+  },
+  {
+    id: "prunier-atlanta",
+    plantDefId: "plum",
+    shopId: "leaderplant",
+    name: "Prunier colonnaire Atlanta",
+    emoji: "🍑",
+    price: 170, grams: 0.7,
+    description: "Colonnaire, fruits rouges sombres, chair jaune, autofertile, ideal petit jardin",
+    image: "/pots/leaderplant/pot-prunier-atlanta.png", unlocked: true,
+    stageDurations: [28,55,115,365], realDaysToHarvest: 763,
+    optimalTemp: [8,25], waterNeed: 4.5, lightNeed: 7,
+  },
+  {
+    id: "casseille",
+    plantDefId: "casseille",
+    shopId: "leaderplant",
+    name: "Casseille",
+    emoji: "🫐",
+    price: 88, grams: 0,
+    description: "Hybride groseillier x cassissier, baies noires sans pepins, très productif",
+    image: "/pots/leaderplant/pot-casseille.png", unlocked: true,
+    stageDurations: [18,30,40,60], realDaysToHarvest: 148,
+    optimalTemp: [5,25], waterNeed: 4.0, lightNeed: 6,
+  },
   // Arbres Tissot - Pommiers et Poiriers specialises
   // Fruitiers Forest - Fruits a noyau et specialites
 ];
 
-// ═══ Seed shop items (legacy flat catalog) ═══
+export interface Achievement {
+  id: string;
+  name: string;
+  desc: string;
+  unlocked: boolean;
+  icon: string;
+  dateUnlocked?: number;
+}
+
+const INITIAL_ACHIEVEMENTS: Achievement[] = [
+  { id: "green_thumb", name: "Main Verte", desc: "Récolter 50 plantes", unlocked: false, icon: "🌱" },
+  { id: "weather_master", name: "Maître Météo", desc: "Jouer sous la pluie 5 fois", unlocked: false, icon: "🌧️" },
+  { id: "night_owl", name: "Hibou", desc: "Jouer après 22h", unlocked: false, icon: "🦉" },
+];
 
 export interface SeedItem {
   id: string;
@@ -1025,6 +1905,13 @@ export async function loadCustomCards(): Promise<{
 
 // ═══ Game state ═══
 
+export interface HologramSettings {
+  rotationEnabled: boolean;
+  rotationSpeed: number;
+  auraIntensity: number;
+  particlesEnabled: boolean;
+}
+
 export interface GameState {
   // Jardin (coordinate-based, cm)
   gardenWidthCm: number;
@@ -1035,6 +1922,8 @@ export interface GameState {
   gardenHedges: GardenHedge[];
   gardenTanks: GardenTank[];
   gardenSheds: GardenShed[];
+  gardenDrums: GardenDrum[];
+  gardenZones: GardenZone[];
 
   // Pépinière (seedling nursery)
   pepiniere: PlantState[];
@@ -1046,8 +1935,16 @@ export interface GameState {
   ownedChambres: Record<string, number>; // modelId -> count owned
   activeChambreId: string | null;
 
+  // Nursery Selection
+  selectedMiniSerreId: string | null;
+  selectedSlot: { row: number; col: number } | null;
+
+  // Hologram Visual Settings
+  hologramSettings: HologramSettings;
+
   // Serre tile inventory
   serreTiles: number;
+
 
   // Seed collection
   seedCollection: Record<string, number>;
@@ -1069,6 +1966,8 @@ export interface GameState {
 
   // Economy
   coins: number;
+  ecoPoints: number;  // Points écologiques gagnés via gestes réels
+  ecoLevel: number;   // Niveau écologique (0-10) basé sur ecoPoints cumulés
 
   // Game controls
   speed: number;
@@ -1085,6 +1984,10 @@ export interface GameState {
   showSerreView: boolean;
   activeTab: string;
   pendingTransplant: { serreId: string; row: number; col: number; plantDefId: string; plantName: string; plantEmoji: string } | null;
+
+  // ── Save System ──
+  activeSlot: string | null;
+  autoSaveEnabled: boolean;
 
   // Actions
   initGame: (freshStart?: boolean) => void;
@@ -1108,7 +2011,27 @@ export interface GameState {
   waterAllGarden: () => void;
   addSerreZone: (x: number, y: number, width: number, height: number, price?: number) => boolean;
   buySerreZone: () => boolean;
+  buyShed: (cost: number) => boolean;
+  buyTank: (capacity: number, cost: number) => boolean;
+  buyTree: (cost: number) => boolean;
+  buyHedge: (cost: number) => boolean;
+  buyDrum: (cost: number) => boolean;
   removeSerreZone: (zoneId: string) => void;
+  removeGardenShed: (id: string) => void;
+  removeGardenTank: (id: string) => void;
+  removeGardenDrum: (id: string) => void;
+  removeGardenTree: (id: string) => void;
+  removeGardenHedge: (id: string) => void;
+  removeGardenZone: (id: string) => void;
+  moveSerreZone: (zoneId: string, newX: number, newY: number) => void;
+  moveGardenPlant: (plantId: string, newX: number, newY: number) => void;
+  moveGardenShed: (id: string, newX: number, newY: number) => void;
+  moveGardenTank: (id: string, newX: number, newY: number) => void;
+  moveGardenDrum: (id: string, newX: number, newY: number) => void;
+  moveGardenTree: (id: string, newX: number, newY: number) => void;
+  moveGardenHedge: (id: string, newX: number, newY: number) => void;
+  moveGardenZone: (id: string, newX: number, newY: number) => void;
+  addGardenZone: (x: number, y: number, width: number, height: number, type?: GardenZone['type']) => void;
   expandGarden: (direction: 'width' | 'height') => boolean;
   waterPlantPepiniere: (index: number) => void;
   treatPlantPepiniere: (index: number) => void;
@@ -1141,14 +2064,35 @@ export interface GameState {
   setActiveTab: (tab: string) => void;
   setPendingTransplant: (data: { serreId: string; row: number; col: number; plantDefId: string; plantName: string; plantEmoji: string } | null) => void;
   transplantFromMiniSerreToGarden: (serreId: string, row: number, col: number, gardenX: number, gardenY: number) => boolean;
+  setSelectedSlot: (serreId: string, slot: { row: number; col: number } | null) => void;
+  updateHologramSettings: (settings: Partial<HologramSettings>) => void;
   tick: () => void;
   addScore: (points: number) => void;
+  addEcoPoints: (points: number) => void;
+
+  // Jumeau Numérique - GrainTag sync
+  createDigitalTwinInGarden: (
+    plantDefId: string,
+    x: number,
+    y: number,
+    scanData: {
+      plantName: string;
+      confidence: number;
+      growthStage?: { stage: number; estimatedAge: number };
+      healthStatus?: { isHealthy: boolean; diseaseName: string };
+    }
+  ) => { success: boolean; message: string; rewards: any };
 
   // Weather
   setRealWeather: (data: RealWeatherData) => void;
   setGPSCoords: (coords: GPSCoords) => void;
   setWeatherLoading: (loading: boolean) => void;
   setWeatherError: (error: string | null) => void;
+
+  // ── Save Actions ──
+  setActiveSlot: (slotId: string | null) => void;
+  setAutoSaveEnabled: (enabled: boolean) => void;
+  loadGameState: (state: any) => void;
 }
 
 function uid(): string {
@@ -1221,7 +2165,8 @@ function loadSeedCollection(): Record<string, number> {
             delete (parsed as Record<string, number>)[key];
           }
         }
-        const total = Object.values(parsed).reduce((a: number, b: number) => a + b, 0);
+        const values = Object.values(parsed as Record<string, number>);
+        const total = values.reduce((a: number, b: number) => a + b, 0);
         if (total > 0) return parsed;
       }
     }
@@ -1257,6 +2202,24 @@ function savePlantuleCollection(collection: Record<string, number>) {
     localStorage.setItem("jardin-culture-plantules", JSON.stringify(collection));
   } catch {
     // ignore
+  }
+}
+
+function loadEcoPoints(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem('jardin-culture-eco-points') || '0', 10);
+  } catch {
+    return 0;
+  }
+}
+
+function loadEcoLevel(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem('jardin-culture-eco-level') || '0', 10);
+  } catch {
+    return 0;
   }
 }
 
@@ -1326,6 +2289,49 @@ function saveActiveChambre(id: string | null) {
   } catch { }
 }
 
+function saveHologramSettings(settings: HologramSettings) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-hologram-settings", JSON.stringify(settings));
+  } catch { }
+}
+
+function loadHologramSettings(): HologramSettings {
+  const defaults: HologramSettings = {
+    rotationEnabled: true,
+    rotationSpeed: 0.01,
+    auraIntensity: 0.8,
+    particlesEnabled: true,
+  };
+  if (typeof window === "undefined") return { ...defaults };
+  try {
+    const stored = localStorage.getItem("jardin-culture-hologram-settings");
+    if (stored) return { ...defaults, ...JSON.parse(stored) };
+  } catch { }
+  return { ...defaults };
+}
+
+function saveNurserySelection(serreId: string | null, slot: { row: number; col: number } | null) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-selected-serre", serreId || "");
+    localStorage.setItem("jardin-culture-selected-slot", JSON.stringify(slot));
+  } catch { }
+}
+
+function loadNurserySelection(): { serreId: string | null; slot: { row: number; col: number } | null } {
+  if (typeof window === "undefined") return { serreId: null, slot: null };
+  try {
+    const serreId = localStorage.getItem("jardin-culture-selected-serre");
+    const slotStr = localStorage.getItem("jardin-culture-selected-slot");
+    return {
+      serreId: serreId || null,
+      slot: slotStr ? JSON.parse(slotStr) : null,
+    };
+  } catch { }
+  return { serreId: null, slot: null };
+}
+
 function loadGardenDimensions(): { widthCm: number; heightCm: number } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -1356,6 +2362,38 @@ function loadGardenPlants(): GardenPlant[] | null {
 function saveGardenPlants(plants: GardenPlant[]) {
   if (typeof window === "undefined") return;
   try { localStorage.setItem("jardin-culture-garden-plants", JSON.stringify(plants)); } catch { }
+}
+
+function saveGardenTanks(tanks: GardenTank[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("jardin-culture-tanks", JSON.stringify(tanks)); } catch { }
+}
+
+function loadGardenTanks(): GardenTank[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-tanks");
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function loadGardenDrums(): GardenDrum[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-drums");
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function loadGardenZones(): GardenZone[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("jardin-culture-zones");
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
 }
 
 function loadGardenSerreZones(): SerreZone[] | null {
@@ -1434,6 +2472,43 @@ function saveSeedVarieties(varieties: Record<string, number>) {
   }
 }
 
+function loadActiveSlot(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem("jardin-culture-active-slot");
+  } catch {
+    return null;
+  }
+}
+
+function saveActiveSlot(slotId: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (slotId) {
+      localStorage.setItem("jardin-culture-active-slot", slotId);
+    } else {
+      localStorage.removeItem("jardin-culture-active-slot");
+    }
+  } catch { /* ignore */ }
+}
+
+function loadAutoSaveEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const stored = localStorage.getItem("jardin-culture-auto-save");
+    return stored === null ? true : stored === "true";
+  } catch {
+    return true;
+  }
+}
+
+function saveAutoSaveEnabled(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-auto-save", String(enabled));
+  } catch { /* ignore */ }
+}
+
 // ═══ Helpers ═══
 
 const MAX_PEPINIERE_SLOTS = 8;
@@ -1446,6 +2521,15 @@ export const useGameStore = create<GameState>((set, get) => ({
   gardenHeightCm: DEFAULT_GARDEN_HEIGHT_CM,
   gardenPlants: [],
   gardenSerreZones: [],
+  gardenTrees: [],
+  gardenHedges: [],
+  gardenTanks: [],
+  gardenSheds: [],
+  gardenDrums: [],
+  gardenZones: [],
+  selectedMiniSerreId: null,
+  selectedSlot: null,
+  hologramSettings: { rotationEnabled: true, rotationSpeed: 1, auraIntensity: 0.5, particlesEnabled: true },
   pepiniere: [],
   miniSerres: [],
   ownedChambres: {},
@@ -1464,6 +2548,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   weatherError: null,
 
   coins: 200,
+  ecoPoints: 0,
+  ecoLevel: 0,
   speed: 0,  // 0 = pause (speed desactivee par defaut)
   isPaused: false,
   alerts: [],
@@ -1478,6 +2564,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   showSerreView: false,
   activeTab: "jardin",
   pendingTransplant: null,
+
+  // ── Save System ──
+  activeSlot: loadActiveSlot(),
+  autoSaveEnabled: loadAutoSaveEnabled(),
 
   initGame: (freshStart = false) => {
     const today = getTodayDayOfYear();
@@ -1502,6 +2592,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         "jardin-culture-day-ts",
         "jardin-culture-best-score",
         "jardin-culture-garden",
+        "jardin-culture-hologram-settings",
+        "jardin-culture-selected-serre",
+        "jardin-culture-selected-slot",
       ];
       keysToRemove.forEach((k) => { try { localStorage.removeItem(k); } catch { /* ignore */ } });
     }
@@ -1511,13 +2604,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     const savedGardenSerreZones = loadGardenSerreZones();
     const savedPepiniere = loadPepiniere();
     const savedMiniSerres = loadMiniSerres();
+    const { serreId: savedSerreId, slot: savedSlot } = loadNurserySelection();
 
     // Clear old grid data
     try { localStorage.removeItem("jardin-culture-garden"); } catch { /* ignore */ }
 
-    // Test plants if garden is empty
-    const testPlants: GardenPlant[] = savedGardenPlants && savedGardenPlants.length > 0
-      ? savedGardenPlants
+    // Check if there's saved garden data — if so, load it instead of demo
+    const hasSavedGarden = savedGardenPlants && savedGardenPlants.length > 0;
+    const testPlants: GardenPlant[] = hasSavedGarden
+      ? (savedGardenPlants || [])
       : [
           {
             id: 'test-1',
@@ -1563,8 +2658,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       gardenSerreZones: savedGardenSerreZones || [],
       gardenTrees: [],
       gardenHedges: [],
-      gardenTanks: [],
+      gardenTanks: loadGardenTanks() || [],
       gardenSheds: [],
+      gardenDrums: loadGardenDrums() || [],
+      gardenZones: loadGardenZones() || [],
       pepiniere: savedPepiniere || [],
       miniSerres: savedMiniSerres || [],
       serreTiles: loadSerreTiles(),
@@ -1583,6 +2680,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       score: 0,
       bestScore: loadBestScore(),
       coins: loadCoins(),
+      ecoPoints: loadEcoPoints(),
+      ecoLevel: loadEcoLevel(),
+      selectedMiniSerreId: savedSerreId,
+      selectedSlot: savedSlot,
+      hologramSettings: loadHologramSettings(),
     });
   },
 
@@ -2178,10 +3280,69 @@ export const useGameStore = create<GameState>((set, get) => ({
       plant: newPlant,
     };
 
+    // 🌿 Crop Rotation & Companionship Check
+    const plots = loadPlotHistory();
+    const plot = findOrCreatePlot(plots, Math.round(x), Math.round(y));
+    const rotation = getPlotRotationSuggestion(plot, plantDefId, state.day);
+
+    // Build alerts
+    const newAlerts: AlertData[] = [];
+
+    if (rotation && rotation.type === 'bad') {
+      newAlerts.push({
+        id: `rotation-warn-${Date.now()}`,
+        type: "weather" as const,
+        message: `${rotation.emoji} ${rotation.message} (${rotation.reason})`,
+        emoji: "⚠️", cellX: 0, cellY: 0,
+        timestamp: Date.now(), severity: "warning" as const,
+      });
+    }
+
+    // Record the planting in rotation history
+    recordPlanting(plots, Math.round(x), Math.round(y), plantDefId, state.day);
+
+    // 🌿 Companion Planting Check
+    const companionCheck = checkCompanionForNewPlant(
+      plantDefId,
+      Math.round(x),
+      Math.round(y),
+      state.gardenPlants.map(gp => ({ plantDefId: gp.plantDefId, x: gp.x, y: gp.y }))
+    );
+
+    if (companionCheck.harmful.length > 0) {
+      const harm = companionCheck.harmful[0];
+      newAlerts.push({
+        id: `companion-warn-${Date.now()}`,
+        type: "pest" as const,
+        message: `⚠️ Mauvais voisinage : ${harm.reason}`,
+        emoji: "🤝",
+        cellX: 0, cellY: 0,
+        timestamp: Date.now(),
+        severity: "warning" as const,
+      });
+    } else if (companionCheck.beneficial.length > 0) {
+      const benefit = companionCheck.beneficial[0];
+      newAlerts.push({
+        id: `companion-ok-${Date.now()}`,
+        type: "success" as const,
+        message: `✅ Bon voisinage : ${benefit.reason}`,
+        emoji: "🌱",
+        cellX: 0, cellY: 0,
+        timestamp: Date.now(),
+        severity: "info" as const,
+      });
+    }
+
     const newGardenPlants = [...state.gardenPlants, newGardenPlant];
     saveGardenPlants(newGardenPlants);
 
-    set({ gardenPlants: newGardenPlants, pepiniere: newPepiniere, seedCollection: newSeedCollection });
+    set({
+      gardenPlants: newGardenPlants,
+      pepiniere: newPepiniere,
+      seedCollection: newSeedCollection,
+      alerts: newAlerts.length > 0 ? [...state.alerts.slice(-25 + newAlerts.length), ...newAlerts] : state.alerts
+    });
+    useSoundManager.getState().playEventSound('plant');
     return true;
   },
 
@@ -2268,6 +3429,76 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  // ── Jumeau Numérique (GrainTag sync) ──
+  createDigitalTwinInGarden: (plantDefId, x, y, scanData) => {
+    const state = get();
+    const plantDef = PLANTS[plantDefId];
+    if (!plantDef) {
+      return {
+        success: false,
+        message: `❌ Type de plante "${plantDefId}" non reconnu.\n\nPlantes disponibles : tomate, poivron, laitue, carotte, basilic, fraise.`,
+        rewards: null
+      };
+    }
+    const spacing = PLANT_SPACING[plantDefId];
+    if (!spacing) {
+      return { success: false, message: `❌ Pas d'espacement défini pour ${plantDef.name}.`, rewards: null };
+    }
+    if (x < 0 || y < 0 || x + spacing.plantSpacingCm > state.gardenWidthCm || y + spacing.rowSpacingCm > state.gardenHeightCm) {
+      return { success: false, message: `❌ Position hors limites du jardin.\n\nJardin: ${state.gardenWidthCm}×${state.gardenHeightCm}cm`, rewards: null };
+    }
+    const overlaps = state.gardenPlants.some((gp) => {
+      const s = PLANT_SPACING[gp.plantDefId];
+      if (!s) return false;
+      return x < gp.x + s.plantSpacingCm && x + spacing.plantSpacingCm > gp.x && y < gp.y + s.rowSpacingCm && y + spacing.rowSpacingCm > gp.y;
+    });
+    if (overlaps) {
+      return { success: false, message: `❌ Un autre plant occupe déjà cet emplacement.`, rewards: null };
+    }
+    const growthStage = scanData.growthStage || { stage: 2, estimatedAge: 15 };
+    const healthStatus = scanData.healthStatus || { isHealthy: true, diseaseName: 'Sain' };
+    const newPlant: PlantState = {
+      ...createInitialPlantState(plantDefId),
+      stage: Math.min(5, growthStage.stage),
+      daysSincePlanting: growthStage.estimatedAge,
+      daysInCurrentStage: Math.min(10, growthStage.estimatedAge),
+      health: healthStatus.isHealthy ? 85 : 60,
+      hasDisease: !healthStatus.isHealthy,
+      diseaseDays: healthStatus.isHealthy ? 0 : 3,
+      waterLevel: 70,
+      fertilizerLevel: 50,
+    };
+    const newGardenPlant: GardenPlant = {
+      id: uid(),
+      plantDefId,
+      x: Math.round(x),
+      y: Math.round(y),
+      plant: newPlant,
+    };
+    const newGardenPlants = [...state.gardenPlants, newGardenPlant];
+    saveGardenPlants(newGardenPlants);
+    const rewards = { coins: 50, xp: 100, bonusSeeds: null as { plantDefId: string; count: number } | null };
+    if (scanData.confidence > 0.8) { rewards.coins += 25; rewards.xp += 50; }
+    if (growthStage.stage >= 4) {
+      rewards.bonusSeeds = { plantDefId, count: 3 };
+      const newCollection = { ...state.seedCollection };
+      newCollection[plantDefId] = (newCollection[plantDefId] || 0) + 3;
+      saveSeedCollection(newCollection);
+      set({ seedCollection: newCollection });
+    }
+    const newCoins = state.coins + rewards.coins;
+    saveCoins(newCoins);
+    const alerts = [...state.alerts.slice(-25), { id: `twin-${Date.now()}`, type: "success" as const, message: `✨ ${plantDef.emoji} ${plantDef.name} ajouté au jardin !`, emoji: "🌱", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "info" as const }];
+    set({ gardenPlants: newGardenPlants, coins: newCoins, alerts });
+    useSoundManager.getState().playEventSound('plant');
+    triggerVisualEffect("success-pop");
+    return {
+      success: true,
+      message: `✅ Jumeau numérique planté !\n\n🌱 ${plantDef.emoji} ${plantDef.name}\n📍 Position: ${Math.round(x)}cm × ${Math.round(y)}cm\n📊 Stade ${growthStage.stage}/5 (${growthStage.estimatedAge}j)\n💚 Santé : ${healthStatus.isHealthy ? 'Saine ✅' : '⚠️ ' + healthStatus.diseaseName}\n\n🎁 Récompenses :\n  • +${rewards.coins} 🪙 pièces\n  • +${rewards.xp} ⭐ XP\n${rewards.bonusSeeds ? `  • +3 graines ${plantDef.emoji}` : ''}\n\nRetrouve ton plant dans la Vue Plan du Jardin !`,
+      rewards,
+    };
+  },
+
   waterPlantGarden: (plantId: string) => {
     set((s) => {
       const newGardenPlants = s.gardenPlants.map((gp) => {
@@ -2317,9 +3548,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newGardenPlants = state.gardenPlants.filter((p) => p.id !== plantId);
     saveGardenPlants(newGardenPlants);
 
+    const totalHarvested = state.harvested + 1;
+    if (totalHarvested >= 50) {
+      useAchievementStore.getState().unlockAchievement('green_thumb');
+    }
+
+    useSoundManager.getState().playEventSound('harvest');
+    triggerVisualEffect("success-pop");
+
     set({
       gardenPlants: newGardenPlants,
-      harvested: state.harvested + 1,
+      harvested: totalHarvested,
       score: newScore,
       bestScore: newBest,
       coins: newCoins,
@@ -2391,6 +3630,107 @@ export const useGameStore = create<GameState>((set, get) => ({
     return true;
   },
 
+  buyShed: (cost: number) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    const newShed: GardenShed = {
+      id: `shed-${Date.now()}`,
+      type: 'tool_shed',
+      x: 20,
+      y: state.gardenHeightCm - 200,
+      width: 200,
+      height: 180,
+    };
+    const newSheds = [...state.gardenSheds, newShed];
+    const newCoins = state.coins - cost;
+    saveCoins(newCoins);
+    set({ gardenSheds: newSheds, coins: newCoins });
+    try { localStorage.setItem("jardin-culture-sheds", JSON.stringify(newSheds)); } catch {}
+    return true;
+  },
+
+  buyTank: (capacity: number, cost: number) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    const newTank: GardenTank = {
+      id: `tank-${Date.now()}`,
+      type: 'water',
+      x: 20 + state.gardenTanks.length * 130,
+      y: 20,
+      width: 120,
+      height: 100,
+      capacity,
+      currentLevel: 0,
+      isRainTank: true,
+      roofAreaM2: 30,
+      efficiency: 0.8,
+    };
+    const newTanks = [...state.gardenTanks, newTank];
+    const newCoins = state.coins - cost;
+    saveCoins(newCoins);
+    set({ gardenTanks: newTanks, coins: newCoins });
+    try { localStorage.setItem("jardin-culture-tanks", JSON.stringify(newTanks)); } catch {}
+    return true;
+  },
+
+  buyTree: (cost: number) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    const newTree: GardenTree = {
+      id: `tree-${Date.now()}`,
+      type: 'apple',
+      x: 100 + state.gardenTrees.length * 120,
+      y: 200,
+      diameter: 100,
+      age: 0,
+    };
+    const newTrees = [...state.gardenTrees, newTree];
+    const newCoins = state.coins - cost;
+    saveCoins(newCoins);
+    set({ gardenTrees: newTrees, coins: newCoins });
+    try { localStorage.setItem("jardin-culture-trees", JSON.stringify(newTrees)); } catch {}
+    return true;
+  },
+
+  buyHedge: (cost: number) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    const newHedge: GardenHedge = {
+      id: `hedge-${Date.now()}`,
+      type: 'laurel',
+      x: 20,
+      y: state.gardenHeightCm - 100,
+      length: 200,
+      orientation: 'horizontal',
+      height: 120,
+    };
+    const newHedges = [...state.gardenHedges, newHedge];
+    const newCoins = state.coins - cost;
+    saveCoins(newCoins);
+    set({ gardenHedges: newHedges, coins: newCoins });
+    try { localStorage.setItem("jardin-culture-hedges", JSON.stringify(newHedges)); } catch {}
+    return true;
+  },
+
+  buyDrum: (cost: number) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    const newDrum: GardenDrum = {
+      id: `drum-${Date.now()}`,
+      x: 20 + state.gardenDrums.length * 80,
+      y: 20,
+      width: 60,
+      height: 90,
+      capacity: 225,
+    };
+    const newDrums = [...state.gardenDrums, newDrum];
+    const newCoins = state.coins - cost;
+    saveCoins(newCoins);
+    set({ gardenDrums: newDrums, coins: newCoins });
+    try { localStorage.setItem("jardin-culture-drums", JSON.stringify(newDrums)); } catch {}
+    return true;
+  },
+
   removeSerreZone: (zoneId: string) => {
     const state = get();
     const zone = state.gardenSerreZones.find((z) => z.id === zoneId);
@@ -2398,6 +3738,132 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newZones = state.gardenSerreZones.filter((z) => z.id !== zoneId);
     saveGardenSerreZones(newZones);
     set({ gardenSerreZones: newZones });
+  },
+
+  removeGardenShed: (id: string) => {
+    const state = get();
+    const newSheds = state.gardenSheds.filter((s) => s.id !== id);
+    set({ gardenSheds: newSheds });
+    try { localStorage.setItem("jardin-culture-sheds", JSON.stringify(newSheds)); } catch {}
+  },
+  removeGardenTank: (id: string) => {
+    const state = get();
+    const newTanks = state.gardenTanks.filter((t) => t.id !== id);
+    set({ gardenTanks: newTanks });
+    try { localStorage.setItem("jardin-culture-tanks", JSON.stringify(newTanks)); } catch {}
+  },
+  removeGardenDrum: (id: string) => {
+    const state = get();
+    const newDrums = state.gardenDrums.filter((d) => d.id !== id);
+    set({ gardenDrums: newDrums });
+    try { localStorage.setItem("jardin-culture-drums", JSON.stringify(newDrums)); } catch {}
+  },
+  removeGardenTree: (id: string) => {
+    const state = get();
+    const newTrees = state.gardenTrees.filter((t) => t.id !== id);
+    set({ gardenTrees: newTrees });
+    try { localStorage.setItem("jardin-culture-trees", JSON.stringify(newTrees)); } catch {}
+  },
+  removeGardenHedge: (id: string) => {
+    const state = get();
+    const newHedges = state.gardenHedges.filter((h) => h.id !== id);
+    set({ gardenHedges: newHedges });
+    try { localStorage.setItem("jardin-culture-hedges", JSON.stringify(newHedges)); } catch {}
+  },
+  removeGardenZone: (id: string) => {
+    const state = get();
+    const newZones = state.gardenZones.filter((z) => z.id !== id);
+    set({ gardenZones: newZones });
+    try { localStorage.setItem("jardin-culture-zones", JSON.stringify(newZones)); } catch {}
+  },
+
+  /** Déplacer une serre en mode libre — sauvegarde immédiate */
+  moveSerreZone: (zoneId: string, newX: number, newY: number) => {
+    set((s) => {
+      const newZones = s.gardenSerreZones.map((z) =>
+        z.id === zoneId
+          ? { ...z, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) }
+          : z
+      );
+      saveGardenSerreZones(newZones);
+      return { gardenSerreZones: newZones };
+    });
+  },
+
+  /** Déplacer une plante du jardin en mode libre */
+  moveGardenPlant: (plantId: string, newX: number, newY: number) => {
+    set((s) => {
+      const newPlants = s.gardenPlants.map((gp) =>
+        gp.id === plantId
+          ? { ...gp, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) }
+          : gp
+      );
+      saveGardenPlants(newPlants);
+      return { gardenPlants: newPlants };
+    });
+  },
+
+  moveGardenShed: (id: string, newX: number, newY: number) => {
+    set((s) => {
+      const newSheds = s.gardenSheds.map((sh) =>
+        sh.id === id ? { ...sh, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : sh
+      );
+      try { localStorage.setItem("jardin-culture-sheds", JSON.stringify(newSheds)); } catch {}
+      return { gardenSheds: newSheds };
+    });
+  },
+  moveGardenTank: (id: string, newX: number, newY: number) => {
+    set((s) => {
+      const newTanks = s.gardenTanks.map((t) =>
+        t.id === id ? { ...t, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : t
+      );
+      try { localStorage.setItem("jardin-culture-tanks", JSON.stringify(newTanks)); } catch {}
+      return { gardenTanks: newTanks };
+    });
+  },
+  moveGardenDrum: (id: string, newX: number, newY: number) => {
+    set((s) => {
+      const newDrums = s.gardenDrums.map((d) =>
+        d.id === id ? { ...d, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : d
+      );
+      try { localStorage.setItem("jardin-culture-drums", JSON.stringify(newDrums)); } catch {}
+      return { gardenDrums: newDrums };
+    });
+  },
+  moveGardenTree: (id: string, newX: number, newY: number) => {
+    set((s) => {
+      const newTrees = s.gardenTrees.map((t) =>
+        t.id === id ? { ...t, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : t
+      );
+      try { localStorage.setItem("jardin-culture-trees", JSON.stringify(newTrees)); } catch {}
+      return { gardenTrees: newTrees };
+    });
+  },
+  moveGardenHedge: (id: string, newX: number, newY: number) => {
+    set((s) => {
+      const newHedges = s.gardenHedges.map((h) =>
+        h.id === id ? { ...h, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : h
+      );
+      try { localStorage.setItem("jardin-culture-hedges", JSON.stringify(newHedges)); } catch {}
+      return { gardenHedges: newHedges };
+    });
+  },
+  moveGardenZone: (id: string, newX: number, newY: number) => {
+    set((s) => {
+      const newZones = s.gardenZones.map((z) =>
+        z.id === id ? { ...z, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : z
+      );
+      try { localStorage.setItem("jardin-culture-zones", JSON.stringify(newZones)); } catch {}
+      return { gardenZones: newZones };
+    });
+  },
+
+  addGardenZone: (x: number, y: number, width: number, height: number, type: GardenZone['type'] = 'uncultivated') => {
+    const state = get();
+    const newZone: GardenZone = { id: `zone-${Date.now()}`, type, x, y, width, height };
+    const newZones = [...state.gardenZones, newZone];
+    set({ gardenZones: newZones });
+    try { localStorage.setItem("jardin-culture-zones", JSON.stringify(newZones)); } catch {}
   },
 
   expandGarden: (direction: 'width' | 'height') => {
@@ -2500,6 +3966,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ score: newScore, bestScore: newBest });
   },
 
+  addEcoPoints: (points: number) => {
+    const state = get();
+    const newEcoPoints = state.ecoPoints + points;
+    const newEcoLevel = Math.min(10, Math.floor(newEcoPoints / 50)); // 50 pts = 1 niveau
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('jardin-culture-eco-points', String(newEcoPoints));
+        localStorage.setItem('jardin-culture-eco-level', String(newEcoLevel));
+      } catch { /* ignore */ }
+    }
+    set({ ecoPoints: newEcoPoints, ecoLevel: newEcoLevel });
+  },
+
   setRealWeather: (data: RealWeatherData) => set({ realWeather: data, weatherError: null }),
   setGPSCoords: (coords: GPSCoords) => {
     saveGPSCoords(coords);
@@ -2510,6 +3989,19 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Tick ──
 
+  setSelectedSlot: (serreId: string, slot: { row: number; col: number } | null) => {
+    const newSerreId = slot ? serreId : null;
+    const newSlot = slot;
+    saveNurserySelection(newSerreId, newSlot);
+    set({ selectedMiniSerreId: newSerreId, selectedSlot: newSlot });
+  },
+  updateHologramSettings: (settings: Partial<HologramSettings>) => {
+    set((s) => {
+      const newSettings = { ...s.hologramSettings, ...settings };
+      saveHologramSettings(newSettings);
+      return { hologramSettings: newSettings };
+    });
+  },
   tick: () => {
     const state = get();
     if (state.isPaused) return;
@@ -2551,7 +4043,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const result = simulateDayWithRealWeather(plantDef, plant, pepEnv, "pepiniere", 0);
 
       newAlerts.push(...result.alerts.filter(
-        (a) => a.type === "stage" || a.type === "harvest" || a.severity === "critical"
+        (a) => a.type === "stage" || a.type === "harvest" || a.type === "pollinator" || a.severity === "critical"
       ));
 
       return result.newState;
@@ -2568,7 +4060,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
           const result = simulateDayWithRealWeather(plantDef, plant, pepEnv, "pepiniere", 0);
           newAlerts.push(...result.alerts.filter(
-            (a) => a.type === "stage" || a.type === "harvest" || a.severity === "critical"
+            (a) => a.type === "stage" || a.type === "harvest" || a.type === "pollinator" || a.severity === "critical"
           ));
           return result.newState;
         })
@@ -2639,7 +4131,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         const result = simulateDayWithRealWeather(plantDef, newPlant, realParams, effectiveZoneId, 0);
         newAlerts.push(...result.alerts.filter(
-          (a) => a.type === "stage" || a.type === "harvest" || a.type === "water" || a.type === "health" || a.type === "pest" || a.type === "disease" || a.severity === "critical"
+          (a) => a.type === "stage" || a.type === "harvest" || a.type === "water" || a.type === "health" || a.type === "pest" || a.type === "disease" || a.type === "pollinator" || a.severity === "critical"
         ));
 
         if (result.newState.isHarvestable && !newPlant.isHarvestable) scoreGain += 200;
@@ -2649,7 +4141,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         const baseEnv = getEnvironmentWithDailyVariation(getEnvironmentForMonth(newMonth));
         const result = simulateDay(plantDef, newPlant, baseEnv, newWeather, newSeason, 0);
         newAlerts.push(...result.alerts.filter(
-          (a) => a.type === "stage" || a.type === "harvest" || a.type === "water" || a.type === "health" || a.type === "pest" || a.type === "disease" || a.severity === "critical"
+          (a) => a.type === "stage" || a.type === "harvest" || a.type === "water" || a.type === "health" || a.type === "pest" || a.type === "disease" || a.type === "pollinator" || a.severity === "critical"
         ));
 
         if (result.newState.isHarvestable && !newPlant.isHarvestable) scoreGain += 200;
@@ -2672,6 +4164,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newScore = state.score + scoreGain;
     const newBest = Math.max(state.bestScore, newScore);
     if (newBest > state.bestScore) saveBestScore(newBest);
+
+    // Achievement Checks
+    if (state.realWeather && state.realWeather.current?.isRaining) {
+      useAchievementStore.getState().unlockAchievement('weather_master');
+    }
+
+    // Check for night owl
+    const hour = new Date().getHours();
+    if (hour >= 22 || hour < 6) {
+      useAchievementStore.getState().unlockAchievement('night_owl');
+    }
+
+    // Update Sound Ambience
+    const weatherType = state.realWeather?.current?.gameWeather || 'sunny';
+    useSoundManager.getState().updateAmbientState(weatherType, hour);
+
     // Only save day if it changed (avoid localStorage spam at high speeds)
     if (newDay !== lastSavedDay) {
       saveDay(newDay);
@@ -2698,10 +4206,23 @@ export const useGameStore = create<GameState>((set, get) => ({
       }));
     }
 
+    // ═══ TICK CUVES — remplissage par la pluie ═══
+    const isRaining = state.realWeather?.current?.isRaining || false;
+    const precipMm = state.realWeather?.today?.precipitationMm ?? 0;
+    const newTanks = state.gardenTanks.map(tank => {
+      if (!tank.isRainTank || tank.currentLevel >= tank.capacity) return tank;
+      if (!isRaining) return tank;
+      // Calcul: precipMm * roofAreaM2 * efficiency / 1000 = litres
+      const litersCollected = precipMm * (tank.roofAreaM2 || 30) * (tank.efficiency || 0.8) / 1000;
+      const newLevel = Math.min(tank.capacity, tank.currentLevel + litersCollected);
+      return { ...tank, currentLevel: newLevel };
+    });
+
     set({
       gardenPlants: finalGarden,
       pepiniere: finalPepiniere,
       miniSerres: finalMiniSerres,
+      gardenTanks: newTanks,
       day: newDay,
       season: newSeason,
       weather: newWeather,
@@ -2710,11 +4231,126 @@ export const useGameStore = create<GameState>((set, get) => ({
       bestScore: newBest,
     });
   },
+
+  // ── Save Actions ──
+  setActiveSlot: (slotId) => {
+    saveActiveSlot(slotId);
+    set({ activeSlot: slotId });
+  },
+
+  setAutoSaveEnabled: (enabled) => {
+    saveAutoSaveEnabled(enabled);
+    set({ autoSaveEnabled: enabled });
+  },
+
+  loadGameState: (state) => {
+    // Restaurer l'état complet depuis une sauvegarde JSON
+    const currentState = get();
+    set({
+      ...state,
+      // Ne pas écraser ces champs système
+      isPaused: currentState.isPaused,
+      speed: currentState.speed,
+      showConsole: currentState.showConsole,
+      adminOpen: currentState.adminOpen,
+    });
+
+    // Sauvegarder dans localStorage pour persistence
+    if (state.gardenPlants) saveGardenPlants(state.gardenPlants);
+    if (state.pepiniere) savePepiniere(state.pepiniere);
+    if (state.gardenTanks) saveGardenTanks(state.gardenTanks);
+    if (state.day !== undefined) saveDay(state.day);
+    if (state.coins !== undefined) saveCoins(state.coins);
+    if (state.bestScore !== undefined) saveBestScore(state.bestScore);
+  },
+
+  // ── Garden Objects ──
+  addGardenShed: (x: number, y: number) => {
+    const state = get();
+    const newShed: GardenShed = {
+      id: `shed-${Date.now()}`,
+      type: 'tool_shed',
+      x,
+      y,
+      width: 200,
+      height: 180,
+    };
+    const newSheds = [...state.gardenSheds, newShed];
+    set({ gardenSheds: newSheds });
+    try { localStorage.setItem("jardin-culture-sheds", JSON.stringify(newSheds)); } catch {}
+  },
+
+  addGardenTank: (x: number, y: number, capacity: number = 1000) => {
+    const state = get();
+    const newTank: GardenTank = {
+      id: `tank-${Date.now()}`,
+      type: 'water',
+      x,
+      y,
+      width: 120,
+      height: 100,
+      capacity,
+      currentLevel: 0,
+      isRainTank: true,
+      roofAreaM2: 30,
+      efficiency: 0.8,
+    };
+    const newTanks = [...state.gardenTanks, newTank];
+    set({ gardenTanks: newTanks });
+    try { localStorage.setItem("jardin-culture-tanks", JSON.stringify(newTanks)); } catch {}
+  },
+
+  addGardenTree: (x: number, y: number, treeType: GardenTree['type'] = 'apple') => {
+    const state = get();
+    const newTree: GardenTree = {
+      id: `tree-${Date.now()}`,
+      type: treeType,
+      x,
+      y,
+      diameter: 100,
+      age: 0,
+    };
+    const newTrees = [...state.gardenTrees, newTree];
+    set({ gardenTrees: newTrees });
+    try { localStorage.setItem("jardin-culture-trees", JSON.stringify(newTrees)); } catch {}
+  },
+
+  addGardenHedge: (x: number, y: number, length: number = 200, orientation: 'horizontal' | 'vertical' = 'horizontal') => {
+    const state = get();
+    const newHedge: GardenHedge = {
+      id: `hedge-${Date.now()}`,
+      type: 'laurel',
+      x,
+      y,
+      length,
+      orientation,
+      height: 120,
+    };
+    const newHedges = [...state.gardenHedges, newHedge];
+    set({ gardenHedges: newHedges });
+    try { localStorage.setItem("jardin-culture-hedges", JSON.stringify(newHedges)); } catch {}
+  },
+
+  addGardenDrum: (x: number, y: number) => {
+    const state = get();
+    const newDrum: GardenDrum = {
+      id: `drum-${Date.now()}`,
+      x,
+      y,
+      width: 60,
+      height: 90,
+      capacity: 225,
+    };
+    const newDrums = [...state.gardenDrums, newDrum];
+    set({ gardenDrums: newDrums });
+    try { localStorage.setItem("jardin-culture-drums", JSON.stringify(newDrums)); } catch {}
+  },
 }));
 
 // ═══ Serre Tile Zone Modifier ═══
 if (!ZONE_MODIFIERS["serre_tile"]) {
-  (ZONE_MODIFIERS as Record<string, typeof ZONE_MODIFIERS.garden>)["serre_tile"] = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ZONE_MODIFIERS as any)["serre_tile"] = {
     label: "Tuile Serre",
     emoji: "🏡",
     tempMin: null,

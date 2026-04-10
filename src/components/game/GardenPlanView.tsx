@@ -1,20 +1,123 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { useGameStore } from '@/store/game-store';
+import { useGameStore, DEFAULT_GARDEN_WIDTH_CM, DEFAULT_GARDEN_HEIGHT_CM } from '@/store/game-store';
 import { PLANTS } from '@/lib/ai-engine';
+import { useAgroData, type PlantAgroData } from '@/hooks/useAgroData';
 import type { SeedRow } from './SeedRowPainter';
 
 interface GardenPlanViewProps {
   seedRows?: SeedRow[];
+  activeTool?: string;
+  editMode?: 'place' | 'select';
+  onToolUsed?: () => void;
+  onSelectElement?: (type: string, id: string) => void;
 }
 
-const GardenPlanView: React.FC<GardenPlanViewProps> = ({ seedRows = [] }) => {
-  const gardenPlants = useGameStore((s) => s.gardenPlants);
+const DISPLAY_SCALE = 0.55;
+
+const TOOL_SIZES: Record<string, { w: number; h: number }> = {
+  serre: { w: 600, h: 400 },
+  tree:  { w: 150, h: 150 },
+  hedge: { w: 300, h: 60  },
+  tank:  { w: 120, h: 100 },
+  drum:  { w: 60,  h: 90  },
+  shed:  { w: 200, h: 180 },
+  zone:  { w: 300, h: 200 },
+};
+
+const GardenPlanView: React.FC<GardenPlanViewProps> = ({
+  seedRows = [],
+  activeTool = 'none',
+  editMode = 'place',
+  onToolUsed,
+  onSelectElement,
+}) => {
+  const gardenPlants     = useGameStore((s) => s.gardenPlants);
   const gardenSerreZones = useGameStore((s) => s.gardenSerreZones);
-  const setActiveTab = useGameStore((s) => s.setActiveTab);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const gardenHedges     = useGameStore((s) => (s as any).gardenHedges || []);
+  const gardenTanks      = useGameStore((s) => (s as any).gardenTanks || []);
+  const gardenDrums      = useGameStore((s) => (s as any).gardenDrums || []);
+  const gardenSheds      = useGameStore((s) => (s as any).gardenSheds || []);
+  const gardenZones      = useGameStore((s) => (s as any).gardenZones || []);
+  const gardenTrees      = useGameStore((s) => (s as any).gardenTrees || []);
+  const gardenWidthCm    = useGameStore((s) => (s as any).gardenWidthCm  ?? DEFAULT_GARDEN_WIDTH_CM);
+  const gardenHeightCm   = useGameStore((s) => (s as any).gardenHeightCm ?? DEFAULT_GARDEN_HEIGHT_CM);
+  const setActiveTab     = useGameStore((s) => s.setActiveTab);
+  const addSerreZone     = useGameStore((s) => s.addSerreZone);
+  const moveSerreZone    = useGameStore((s) => (s as any).moveSerreZone as (id: string, x: number, y: number) => void);
+  const moveGardenPlant  = useGameStore((s) => (s as any).moveGardenPlant as (id: string, x: number, y: number) => void);
+  const moveGardenHedge  = useGameStore((s) => (s as any).moveGardenHedge as (id: string, x: number, y: number) => void);
+  const moveGardenTank   = useGameStore((s) => (s as any).moveGardenTank as (id: string, x: number, y: number) => void);
+  const moveGardenDrum   = useGameStore((s) => (s as any).moveGardenDrum as (id: string, x: number, y: number) => void);
+  const moveGardenTree   = useGameStore((s) => (s as any).moveGardenTree as (id: string, x: number, y: number) => void);
+  const moveGardenZone   = useGameStore((s) => (s as any).moveGardenZone as (id: string, x: number, y: number) => void);
+  const addGardenZone    = useGameStore((s) => (s as any).addGardenZone as (x: number, y: number, w: number, h: number, type?: string) => void);
+  const removeGardenShed  = useGameStore((s) => (s as any).removeGardenShed as (id: string) => void);
+  const moveGardenShed    = useGameStore((s) => (s as any).moveGardenShed as (id: string, x: number, y: number) => void);
+  const removeGardenTank = useGameStore((s) => (s as any).removeGardenTank as (id: string) => void);
+  const removeGardenDrum = useGameStore((s) => (s as any).removeGardenDrum as (id: string) => void);
+  const removeGardenTree = useGameStore((s) => (s as any).removeGardenTree as (id: string) => void);
+  const removeGardenHedge = useGameStore((s) => (s as any).removeGardenHedge as (id: string) => void);
+  const removeGardenZone = useGameStore((s) => (s as any).removeGardenZone as (id: string) => void);
+  const removeSerreZone  = useGameStore((s) => (s as any).removeSerreZone as (id: string) => void);
+  const coins            = useGameStore((s) => s.coins);
+  const addGardenDrum    = useGameStore((s) => (s as any).addGardenDrum as (x: number, y: number) => void);
+  const addGardenTree    = useGameStore((s) => (s as any).addGardenTree as (x: number, y: number, type?: string) => void);
+  const addGardenHedge   = useGameStore((s) => (s as any).addGardenHedge as (x: number, y: number, w?: number, orient?: string) => void);
+  const addGardenTank    = useGameStore((s) => (s as any).addGardenTank as (x: number, y: number, cap?: number) => void);
+  const addGardenShed    = useGameStore((s) => (s as any).addGardenShed as (x: number, y: number) => void);
+  const canvasRef        = useRef<HTMLCanvasElement>(null);
+  const agro             = useAgroData();
+
+  // ── Drag state ──
+  const dragRef = useRef<{
+    type: 'serre' | 'plant' | 'hedge' | 'tank' | 'drum' | 'shed' | 'tree' | 'zone' | 'zone_hedge' | 'zone_water';
+    id: string;
+    startMouseX: number;
+    startMouseY: number;
+    startObjX: number;   // position initiale en cm
+    startObjY: number;
+    active: boolean;
+  } | null>(null);
+  const [dragPos, setDragPos] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [selectedElement, setSelectedElement] = useState<{ type: string; id: string } | null>(null);
+
+  // ── Dessin de zone par glisser ──
+  type ZoneDrawState = { startX: number; startY: number; curX: number; curY: number; zoneType: 'uncultivated' | 'hedge' | 'water_recovery' | 'grass' | 'fleur' } | null;
+  const [drawingZone, setDrawingZone] = useState<ZoneDrawState>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const getZoneRect = (d: ZoneDrawState) => {
+    if (!d) return null;
+    const x = Math.min(d.startX, d.curX);
+    const y = Math.min(d.startY, d.curY);
+    const w = Math.abs(d.curX - d.startX);
+    const h = Math.abs(d.curY - d.startY);
+    return { x, y, w, h };
+  };
+
+  // ── Tooltip portal ──
+  const [tooltip, setTooltip] = useState<{
+    agroData: PlantAgroData;
+    plantName: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref pour éviter la stale closure dans le handler drag
+  const dragPosRef = useRef<{ id: string; x: number; y: number } | null>(null);
+  useEffect(() => { dragPosRef.current = dragPos; }, [dragPos]);
+
+  // Cleanup du timer tooltip au unmount
+  useEffect(() => {
+    return () => { if (tooltipTimer.current) clearTimeout(tooltipTimer.current); };
+  }, []);
+
+  const displayW = Math.round(gardenWidthCm  * DISPLAY_SCALE);
+  const displayH = Math.round(gardenHeightCm * DISPLAY_SCALE);
 
   const getStageSprite = (plantDefId: string, stage: number) =>
     `/plants/${plantDefId}-stage-${Math.min(stage, 6)}.png`;
@@ -25,170 +128,880 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({ seedRows = [] }) => {
     return '#ff6b6b';
   };
 
-  // ── Dessine les rangs de semences sur le canvas overlay ──────────────────
+
+  // ── Placement par clic (outil actif) ──────────────────────────────────────
+  const handleGridClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (activeTool === 'none') return;
+    if (dragRef.current?.active) return; // ignore click après un drag
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cmX = Math.round((e.clientX - rect.left) / DISPLAY_SCALE);
+    const cmY = Math.round((e.clientY - rect.top)  / DISPLAY_SCALE);
+
+    if (activeTool === 'serre') {
+      const { w, h } = TOOL_SIZES.serre;
+      const ok = addSerreZone(cmX - w / 2, cmY - h / 2, w, h, 500);
+      if (!ok) alert('Pas assez de pièces ou zone invalide !');
+      else onToolUsed?.();
+    } else if (activeTool === 'tree' && addGardenTree) {
+      addGardenTree(cmX, cmY);
+      onToolUsed?.();
+    } else if (activeTool === 'hedge' && addGardenHedge) {
+      const { w } = TOOL_SIZES.hedge;
+      addGardenHedge(cmX, cmY, w, 'horizontal');
+      onToolUsed?.();
+    } else if (activeTool === 'tank' && addGardenTank) {
+      addGardenTank(cmX, cmY);
+      onToolUsed?.();
+    } else if (activeTool === 'drum' && addGardenDrum) {
+      addGardenDrum(cmX, cmY);
+      onToolUsed?.();
+    } else if (activeTool === 'shed' && addGardenShed) {
+      addGardenShed(cmX, cmY);
+      onToolUsed?.();
+    } else if (activeTool === 'zone' && addGardenZone) {
+      const { w, h } = TOOL_SIZES.zone;
+      addGardenZone(cmX - w / 2, cmY - h / 2, w, h, 'uncultivated');
+      onToolUsed?.();
+    } else if (activeTool === 'zone_hedge' && addGardenZone) {
+      const { w, h } = TOOL_SIZES.zone;
+      addGardenZone(cmX - w / 2, cmY - h / 2, w, h, 'hedge');
+      onToolUsed?.();
+    } else if (activeTool === 'zone_water' && addGardenZone) {
+      const { w, h } = TOOL_SIZES.zone;
+      addGardenZone(cmX - w / 2, cmY - h / 2, w, h, 'water_recovery');
+      onToolUsed?.();
+    } else if (activeTool === 'zone_grass' && addGardenZone) {
+      const { w, h } = TOOL_SIZES.zone;
+      addGardenZone(cmX - w / 2, cmY - h / 2, w, h, 'grass');
+      onToolUsed?.();
+    } else if (activeTool === 'zone_fleur' && addGardenZone) {
+      const { w, h } = TOOL_SIZES.zone;
+      addGardenZone(cmX - w / 2, cmY - h / 2, w, h, 'fleur');
+      onToolUsed?.();
+    }
+  }, [activeTool, addSerreZone, addGardenTree, addGardenHedge, addGardenTank, addGardenDrum, addGardenShed, addGardenZone, onToolUsed]);
+
+  // ── Drag handlers ──────────────────────────────────────────────────────────
+  const startDrag = useCallback((
+    e: React.MouseEvent,
+    type: 'serre' | 'plant' | 'hedge' | 'tank' | 'drum' | 'shed' | 'tree' | 'zone',
+    id: string,
+    objXcm: number,
+    objYcm: number
+  ) => {
+    // Pas de drag si outil actif OU si un élément est déjà sélectionné en mode select
+    if (activeTool !== 'none') return;
+    if (editMode === 'select' && selectedElement !== null) return;
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = {
+      type, id,
+      startMouseX: e.clientX,
+      startMouseY: e.clientY,
+      startObjX: objXcm,
+      startObjY: objYcm,
+      active: false,
+    };
+    setTooltip(null);
+  }, [activeTool, editMode, selectedElement]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = e.clientX - dragRef.current.startMouseX;
+      const dy = e.clientY - dragRef.current.startMouseY;
+      if (!dragRef.current.active && Math.hypot(dx, dy) < 4) return;
+      dragRef.current.active = true;
+      const newX = Math.max(0, dragRef.current.startObjX + dx / DISPLAY_SCALE);
+      const newY = Math.max(0, dragRef.current.startObjY + dy / DISPLAY_SCALE);
+      setDragPos({ id: dragRef.current.id, x: newX, y: newY });
+    };
+    const onUp = () => {
+      if (!dragRef.current) return;
+      const pos = dragPosRef.current;
+      if (dragRef.current.active && pos) {
+        if (dragRef.current.type === 'serre') {
+          moveSerreZone?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'plant') {
+          moveGardenPlant?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'hedge') {
+          moveGardenHedge?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'tank') {
+          moveGardenTank?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'drum') {
+          moveGardenDrum?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'shed') {
+          moveGardenShed?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'tree') {
+          moveGardenTree?.(dragRef.current.id, pos.x, pos.y);
+        } else if (dragRef.current.type === 'zone') {
+          moveGardenZone?.(dragRef.current.id, pos.x, pos.y);
+        }
+      }
+      dragRef.current = null;
+      setDragPos(null);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragPos, moveSerreZone, moveGardenPlant, moveGardenHedge, moveGardenTank, moveGardenDrum, moveGardenShed, moveGardenTree, moveGardenZone]);
+
+
+  // ── Canvas overlay rangs ──────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = displayW;
+    canvas.height = displayH;
+    ctx.clearRect(0, 0, displayW, displayH);
     if (!seedRows || seedRows.length === 0) return;
-
-    const W = canvas.width;
-    const H = canvas.height;
-
     for (const row of seedRows) {
       if (row.points.length < 2) continue;
-
-      // Tracé du rang
       ctx.beginPath();
       ctx.strokeStyle = row.color;
       ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.shadowColor = row.color;
-      ctx.shadowBlur = 8;
-      ctx.setLineDash([8, 5]); // pointillé pour bien montrer que c'est un rang
-      ctx.moveTo(row.points[0].x * W, row.points[0].y * H);
-      for (let i = 1; i < row.points.length; i++) {
-        ctx.lineTo(row.points[i].x * W, row.points[i].y * H);
-      }
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.shadowColor = row.color; ctx.shadowBlur = 8;
+      ctx.setLineDash([8, 5]);
+      ctx.moveTo(row.points[0].x * displayW, row.points[0].y * displayH);
+      for (let i = 1; i < row.points.length; i++)
+        ctx.lineTo(row.points[i].x * displayW, row.points[i].y * displayH);
       ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.shadowBlur = 0;
-
-      // Point de départ
+      ctx.setLineDash([]); ctx.shadowBlur = 0;
       ctx.beginPath();
-      ctx.arc(row.points[0].x * W, row.points[0].y * H, 5, 0, Math.PI * 2);
-      ctx.fillStyle = row.color;
-      ctx.fill();
-
-      // Label du rang
+      ctx.arc(row.points[0].x * displayW, row.points[0].y * displayH, 5, 0, Math.PI * 2);
+      ctx.fillStyle = row.color; ctx.fill();
       if (row.label) {
-        const midIdx = Math.floor(row.points.length / 2);
-        const midPt = row.points[midIdx];
+        const mid = row.points[Math.floor(row.points.length / 2)];
         ctx.save();
-        ctx.font = 'bold 11px system-ui';
-        ctx.fillStyle = '#fff';
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(row.label, midPt.x * W + 6, midPt.y * H - 6);
+        ctx.font = 'bold 11px system-ui'; ctx.fillStyle = '#fff';
+        ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 4;
+        ctx.fillText(row.label, mid.x * displayW + 6, mid.y * displayH - 6);
         ctx.restore();
       }
     }
-  }, [seedRows]);
+  }, [seedRows, displayW, displayH]);
 
+
+  const toolSize = activeTool !== 'none' ? TOOL_SIZES[activeTool] : null;
 
   return (
     <div className="plan-view-container">
-      <div className="garden-grid" style={{ position: 'relative' }}>
-
-        {/* ── SERRES (background layer) ── */}
-        {gardenSerreZones && gardenSerreZones.map((serre) => (
-          <motion.div
-            key={serre.id}
-            className="serre-zone-overlay"
-            style={{
-              left: `${serre.x}px`, top: `${serre.y}px`,
-              width: `${serre.width}px`, height: `${serre.height}px`,
-              backgroundImage: 'url(/greenhouse-sprite.png)',
-              backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
-            }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(76, 175, 80, 0.4)' }}
-            onClick={() => setActiveTab('serre')}
-            title="Cliquer pour accéder à la serre"
-          >
-            <div className="serre-label" style={{ position: 'absolute', bottom: '-25px', left: '50%', transform: 'translateX(-50%)' }}>Serre</div>
-          </motion.div>
-        ))}
-
-        {/* ── PLANTES ── */}
-        {gardenPlants.map((gp) => {
-          const plant = gp.plant;
-          const plantDef = PLANTS[gp.plantDefId];
-          return (
-            <motion.div key={gp.id} className="plant-sprite-container"
-              style={{ left: `${gp.x}px`, top: `${gp.y}px` }}
-              initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              whileHover={{ scale: 1.15, zIndex: 10, filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))' }}
-              transition={{ type: 'spring', stiffness: 300 }}>
-              <div className="plant-shadow" />
-              <img src={getStageSprite(gp.plantDefId, plant.stage)} alt={plantDef?.name || 'Plante'}
-                className="plant-sprite-image" draggable={false} />
-              <div className="day-badge-manga">J{plant.daysSincePlanting}</div>
-              <div className="water-bar-manga">
-                <div className="water-fill-manga" style={{
-                  height: `${plant.waterLevel}%`,
-                  background: `linear-gradient(to top, ${getWaterColor(plant.waterLevel)}, #fff)`
-                }} />
-              </div>
-              <div className="stage-dots">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className={`stage-dot ${i < plant.stage ? 'active' : ''}`} />
-                ))}
-              </div>
-            </motion.div>
-          );
-        })}
-
-        {/* ── OVERLAY RANGS DE SEMENCES ── */}
-        {seedRows.length > 0 && (
-          <canvas
-            ref={canvasRef}
-            className="seed-rows-overlay"
-            width={1400}
-            height={800}
-            style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
-              pointerEvents: 'none',
-              zIndex: 5,
-            }}
-          />
-        )}
-
-        {/* ── Légende rangs ── */}
-        {seedRows.length > 0 && (
-          <div className="seed-rows-legend">
-            {seedRows.map((r, i) => (
-              <div key={r.id} className="seed-row-legend-item">
-                <span className="seed-row-legend-dot" style={{ background: r.color }} />
-                <span>{r.label || `Rang ${i + 1}`}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {gardenPlants.length === 0 && (!gardenSerreZones || gardenSerreZones.length === 0) && seedRows.length === 0 && (
-          <div className="empty-garden-message">
-            <span className="empty-emoji">🌱</span>
-            <p>Votre jardin est vide !</p>
-            <p className="empty-subtitle">Plantez vos premières graines</p>
-          </div>
+      {/* Info dimensions + curseur actif */}
+      <div className="garden-dims-bar">
+        <span>🗺️ {(gardenWidthCm/100).toFixed(0)}m × {(gardenHeightCm/100).toFixed(0)}m</span>
+        <span>({(gardenWidthCm*gardenHeightCm/10000).toFixed(0)} m²)</span>
+        <span className="dims-scale">Échelle 1:{Math.round(1/DISPLAY_SCALE)}e</span>
+        {activeTool !== 'none' && (
+          <span className="dims-tool-active">
+            ✏️ Mode placement : {activeTool} — cliquez sur la grille
+          </span>
         )}
       </div>
 
-      {/* Styles overlay */}
+      {/* Grille scrollable */}
+      <div className="garden-scroll-wrapper">
+        
+        {/* Règles graduées */}
+        <div style={{ position: 'relative', marginLeft: 30, marginTop: 20 }}>
+          {/* Règle horizontale (haut) */}
+          <div style={{ 
+            position: 'absolute', 
+            top: -20, 
+            left: 0, 
+            width: displayW, 
+            height: 20,
+            display: 'flex',
+            borderBottom: '1px solid #666'
+          }}>
+            {Array.from({ length: Math.ceil(gardenWidthCm / 100) + 1 }).map((_, i) => (
+              <div key={`h-${i}`} style={{ 
+                flex: '1 0 ' + (100 * DISPLAY_SCALE) + 'px',
+                borderLeft: i === 0 ? 'none' : '1px solid #999',
+                fontSize: 10,
+                color: '#666',
+                paddingLeft: 2
+              }}>
+                {i}m
+              </div>
+            ))}
+          </div>
+          
+          {/* Règle verticale (gauche) */}
+          <div style={{
+            position: 'absolute',
+            left: -30,
+            top: 0,
+            width: 30,
+            height: displayH,
+            borderRight: '1px solid #666'
+          }}>
+            {Array.from({ length: Math.ceil(gardenHeightCm / 100) + 1 }).map((_, i) => (
+              <div key={`v-${i}`} style={{
+                position: 'absolute',
+                top: i * 100 * DISPLAY_SCALE,
+                right: 2,
+                fontSize: 10,
+                color: '#666',
+                borderTop: i === 0 ? 'none' : '1px solid #999',
+                width: 28,
+                textAlign: 'right'
+              }}>
+                {i}m
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div
+          ref={gridRef}
+          className="garden-grid"
+          style={{
+            width: displayW,
+            height: displayH,
+            position: 'relative',
+            flexShrink: 0,
+            cursor: activeTool !== 'none' ? 'crosshair' : 'default',
+          }}
+          onMouseDown={(e) => {
+            if (activeTool === 'none') return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const cmX = Math.round((e.clientX - rect.left) / DISPLAY_SCALE);
+            const cmY = Math.round((e.clientY - rect.top) / DISPLAY_SCALE);
+            if (activeTool === 'zone' || activeTool === 'zone_hedge' || activeTool === 'zone_water' || activeTool === 'zone_grass' || activeTool === 'zone_fleur') {
+              e.stopPropagation();
+              setDrawingZone({
+                startX: cmX,
+                startY: cmY,
+                curX: cmX,
+                curY: cmY,
+                zoneType: activeTool === 'zone' ? 'uncultivated' : activeTool === 'zone_hedge' ? 'hedge' : activeTool === 'zone_water' ? 'water_recovery' : activeTool === 'zone_grass' ? 'grass' : 'fleur',
+              });
+            }
+          }}
+          onMouseMove={(e) => {
+            if (!drawingZone) return;
+            const rect = gridRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            const cmX = Math.round((e.clientX - rect.left) / DISPLAY_SCALE);
+            const cmY = Math.round((e.clientY - rect.top) / DISPLAY_SCALE);
+            setDrawingZone(d => d ? { ...d, curX: cmX, curY: cmY } : null);
+          }}
+          onMouseUp={() => {
+            if (!drawingZone) return;
+            const rect = getZoneRect(drawingZone);
+            if (rect && rect.w > 20 && rect.h > 20) {
+              addGardenZone?.(rect.x, rect.y, rect.w, rect.h, drawingZone.zoneType);
+              onToolUsed?.();
+            }
+            setDrawingZone(null);
+          }}
+          onClick={(e) => {
+            // Clic simple : ne place que si pas en train de dessiner
+            if (drawingZone || activeTool === 'none') return;
+            if (activeTool !== 'zone' && activeTool !== 'zone_hedge' && activeTool !== 'zone_water' && activeTool !== 'zone_grass' && activeTool !== 'zone_fleur') {
+              handleGridClick(e as any);
+            }
+          }}
+        >
+
+          {/* SERRES — draggables */}
+          {gardenSerreZones && gardenSerreZones.map((serre) => {
+            const isDragging = dragPos?.id === serre.id;
+            const px = (isDragging ? dragPos!.x : serre.x) * DISPLAY_SCALE;
+            const py = (isDragging ? dragPos!.y : serre.y) * DISPLAY_SCALE;
+            return (
+              <div key={serre.id}
+                style={{
+                  position: 'absolute',
+                  left: px, top: py,
+                  width: serre.width * DISPLAY_SCALE,
+                  height: serre.height * DISPLAY_SCALE,
+                  cursor: activeTool === 'none' ? 'grab' : 'default',
+                  userSelect: 'none',
+                  backgroundImage: 'url(/greenhouse-sprite.png)',
+                  backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
+                  border: isDragging ? '2px dashed #4caf50' : '2px solid rgba(76,175,80,0.5)',
+                  borderRadius: 8,
+                  boxShadow: isDragging ? '0 8px 24px rgba(76,175,80,0.6)' : undefined,
+                  zIndex: isDragging ? 500 : 3,
+                  opacity: isDragging ? 0.85 : 1,
+                  transition: isDragging ? 'none' : 'box-shadow .2s',
+                }}
+                onMouseDown={(e) => startDrag(e, 'serre', serre.id, serre.x, serre.y)}
+                onClick={(e) => {
+                  if (dragRef.current?.active) { e.stopPropagation(); return; }
+                  e.stopPropagation();
+                  if (editMode === 'select') { setSelectedElement({ type: 'serre', id: serre.id }); onSelectElement?.('serre', serre.id); }
+                  else setActiveTab('serre');
+                }}
+                title="Glisser pour déplacer · Cliquer pour entrer dans la serre"
+              >
+                {selectedElement?.id === serre.id && selectedElement?.type === 'serre' && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeSerreZone?.(serre.id); setSelectedElement(null); }}
+                    style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                  >
+                    🗑️ Supprimer
+                  </button>
+                )}
+                <div style={{ position:'absolute', bottom:-20, left:'50%', transform:'translateX(-50%)',
+                  fontSize:10, fontWeight:700, color:'#2e7d32', whiteSpace:'nowrap',
+                  background:'rgba(255,255,255,.8)', borderRadius:4, padding:'1px 6px' }}>
+                  🏡 Serre {activeTool === 'none' ? '⟺' : ''}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* ZONES NON CULTIVÉES */}
+          {gardenZones.map((zone: any) => (
+            <div key={zone.id}
+              onMouseDown={(e) => { e.stopPropagation(); if (activeTool === 'none') startDrag(e, 'zone', zone.id, zone.x, zone.y); }}
+              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'zone', id: zone.id }); onSelectElement?.('zone', zone.id); } }}
+              style={{
+                position: 'absolute',
+                left: zone.x * DISPLAY_SCALE,
+                top: zone.y * DISPLAY_SCALE,
+                width: zone.width * DISPLAY_SCALE,
+                height: zone.height * DISPLAY_SCALE,
+                background: zone.type === 'water_recovery'
+                  ? 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(100,116,139,.08) 8px, rgba(100,116,139,.08) 16px)'
+                  : zone.type === 'hedge'
+                  ? 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(45,80,22,.18) 8px, rgba(45,80,22,.18) 16px)'
+                  : zone.type === 'grass'
+                  ? 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(74,222,128,.12) 8px, rgba(74,222,128,.12) 16px)'
+                  : zone.type === 'fleur'
+                  ? 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(244,114,182,.12) 8px, rgba(244,114,182,.12) 16px)'
+                  : 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(139,195,74,.12) 8px, rgba(139,195,74,.12) 16px)',
+                border: selectedElement?.id === zone.id && selectedElement?.type === 'zone' ? '3px dashed #22c55e' : zone.type === 'water_recovery' ? '2px dashed rgba(100,116,139,.25)' : zone.type === 'hedge' ? '2px dashed rgba(45,80,22,.4)' : zone.type === 'grass' ? '2px dashed rgba(74,222,128,.4)' : zone.type === 'fleur' ? '2px dashed rgba(244,114,182,.4)' : '2px dashed rgba(139,195,74,.35)',
+                borderRadius: 6,
+                zIndex: 1,
+                cursor: activeTool === 'none' ? 'grab' : 'default',
+              }}
+              title={zone.label || (zone.type === 'water_recovery' ? '💧 Zone récupération eau' : zone.type === 'hedge' ? '🌿 Zone haie' : zone.type === 'grass' ? '🌱 Zone herbe' : zone.type === 'fleur' ? '🌸 Zone fleur' : '🟢 Zone culture')}
+            >
+              {selectedElement?.id === zone.id && selectedElement?.type === 'zone' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeGardenZone?.(zone.id); setSelectedElement(null); }}
+                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                  title="Supprimer"
+                >
+                  🗑️ Supprimer
+                </button>
+              )}
+              <div style={{ position:'absolute', top:4, left:6, fontSize:9, color: zone.type === 'water_recovery' ? 'rgba(100,116,139,.6)' : zone.type === 'hedge' ? 'rgba(45,80,22,.7)' : 'rgba(139,195,74,.7)', fontWeight:600 }}>
+                {zone.label || (zone.type === 'water_recovery' ? '💧' : zone.type === 'hedge' ? '🌿' : zone.type === 'grass' ? '🌱' : zone.type === 'fleur' ? '🌸' : '🟢')}
+              </div>
+            </div>
+          ))}
+
+          {/* HAIES */}
+          {gardenHedges.map((hedge: any) => (
+            <div key={hedge.id}
+              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'hedge', id: hedge.id }); onSelectElement?.('hedge', hedge.id); } }}
+              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y); }}
+              style={{
+                position: 'absolute',
+                left: hedge.x * DISPLAY_SCALE,
+                top: hedge.y * DISPLAY_SCALE,
+                width: hedge.width * DISPLAY_SCALE,
+                height: hedge.height * DISPLAY_SCALE,
+                background: 'linear-gradient(135deg, #2d5016 0%, #4a7c2c 50%, #2d5016 100%)',
+                border: selectedElement?.id === hedge.id && selectedElement?.type === 'hedge' ? '3px dashed #22c55e' : '2px solid #1a3a0f',
+                borderRadius: 4,
+                zIndex: 2,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              }}
+              title={`Haie ${hedge.id}`}
+            >
+              <div style={{ 
+                position: 'absolute', 
+                bottom: -18, 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                fontSize: 9, 
+                color: '#2d5016', 
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap'
+              }}>
+                🌿 {hedge.label || 'Haie'}
+              </div>
+              {selectedElement?.id === hedge.id && selectedElement?.type === 'hedge' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeGardenHedge?.(hedge.id); setSelectedElement(null); }}
+                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                >
+                  🗑️ Supprimer
+                </button>
+              )}
+            </div>
+          ))}
+
+          {/* CUVES */}
+          {gardenTanks.map((tank: any) => {
+            const fillPercent = tank.capacity > 0 ? (tank.currentLevel / tank.capacity) : 0;
+            const isEmpty = fillPercent === 0;
+            const isHalf = fillPercent > 0 && fillPercent < 0.7;
+            const isFull = fillPercent >= 0.7;
+            return (
+            <div key={tank.id}
+              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tank', id: tank.id }); onSelectElement?.('tank', tank.id); } }}
+              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tank', tank.id, tank.x, tank.y); }}
+              style={{
+                position: 'absolute',
+                left: tank.x * DISPLAY_SCALE,
+                top: tank.y * DISPLAY_SCALE,
+                width: tank.width * DISPLAY_SCALE,
+                height: tank.height * DISPLAY_SCALE,
+                background: 'linear-gradient(135deg, #374151 0%, #6b7280 50%, #374151 100%)',
+                border: selectedElement?.id === tank.id && selectedElement?.type === 'tank' ? '3px dashed #22c55e' : '3px solid #1f2937',
+                borderRadius: 8,
+                zIndex: 2,
+                boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+                overflow: 'hidden',
+              }}
+              title={`Cuve ${tank.capacity}L — ${Math.round(fillPercent * 100)}%`}
+            >
+              {/* Eau */}
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: `${fillPercent * 100}%`,
+                background: isFull
+                  ? 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #1d4ed8 100%)'
+                  : isHalf
+                  ? 'linear-gradient(135deg, #2563eb 0%, #60a5fa 50%, #2563eb 100%)'
+                  : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%)',
+                transition: 'height 0.5s ease',
+              }} />
+              {/* État vide */}
+              {isEmpty && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: 9,
+                  color: '#9ca3af',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                }}>
+                  VIDE
+                </div>
+              )}
+              {/* Label capacité */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: 11,
+                color: fillPercent > 0.5 ? '#fff' : '#93c5fd',
+                fontWeight: 'bold',
+                textShadow: fillPercent > 0.5 ? '1px 1px 2px rgba(0,0,0,0.9)' : '1px 1px 2px rgba(0,0,0,0.6)',
+              }}>
+                💧 {tank.capacity}L
+              </div>
+              <div style={{
+                position: 'absolute',
+                bottom: 2,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: 8,
+                color: fillPercent > 0.3 ? '#bfdbfe' : '#60a5fa',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+              }}>
+                {Math.round(fillPercent * 100)}%
+              </div>
+              {selectedElement?.id === tank.id && selectedElement?.type === 'tank' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeGardenTank?.(tank.id); setSelectedElement(null); }}
+                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                >
+                  🗑️ Supprimer
+                </button>
+              )}
+            </div>
+          );
+          })}
+
+          {/* CABANES */}
+          {gardenSheds.map((shed: any) => (
+            <div key={shed.id}
+              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'shed', id: shed.id }); onSelectElement?.('shed', shed.id); } }}
+              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'shed', shed.id, shed.x, shed.y); }}
+              style={{
+                position: 'absolute',
+                left: shed.x * DISPLAY_SCALE,
+                top: shed.y * DISPLAY_SCALE,
+                width: shed.width * DISPLAY_SCALE,
+                height: shed.height * DISPLAY_SCALE,
+                background: 'linear-gradient(135deg, #92400e 0%, #b45309 50%, #92400e 100%)',
+                border: selectedElement?.id === shed.id && selectedElement?.type === 'shed' ? '3px dashed #22c55e' : '3px solid #78350f',
+                borderRadius: 6,
+                zIndex: 2,
+                boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+              }}
+              title={`Cabane ${shed.id}`}
+            >
+              <div style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                left: '50%', 
+                transform: 'translate(-50%, -50%)',
+                fontSize: 24
+              }}>
+                🏚️
+              </div>
+              <div style={{ 
+                position: 'absolute', 
+                bottom: -18, 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                fontSize: 9, 
+                color: '#92400e', 
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap'
+              }}>
+                {shed.label || 'Cabane'}
+              </div>
+              {selectedElement?.id === shed.id && selectedElement?.type === 'shed' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeGardenShed?.(shed.id); setSelectedElement(null); }}
+                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                >
+                  🗑️ Supprimer
+                </button>
+              )}
+            </div>
+          ))}
+
+          {/* FÛTS PEHD 225L */}
+          {gardenDrums.map((drum: any) => (
+            <div key={drum.id}
+              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'drum', id: drum.id }); onSelectElement?.('drum', drum.id); } }}
+              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'drum', drum.id, drum.x, drum.y); }}
+              style={{
+                position: 'absolute',
+                left: drum.x * DISPLAY_SCALE,
+                top: drum.y * DISPLAY_SCALE,
+                width: drum.width * DISPLAY_SCALE,
+                height: drum.height * DISPLAY_SCALE,
+                background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e3a5f 100%)',
+                border: selectedElement?.id === drum.id && selectedElement?.type === 'drum' ? '3px dashed #22c55e' : '3px solid #1e40af',
+                borderRadius: 6,
+                zIndex: 2,
+                boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title={`Fût PEHD ${drum.capacity}L`}
+            >
+              <div style={{ fontSize: 22 }}>🛢️</div>
+              <div style={{
+                position: 'absolute',
+                bottom: 2,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: 8,
+                color: '#93c5fd',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+              }}>
+                {drum.capacity}L
+              </div>
+              {selectedElement?.id === drum.id && selectedElement?.type === 'drum' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeGardenDrum?.(drum.id); setSelectedElement(null); }}
+                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                >
+                  🗑️ Supprimer
+                </button>
+              )}
+            </div>
+          ))}
+
+
+          {/* ARBRES */}
+          {gardenTrees.map((tree: any) => (
+            <div key={tree.id}
+              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tree', id: tree.id }); onSelectElement?.('tree', tree.id); } }}
+              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tree', tree.id, tree.x, tree.y); }}
+              style={{
+                position: 'absolute',
+                left: tree.x * DISPLAY_SCALE - (tree.diameter ?? 75) * 0.5 * DISPLAY_SCALE,
+                top: tree.y * DISPLAY_SCALE - (tree.diameter ?? 75) * 0.5 * DISPLAY_SCALE,
+                width: (tree.diameter ?? 75) * DISPLAY_SCALE,
+                height: (tree.diameter ?? 75) * DISPLAY_SCALE,
+                borderRadius: '50%',
+                background: 'radial-gradient(circle at 40% 35%, #4ade80 0%, #16a34a 60%, #14532d 100%)',
+                border: selectedElement?.id === tree.id && selectedElement?.type === 'tree' ? '3px dashed #22c55e' : '2px solid #166534',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                zIndex: 2,
+                cursor: activeTool === 'none' ? 'grab' : 'default',
+              }}
+              title={`Arbre ${tree.type} — ${tree.age ?? 0}j`}
+            >
+              {/* Tronc */}
+              <div style={{
+                position: 'absolute',
+                bottom: '15%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '20%',
+                height: '35%',
+                background: 'linear-gradient(90deg, #78350f 0%, #92400e 50%, #78350f 100%)',
+                borderRadius: '2px',
+              }} />
+              {/* Label */}
+              <div style={{
+                position: 'absolute',
+                bottom: -18,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: 9,
+                color: '#14532d',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+              }}>
+                🌳 {tree.type}
+              </div>
+              {/* Bouton supprimer */}
+              {selectedElement?.id === tree.id && selectedElement?.type === 'tree' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeGardenTree?.(tree.id); setSelectedElement(null); }}
+                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                >
+                  🗑️ Supprimer
+                </button>
+              )}
+            </div>
+          ))}
+
+
+          {/* PLANTES — draggables */}
+          {gardenPlants.map((gp) => {
+            const plant    = gp.plant;
+            const plantDef = PLANTS[gp.plantDefId];
+            const agroData = agro.plants.find(p => p.plantId === gp.id);
+            const isDragging = dragPos?.id === gp.id;
+            const cx = isDragging ? dragPos!.x : gp.x;
+            const cy = isDragging ? dragPos!.y : gp.y;
+            const px = cx * DISPLAY_SCALE;
+            const py = cy * DISPLAY_SCALE;
+            const sz = Math.max(40, 80 * DISPLAY_SCALE);
+
+            const ringColor = isDragging ? '#90caf9' :
+              agroData?.waterUrgency === 'critique' ? '#ef4444' :
+              agroData?.waterUrgency === 'urgent'   ? '#f97316' :
+              agroData?.diseaseAlert  === 'danger'  ? '#a855f7' :
+              agroData?.companionScore === 'mauvais'? '#eab308' : '#22c55e';
+
+            return (
+              <div key={gp.id} className="plant-sprite-container"
+                style={{
+                  left: px, top: py, width: sz, height: sz + 30,
+                  cursor: activeTool === 'none' ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                  zIndex: isDragging ? 9999 : 4,
+                  transform: isDragging ? 'scale(1.15)' : undefined,
+                  transition: isDragging ? 'none' : 'transform .15s',
+                }}
+                onMouseDown={(e) => startDrag(e, 'plant', gp.id, gp.x, gp.y)}
+                onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'plant', id: gp.id }); onSelectElement?.('plant', gp.id); } }}
+                onMouseEnter={(e) => {
+                  if (!agroData || dragRef.current) return;
+                  if (tooltipTimer.current) clearTimeout(tooltipTimer.current);
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setTooltip({ agroData, plantName: plantDef?.name ?? 'Plante', x: rect.left + rect.width / 2, y: rect.top });
+                }}
+                onMouseLeave={() => { tooltipTimer.current = setTimeout(() => setTooltip(null), 120); }}
+              >
+                <div style={{ position:'absolute', inset:-3, borderRadius:'50%', border:`2px solid ${ringColor}`, boxShadow:`0 0 ${isDragging ? 12 : 6}px ${ringColor}88`, pointerEvents:'none', zIndex:1 }} />
+                <img src={`/plants/${gp.plantDefId}-stage-${Math.min(plant.stage, 6)}.png`}
+                  alt={plantDef?.name || 'Plante'} className="plant-sprite-image"
+                  draggable={false} style={{ width:'100%', height:'100%', objectFit:'contain' }} />
+                <div className="day-badge-manga" style={{ fontSize:8, width:26, height:26 }}>J{plant.daysSincePlanting}</div>
+                <div className="water-bar-manga">
+                  <div className="water-fill-manga" style={{
+                    height:`${plant.waterLevel}%`,
+                    background:`linear-gradient(to top,${plant.waterLevel>60?'#4ecdc4':plant.waterLevel>30?'#f9d423':'#ff6b6b'},#fff)`
+                  }} />
+                </div>
+                {agroData && (
+                  <div className="agro-badges-grid">
+                    <span className={`agro-badge ${agroData.waterUrgency==='critique'?'badge-red':agroData.waterUrgency==='urgent'?'badge-orange':'badge-blue'}`}>
+                      💧{agroData.waterUrgency==='critique'?'🔴':agroData.waterUrgency==='urgent'?'⚠️':'✓'}
+                    </span>
+                    {agroData.diseaseAlert!=='none' && <span className={`agro-badge ${agroData.diseaseAlert==='danger'?'badge-purple':'badge-yellow'}`}>🦠{agroData.diseaseAlert==='danger'?'🔴':'⚠️'}</span>}
+                    {agroData.companionScore!=='neutre' && <span className={`agro-badge ${agroData.companionScore==='mauvais'?'badge-red':agroData.companionScore==='excellent'?'badge-green':'badge-teal'}`}>{agroData.companionScore==='mauvais'?'⚔️':agroData.companionScore==='excellent'?'🤝✨':'🤝'}</span>}
+                    {!agroData.soilTempOk && <span className="agro-badge badge-ice">🌡️❄️</span>}
+                    <div className="gdd-mini-bar"><div className="gdd-mini-fill" style={{ width:`${agroData.gddProgressPct}%` }} /></div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* CANVAS OVERLAY RANGS */}
+          {seedRows.length > 0 && (
+            <canvas ref={canvasRef} style={{
+              position:'absolute', inset:0, width:displayW, height:displayH,
+              pointerEvents:'none', zIndex:5,
+            }} />
+          )}
+
+          {/* LÉGENDE RANGS */}
+          {seedRows.length > 0 && (
+            <div className="seed-rows-legend">
+              {seedRows.map((r, i) => (
+                <div key={r.id} className="seed-row-legend-item">
+                  <span className="seed-row-legend-dot" style={{ background: r.color }} />
+                  <span>{r.label || `Rang ${i + 1}`}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* PRÉVIEW ZONE EN TRAIN DE SE DESSINER */}
+          {drawingZone && (() => {
+            const rect = getZoneRect(drawingZone);
+            if (!rect || rect.w < 5 || rect.h < 5) return null;
+            return (
+              <div style={{
+                position: 'absolute',
+                left: rect.x * DISPLAY_SCALE,
+                top: rect.y * DISPLAY_SCALE,
+                width: rect.w * DISPLAY_SCALE,
+                height: rect.h * DISPLAY_SCALE,
+                background: drawingZone.zoneType === 'water_recovery'
+                  ? 'rgba(100,116,139,.15)'
+                  : drawingZone.zoneType === 'hedge'
+                  ? 'rgba(45,80,22,.2)'
+                  : drawingZone.zoneType === 'grass'
+                  ? 'rgba(74,222,128,.2)'
+                  : drawingZone.zoneType === 'fleur'
+                  ? 'rgba(244,114,182,.2)'
+                  : 'rgba(139,195,74,.2)',
+                border: '2px dashed rgba(76,175,80,.7)',
+                borderRadius: 6,
+                zIndex: 9998,
+                pointerEvents: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <span style={{ fontSize: 10, color: 'rgba(76,175,80,.9)', fontWeight: 700 }}>
+                  {Math.round(rect.w)}×{Math.round(rect.h)} cm
+                </span>
+              </div>
+            );
+          })()}
+
+          {/* EMPTY STATE */}
+          {gardenPlants.length === 0 && (!gardenSerreZones || gardenSerreZones.length === 0) && seedRows.length === 0 && (
+            <div className="empty-garden-message">
+              <span className="empty-emoji">🌱</span>
+              <p>Votre jardin est vide !</p>
+              <p className="empty-subtitle">Transplantez depuis la Pépinière, ou placez une Serre avec les outils ci-dessus</p>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+
+      {/* ── Tooltip portal — rendu hors du scroll-wrapper pour ne jamais être coupé ── */}
+      {tooltip && typeof document !== 'undefined' && createPortal(
+        <div
+          className="agro-tooltip-portal"
+          style={{ left: tooltip.x, top: tooltip.y - 8 }}
+          onMouseEnter={() => { if (tooltipTimer.current) clearTimeout(tooltipTimer.current); }}
+          onMouseLeave={() => setTooltip(null)}
+        >
+          <div className="agro-tt-name">{tooltip.plantName}</div>
+          <div className="agro-tt-row">
+            💧 {tooltip.agroData.needLPerDay.toFixed(2)}L/j
+            <span className="agro-tt-save"> −{tooltip.agroData.waterSavingPct}%</span>
+          </div>
+          {tooltip.agroData.hydroBreakdown.slice(0, 2).map((b, i) =>
+            <div key={i} className="agro-tt-sub">{b.emoji} {b.source} −{b.savingMm.toFixed(2)}mm</div>
+          )}
+          <div className="agro-tt-row">🌡️ Sol {tooltip.agroData.soilTempC}°C {tooltip.agroData.soilTempOk ? '✅' : '❌'}</div>
+          <div className="agro-tt-row">🌱 GDD {tooltip.agroData.gddProgressPct.toFixed(0)}% — {tooltip.agroData.daysToNextStage}j prochain stade</div>
+          <div className="agro-tt-row" style={{ whiteSpace: 'normal' }}>{tooltip.agroData.companionTip}</div>
+          {tooltip.agroData.diseaseAlert !== 'none' && (
+            <div className="agro-tt-disease" style={{ whiteSpace: 'normal' }}>{tooltip.agroData.diseaseMessage}</div>
+          )}
+        </div>,
+        document.body
+      )}
+
+
       <style>{`
-        .seed-rows-legend {
-          position: absolute;
-          top: 10px; right: 10px;
-          background: rgba(0,0,0,0.65);
-          backdrop-filter: blur(6px);
-          border-radius: 10px;
-          padding: 8px 12px;
-          display: flex; flex-direction: column; gap: 5px;
-          z-index: 10; pointer-events: none;
+        .garden-dims-bar{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:10px;padding:6px 12px;background:rgba(255,255,255,0.7);border-radius:8px;flex-wrap:wrap}
+        .dims-scale{color:#9f7aea;font-weight:700}
+        .dims-tool-active{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:2px 10px;border-radius:8px;font-weight:700;animation:pulse-tool 1.5s ease-in-out infinite}
+        @keyframes pulse-tool{0%,100%{opacity:1}50%{opacity:.65}}
+        .garden-scroll-wrapper{overflow:auto;max-width:100%;max-height:70vh;border-radius:12px;border:2px solid rgba(255,255,255,0.5);box-shadow:inset 0 2px 8px rgba(0,0,0,0.08)}
+        /* overflow:visible sur la grille elle-même pour que les tooltips sortent */
+        .garden-grid{overflow:visible!important}
+        .seed-rows-legend{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none}
+        .seed-row-legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#fff;font-weight:600}
+        .seed-row-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+        /* ── Badges agronomiques ── */
+        .agro-badges-grid{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);display:flex;gap:2px;align-items:center;z-index:8;white-space:nowrap}
+        .agro-badge{font-size:9px;padding:1px 3px;border-radius:4px;font-weight:700;line-height:1;cursor:default}
+        .badge-red{background:rgba(239,68,68,.85);color:#fff}
+        .badge-orange{background:rgba(249,115,22,.85);color:#fff}
+        .badge-blue{background:rgba(14,165,233,.75);color:#fff}
+        .badge-green{background:rgba(34,197,94,.8);color:#fff}
+        .badge-teal{background:rgba(20,184,166,.8);color:#fff}
+        .badge-yellow{background:rgba(234,179,8,.85);color:#000}
+        .badge-purple{background:rgba(168,85,247,.85);color:#fff}
+        .badge-ice{background:rgba(147,197,253,.85);color:#1e3a5f}
+        .gdd-mini-bar{width:26px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;overflow:hidden;align-self:center}
+        .gdd-mini-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#22c55e);border-radius:2px;transition:width .4s}
+
+        /* ── Tooltip survol ── */
+        .plant-sprite-container{position:absolute;overflow:visible}
+        .plant-sprite-container:hover{z-index:9999!important}
+        .plant-sprite-container:hover .agro-tooltip{opacity:1;pointer-events:none;transform:translateY(0)}
+        .agro-tooltip{opacity:0;transition:opacity .15s,transform .15s;transform:translateY(4px);
+          position:absolute;bottom:calc(100% + 10px);left:50%;translate:-50% 0;
+          background:rgba(10,20,35,.97);border:1px solid rgba(144,202,249,.35);
+          border-radius:10px;padding:9px 12px;font-size:10px;color:#e2e8f0;
+          min-width:170px;max-width:220px;z-index:9999;line-height:1.7;pointer-events:none;
+          box-shadow:0 12px 32px rgba(0,0,0,.7);white-space:nowrap}
+        .agro-tt-name{font-weight:800;font-size:11px;color:#90caf9;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:3px}
+        .agro-tt-row{display:flex;justify-content:space-between;gap:8px}
+        .agro-tt-save{color:#86efac;font-weight:700}
+        .agro-tt-sub{color:#94a3b8;font-size:9px;padding-left:4px}
+        .agro-tt-disease{margin-top:3px;color:#fca5a5;font-size:9px}
+
+        /* ── Tooltip portal (rendu dans document.body, jamais coupé) ── */
+        .agro-tooltip-portal{
+          position:fixed;z-index:99999;
+          transform:translate(-50%,-100%);
+          background:rgba(10,20,35,.97);border:1px solid rgba(144,202,249,.4);
+          border-radius:10px;padding:10px 13px;font-size:10px;color:#e2e8f0;
+          min-width:180px;max-width:240px;line-height:1.7;
+          box-shadow:0 16px 40px rgba(0,0,0,.75);
+          pointer-events:auto;
         }
-        .seed-row-legend-item {
-          display: flex; align-items: center; gap: 7px;
-          font-size: 11px; color: #fff; font-weight: 600;
-        }
-        .seed-row-legend-dot {
-          width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+        .agro-tooltip-portal::after{
+          content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+          border:6px solid transparent;border-top-color:rgba(144,202,249,.4);
         }
       `}</style>
     </div>
