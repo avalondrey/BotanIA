@@ -10,8 +10,9 @@ import { analyzeCompanions, COMPANION_BADGES, checkCompanionBadges } from './com
 const GROQ_API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
 const GROQ_MODEL   = 'llama-3.3-70b-versatile';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
-const OLLAMA_URL   = process.env.OLLAMA_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
+// Via proxy /api/agent/chat (évite CORS navigateur → localhost:11434)
+const OLLAMA_PROXY = '/api/agent/chat';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || process.env.OLLAMA_CHAT_MODEL || 'qwen2.5:7b';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -243,7 +244,7 @@ async function callGroq(prompt: string): Promise<string> {
 // ─── Appel Ollama local ───────────────────────────────────────────────────────
 
 async function callOllama(prompt: string): Promise<string> {
-  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+  const res = await fetch(OLLAMA_PROXY, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -252,11 +253,13 @@ async function callOllama(prompt: string): Promise<string> {
         { role: 'system', content: 'Expert maraîchage biologique. JSON uniquement.' },
         { role: 'user',   content: prompt },
       ],
-      stream: false,
       options: { temperature: 0.25, num_predict: 600 },
     }),
   });
-  if (!res.ok) throw new Error(`Ollama ${res.status}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(`Ollama proxy ${res.status}: ${err.error || res.statusText}`);
+  }
   const d = await res.json();
   return d.message?.content || '';
 }
@@ -375,7 +378,7 @@ Réponds en JSON strict :
       const d = await res.json();
       raw = d.choices?.[0]?.message?.content || '';
     } else {
-      const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+      const res = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -77,7 +77,7 @@ export function IAJardinier({ className = '' }: IAJardinierProps) {
         res = await Promise.race([
           getConseilQuotidien(ctx),
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('timeout')), 20000)
+            setTimeout(() => reject(new Error('timeout')), 120000)
           ),
         ]);
       } catch (err) {
