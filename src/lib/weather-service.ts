@@ -2,16 +2,21 @@
 export interface WeatherCurrent {
   temperature: number;
   weatherCode: number;
+  weatherEmoji: string;
+  weatherDescription: string;
   gameWeather: string;
   isRaining: boolean;
   windSpeed: number;
   humidity: number;
+  timestamp: number;
 }
 export interface WeatherToday {
   tempMax: number;
   tempMin: number;
   uvIndex: number;
   date: string;
+  /** Précipitations du jour en mm (Open-Meteo daily precipitation_sum) */
+  precipitationMm: number;
 }
 export type RealWeatherData = {
   current: WeatherCurrent;
@@ -40,6 +45,41 @@ const codeToGameWeather: Record<number, string> = {
 
 const rainCodes = new Set([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99]);
 
+function weatherCodeEmoji(code: number): string {
+  if (code === 0) return "☀️";
+  if (code === 1) return "🌤️";
+  if (code === 2) return "⛅";
+  if (code === 3) return "☁️";
+  if (code >= 45 && code <= 48) return "🌫️";
+  if (code >= 51 && code <= 55) return "🌧️";
+  if (code >= 56 && code <= 57) return "🌧️";
+  if (code >= 61 && code <= 65) return "🌧️";
+  if (code >= 66 && code <= 67) return "🌧️";
+  if (code >= 71 && code <= 77) return "🌨️";
+  if (code >= 80 && code <= 82) return "🌦️";
+  if (code >= 85 && code <= 86) return "🌨️";
+  if (code >= 95) return "⛈️";
+  return "🌈";
+}
+
+function weatherCodeDescription(code: number): string {
+  if (code === 0) return "Ciel dégagé";
+  if (code === 1) return "Partiellement dégagé";
+  if (code === 2) return "Partiellement nuageux";
+  if (code === 3) return "Couvert";
+  if (code >= 45 && code <= 48) return "Brouillard";
+  if (code >= 51 && code <= 55) return "Bruine";
+  if (code >= 56 && code <= 57) return "Bruine verglaçante";
+  if (code >= 61 && code <= 65) return "Pluie";
+  if (code >= 66 && code <= 67) return "Forte pluie";
+  if (code >= 71 && code <= 73) return "Neige";
+  if (code >= 75 && code <= 77) return "Fortes chutes de neige";
+  if (code >= 80 && code <= 82) return "Averses";
+  if (code >= 85 && code <= 86) return "Averses de neige";
+  if (code >= 95) return "Orage";
+  return "Variable";
+}
+
 let _cachedWeather: RealWeatherData | null = null;
 let _cacheTime = 0;
 const CACHE_MS = 15 * 60 * 1000;
@@ -48,32 +88,36 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
   const now = Date.now();
   if (_cachedWeather && now - _cacheTime < CACHE_MS) return _cachedWeather;
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${typeof lat === 'number' ? lat : (lat as any)?.latitude || 48.8566}&longitude=${typeof lon === 'number' ? lon : (lon as any)?.longitude || 2.3522}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum&hourly=relative_humidity_2m&timezone=auto`;
     const res = await fetch(url);
     const data = await res.json();
     const c = data.current_weather;
     const maxT = data.daily?.temperature_2m_max?.[0] ?? c.temperature;
     const minT = data.daily?.temperature_2m_min?.[0] ?? c.temperature;
     const uvIndex = data.daily?.uv_index_max?.[0] ?? 5;
+    const precipMm: number = data.daily?.precipitation_sum?.[0] ?? (rainCodes.has(c.weathercode) ? 3 : 0);
     const isRaining = rainCodes.has(c.weathercode);
     _cachedWeather = {
       current: {
         temperature: c.temperature,
         weatherCode: c.weathercode,
+        weatherEmoji: weatherCodeEmoji(c.weathercode),
+        weatherDescription: weatherCodeDescription(c.weathercode),
         gameWeather: codeToGameWeather[c.weathercode] || "sunny",
         isRaining,
         windSpeed: c.windspeed,
         humidity: data.current?.relative_humidity_2m ?? 60,
+        timestamp: Date.now(),
       },
-      today: { tempMax: maxT, tempMin: minT, uvIndex, date: new Date().toISOString().split("T")[0] },
+      today: { tempMax: maxT, tempMin: minT, uvIndex, date: new Date().toISOString().split("T")[0], precipitationMm: precipMm },
       description: "OK",
     };
     _cacheTime = now;
     return _cachedWeather;
   } catch {
     return {
-      current: { temperature: 20, weatherCode: 0, gameWeather: "sunny", isRaining: false, windSpeed: 10, humidity: 60 },
-      today: { tempMax: 25, tempMin: 15, uvIndex: 5, date: "" },
+      current: { temperature: 20, weatherCode: 0, weatherEmoji: "☀️", weatherDescription: "Ciel dégagé", gameWeather: "sunny", isRaining: false, windSpeed: 10, humidity: 60, timestamp: Date.now() },
+      today: { tempMax: 25, tempMin: 15, uvIndex: 5, date: "", precipitationMm: 0 },
       description: "Indisponible",
     };
   }
@@ -95,7 +139,9 @@ export function getRealEnvironment(data: RealWeatherData, zoneId: string) {
 
 export function getZonePrecipitation(data: RealWeatherData, zoneId: string): number {
   const zone = zoneId === "serre_tile" ? "serre" : zoneId === "garden" ? "jardin" : "pepiniere";
-  return (zone === "jardin" && data.current.isRaining) ? 1.0 : 0;
+  if (zone !== "jardin") return 0; // serre et pépinière = pas de pluie directe
+  // Retourne les mm réels du jour (depuis Open-Meteo daily precipitation_sum)
+  return data.today?.precipitationMm ?? (data.current.isRaining ? 3 : 0);
 }
 
 export function isFrostRisk(data: RealWeatherData): boolean {

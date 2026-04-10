@@ -6,7 +6,8 @@
 .garden-page-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3e6cb 100%);
-  padding: 20px;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -88,26 +89,30 @@
 
 .plan-view-container {
   position: relative;
-  min-height: 600px;
   background: linear-gradient(
-    135deg, 
-    #e8f5e9 0%, 
-    #c8e6c9 50%, 
+    135deg,
+    #e8f5e9 0%,
+    #c8e6c9 50%,
     #a5d6a7 100%
   );
   border-radius: 20px;
-  padding: 40px;
+  padding: 12px;
   box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* La grille est dimensionnée dynamiquement par GardenPlanView (width/height via store)
+   Le background-size suit DISPLAY_SCALE (50cm * 0.55 = 27.5px) */
 .garden-grid {
   position: relative;
-  min-height: 500px;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
-  background-size: 50px 50px;
-  border-radius: 12px;
+  /* width et height injectés inline depuis le composant */
+  background-image:
+    linear-gradient(rgba(255,255,255,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.25) 1px, transparent 1px);
+  background-size: 65px 65px; /* 1m * 0.65 scale */
+  border-radius: 8px;
+  background-color: rgba(139, 195, 74, 0.12);
 }
 
 .plant-sprite-container {
@@ -446,8 +451,26 @@
 }
 
 /* ═══════════════════════════════════════════════════════════ */
+
+.photo-mode-manga-filter {
+  filter: sepia(0.4) contrast(1.2) saturate(0.8) !important;
+  position: relative !important;
+}
+
+.photo-mode-manga-filter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background-image: radial-gradient(#000 1px, transparent 0);
+  background-size: 4px 4px;
+  opacity: 0.1;
+}
 /* SERRE ZONES (Greenhouse overlays on garden grid) */
 /* ═══════════════════════════════════════════════════════════ */
+
+
 
 .serre-zone-overlay {
   position: absolute;
@@ -494,17 +517,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════════ */
+
+
 /* PLACEMENT CONTROLS */
 /* ═══════════════════════════════════════════════════════════ */
 
-.placement-controls {
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
 
 .control-label {
   display: flex;
@@ -586,6 +603,8 @@
 
 /* ═══════════════════════════════════════════════════════════ */
 
+
+
 /* Responsive */
 @media (max-width: 768px) {
   .garden-header {
@@ -609,8 +628,12 @@
     height: 120px;
   }
 }/* ═══════════════════════════════════════════════════════════ */
+
+
 /* WEATHER EFFECTS (Soleil, Nuages, Pluie) */
 /* ═══════════════════════════════════════════════════════════ */
+
+
 
 .weather-effects-container {
   position: fixed;
@@ -769,9 +792,15 @@
 
 /* ═══════════════════════════════════════════════════════════ */
 
+
+
 /* ═══════════════════════════════════════════════════════════ */
+
+
 /* PLACEMENT TOOLS PANEL */
 /* ═══════════════════════════════════════════════════════════ */
+
+
 
 .placement-tools-panel {
   background: white;
@@ -929,3 +958,5 @@
 }
 
 /* ═══════════════════════════════════════════════════════════ */
+
+

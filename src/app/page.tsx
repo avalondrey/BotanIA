@@ -21,6 +21,8 @@ import { GardenJournalLunar } from "@/components/game/GardenJournalLunar";
 import DiseaseDetector from "@/components/game/DiseaseDetector";
 import { LunarCalendar } from "@/components/game/LunarCalendar";
 import { GardenSaveManager } from "@/components/game/GardenSaveManager";
+import WaterBudget from "@/components/game/WaterBudget";
+import { HologramEvolution } from "@/components/game/HologramEvolutionCard";
 import {
   fetchWeather,
   getGPSLocation,
@@ -29,13 +31,15 @@ import {
 } from "@/lib/weather-service";
 import {
   TreePine, ShoppingBag, Sprout, RefreshCw, MapPin, Loader2,
-  Warehouse, Home, ScanSearch, Moon, BookOpen, Scale, Bug, Save,
+  Warehouse, Home, ScanSearch, Moon, BookOpen, Scale, Bug, Save, Droplets, Leaf,
 } from "lucide-react";
 import HarvestParticles from "@/components/ui/HarvestParticles";
 import { useNightMode, useAutoSave } from "@/lib/use-effects";
 import { useSlotAutoSave } from "@/hooks/useSlotAutoSave";
 import { LiaInterface } from "@/components/agent/LiaInterface";
 import { LiaToggleButton } from "@/components/agent/LiaStatusIndicator";
+import { AgentInitializer } from "@/components/agent/AgentInitializer";
+import { loadAutoSave, hasAutoSave, getAllSlots } from "@/lib/save-manager";
 
 export default function GamePage() {
   const initGame = useGameStore((s) => s.initGame);
@@ -87,7 +91,29 @@ export default function GamePage() {
 
   // Initial setup
   useEffect(() => {
-    initGame();
+    async function setupGame() {
+      initGame();
+
+      // Check for saved game in IndexedDB
+      try {
+        const [autoSaveExists, allSlots] = await Promise.all([
+          hasAutoSave(),
+          getAllSlots(),
+        ]);
+
+        // Find the active slot (either auto-save or user-selected)
+        const activeSlot = allSlots.find(s => s.autoSaveEnabled) || allSlots[0];
+        if (activeSlot?.gameState) {
+          const loadGameState = useGameStore.getState().loadGameState;
+          const setActiveSlot = useGameStore.getState().setActiveSlot;
+          loadGameState(activeSlot.gameState);
+          setActiveSlot(activeSlot.slotId);
+        }
+      } catch (err) {
+        console.warn("No saved game found, starting fresh");
+      }
+    }
+    setupGame();
   }, [initGame]);
 
   // Load weather on mount
@@ -385,16 +411,31 @@ export default function GamePage() {
               <Save className="w-4 h-4" />
               💾 Sauvegardes
             </TabsTrigger>
+            <TabsTrigger
+              value="eau"
+              className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <Droplets className="w-4 h-4" />
+              💧 Eau
+            </TabsTrigger>
+            <TabsTrigger
+              value="croissance"
+              className="data-[state=active]:bg-lime-100 data-[state=active]:border-lime-300 border-2 border-transparent rounded-lg px-4 py-2 text-xs font-black uppercase gap-1.5"
+            >
+              <Leaf className="w-4 h-4" />
+              🌱 Croissance
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jardin" className="mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
-                <Jardin />
+            <div className="space-y-4">
+              <div className="border border-muted-foreground/20 rounded-lg p-2 bg-muted/10">
+                <div className="grid grid-cols-2 gap-2">
+                  <IAJardinier />
+                  <LiaInterface />
+                </div>
               </div>
-              <div className="lg:col-span-1">
-                <IAJardinier />
-              </div>
+              <Jardin />
             </div>
           </TabsContent>
 
@@ -433,6 +474,14 @@ export default function GamePage() {
           <TabsContent value="sauvegardes" className="mt-4">
             <GardenSaveManager />
           </TabsContent>
+
+          <TabsContent value="eau" className="mt-4">
+            <WaterBudget />
+          </TabsContent>
+
+          <TabsContent value="croissance" className="mt-4">
+            <HologramEvolution />
+          </TabsContent>
         </Tabs>
 
         {/* Footer AI Console */}
@@ -463,13 +512,11 @@ export default function GamePage() {
       {/* Admin Panel — rendered via portal to body (z-99999) */}
       <AdminPanel />
 
+      {/* Agent Initializer — vérifie Ollama + Qdrant au démarrage */}
+      <AgentInitializer />
+
       {/* Effets météo */}
       <WeatherEffects />
-
-      {/* Lia Chat Panel — Floating */}
-      <div className="fixed bottom-4 right-4 z-50 w-80">
-        <LiaInterface initialOpen={false} />
-      </div>
     </div>
   );
 }

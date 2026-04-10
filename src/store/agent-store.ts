@@ -62,6 +62,9 @@ interface AgentStore {
   pendingSuggestions: AgentSuggestion[];
   dismissedSuggestions: Set<string>;
 
+  // Missing sprites (detected client-side via img onError)
+  missingSprites: Set<string>;
+
   // Chat
   messages: LiaMessage[];
   isThinking: boolean;
@@ -79,6 +82,9 @@ interface AgentStore {
   addSuggestion(s: Omit<AgentSuggestion, 'id' | 'timestamp'>): void;
   dismissSuggestion(id: string): void;
   clearSuggestions(): void;
+
+  addMissingSprite(plantDefId: string): void;
+  clearMissingSprite(plantDefId?: string): void;
 
   addMessage(m: Omit<LiaMessage, 'id' | 'timestamp'>): void;
   clearMessages(): void;
@@ -104,6 +110,8 @@ export const useAgentStore = create<AgentStore>()(
       pendingNotifications: [],
       pendingSuggestions: [],
       dismissedSuggestions: new Set(),
+
+      missingSprites: new Set<string>(),
 
       messages: [],
       isThinking: false,
@@ -182,6 +190,21 @@ export const useAgentStore = create<AgentStore>()(
 
       clearSuggestions: () =>
         set({ pendingSuggestions: [], dismissedSuggestions: new Set() }),
+
+      // ─── Missing Sprite Actions ───────────────────────────────────────────
+
+      addMissingSprite: (plantDefId) =>
+        set((s) => ({
+          missingSprites: new Set([...s.missingSprites, plantDefId]),
+        })),
+
+      clearMissingSprite: (plantDefId) =>
+        set((s) => {
+          if (!plantDefId) return { missingSprites: new Set<string>() };
+          const next = new Set(s.missingSprites);
+          next.delete(plantDefId);
+          return { missingSprites: next };
+        }),
 
       // ─── Chat Actions ──────────────────────────────────────────────────
 

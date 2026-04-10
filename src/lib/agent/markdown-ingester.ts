@@ -156,7 +156,7 @@ export async function ingestMarkdown(
   const vector = await generateEmbedding(searchableText);
 
   // Upsert to Qdrant
-  await upsertPoint('botania_docs', path, vector, {
+  await upsertPoint('botania_docs', crypto.randomUUID(), vector, {
     path: scanned.path,
     title: scanned.title,
     category: scanned.category,

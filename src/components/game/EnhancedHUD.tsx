@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useGameStore } from "@/store/game-store";
 import { motion, AnimatePresence } from "framer-motion";
+import { captureElementAsDataUrl } from "@/lib/photo-mode";
 import {
   Moon, Volume2, VolumeX, Camera, Sun, Calendar,
   AlertTriangle, Droplets, Thermometer, Wind,
@@ -13,6 +14,7 @@ import {
   getLunarPhase,
   formatLunarDate,
   isLunarNodeDay,
+  getPlantingRecommendation,
 } from "@/lib/lunar-calendar";
 import {
   loadSoundConfig,
@@ -44,6 +46,7 @@ import {
   type PhotoMetadata,
 } from "@/lib/photo-mode";
 import { getAdvisorSuggestions, type AdvisorSuggestion } from "@/lib/ai-advisor";
+import { EcoGestureWidget } from "./EcoGestureWidget";
 
 // ═══ Sound Toggle ═══
 function SoundToggle() {
@@ -370,6 +373,7 @@ function PhotoModeWidget() {
   const [photos, setPhotos] = useState<PhotoMetadata[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [isMangaMode, setIsMangaMode] = useState(false);
   const day = useGameStore((s) => s.day);
   const season = useGameStore((s) => s.season);
   const score = useGameStore((s) => s.score);
@@ -384,16 +388,32 @@ function PhotoModeWidget() {
     loadPhotos_();
   }, [loadPhotos_]);
 
-  const takePhoto = () => {
-    const metadata = addPhoto({
-      day,
-      season,
-      plantCount: gardenPlants.length,
-      harvested,
-      score,
-    });
-    loadPhotos_();
-    playSound("click");
+  const takePhoto = async () => {
+    const gardenElement = document.querySelector('.garden-grid') as HTMLElement | null;
+    if (!gardenElement) return;
+
+    if (isMangaMode) {
+      gardenElement.classList.add('photo-mode-manga-filter');
+    }
+
+    const dataUrl = await captureElementAsDataUrl(gardenElement);
+
+    if (isMangaMode) {
+      gardenElement.classList.remove('photo-mode-manga-filter');
+    }
+
+    if (dataUrl) {
+      const metadata = addPhoto({
+        day,
+        season,
+        plantCount: gardenPlants.length,
+        harvested,
+        score,
+        dataUrl,
+      });
+      loadPhotos_();
+      playSound("click");
+    }
   };
 
   return (
@@ -426,6 +446,17 @@ function PhotoModeWidget() {
                 className="w-full py-2 px-3 bg-pink-500 text-white rounded-lg font-bold text-xs hover:bg-pink-600 transition-colors flex items-center justify-center gap-2"
               >
                 <Camera className="w-4 h-4" /> Prendre une photo
+              </button>
+
+              <button
+                onClick={() => setIsMangaMode(!isMangaMode)}
+                className={`w-full py-1.5 px-3 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 ${
+                  isMangaMode
+                    ? "bg-amber-500 text-white"
+                    : "bg-white border border-amber-300 text-amber-600 hover:bg-amber-50"
+                }`}
+              >
+                <span className="text-sm">🎨</span> Filtre Manga {isMangaMode ? "Activé" : "Désactivé"}
               </button>
 
               <button
@@ -488,8 +519,12 @@ function PhotoModeWidget() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {photos.slice().reverse().map((photo) => (
                       <div key={photo.id} className="border rounded-lg overflow-hidden bg-stone-50">
-                        <div className="aspect-video bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
-                          <span className="text-4xl">🏡</span>
+                        <div className="aspect-video bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center overflow-hidden">
+                          {photo.dataUrl ? (
+                            <img src={photo.dataUrl} alt="Garden snapshot" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-4xl">🏡</span>
+                          )}
                         </div>
                         <div className="p-2 text-[10px]">
                           <p className="font-bold">{formatPhotoDate(photo.timestamp)}</p>
@@ -573,6 +608,7 @@ export function EnhancedHUD() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <LunarWidget />
               <PhotoModeWidget />
+              <EcoGestureWidget />
             </div>
             <ForecastWidget />
             <AdvisorWidget />

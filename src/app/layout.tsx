@@ -49,6 +49,7 @@ export default function RootLayout({
       <link rel="manifest" href="/manifest.json" />
       <link rel="apple-touch-icon" href="/images/pepiniere/tomato/stage-4.png" />
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         <ServiceWorkerRegister />

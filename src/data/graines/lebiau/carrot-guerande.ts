@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 20, note: "Levee lente et irreguliere 15-25 jours" },
     firstLeaves: { days: 40, note: "Feuilles en rosette" },
     rootGrowth: { days: 60, note: "Racine commence a grossir" },

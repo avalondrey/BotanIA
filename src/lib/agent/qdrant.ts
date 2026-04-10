@@ -134,7 +134,7 @@ export async function listCollections(): Promise<QdrantCollection[]> {
  */
 export async function upsertPoint(
   collectionName: string,
-  id: string,
+  id: string | number,
   vector: number[],
   payload: Record<string, unknown>
 ): Promise<void> {
@@ -286,7 +286,7 @@ export async function getCollectionInfo(
   if (!response.ok) throw new Error(`Qdrant info failed: ${response.statusText}`);
   const data = await response.json();
   return {
-    count: data.result?.vectors_count ?? 0,
+    count: data.result?.points_count ?? 0,
     status: data.result?.status ?? 'unknown',
   };
 }

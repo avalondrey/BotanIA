@@ -87,6 +87,7 @@ export const Jardin: React.FC = () => {
               editMode={editMode}
               onToolUsed={() => setActiveTool('none')}
               onSelectElement={(type, id) => setSelectedInfo({ type, id })}
+              onEditModeChange={setEditMode}
             />
           </motion.div>
         )}

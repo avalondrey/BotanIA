@@ -1,7 +1,8 @@
 {
-  "name": "nextjs_tailwind_shadcn_ts",
-  "version": "0.2.0",
+  "name": "botania",
+  "version": "0.12.1",
   "private": true,
+  "description": "Application de jardinage botanique scientifique — données agronomiques INRAE, FAO, GNIS",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
@@ -13,6 +14,8 @@
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@builder.io/react": "^9.3.0",
+    "@builder.io/sdk": "^6.3.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -57,6 +60,7 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.38.0",
     "groq-sdk": "^1.1.2",
+    "idb": "^8.0.3",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.525.0",
     "next": "^16.1.1",

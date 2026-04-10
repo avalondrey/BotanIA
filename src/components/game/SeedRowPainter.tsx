@@ -1,178 +1,440 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoStore } from '@/store/photo-store';
 import { getBestGPS } from '@/lib/gps-extractor';
+import { useGameStore } from '@/store/game-store';
 
+// ─── Types ─────────────────────────────────────────────────────────────────────
 export interface SeedRow {
-  id: string; color: string;
+  id: string;
+  color: string;
+  label?: string;
   points: { x: number; y: number }[];
-  label?: string; createdAt: number;
+  plantDefId?: string;   // Type de plante
+  plantCount?: number;   // Nombre de plants
 }
 
-interface Props { onRowsChange?: (rows: SeedRow[]) => void; }
+interface SeedRowPainterProps {
+  onRowsChange?: (rows: SeedRow[]) => void;
+}
 
+interface DrawingPoint {
+  x: number;
+  y: number;
+}
+
+// ─── Palette de couleurs ───────────────────────────────────────────────────────
 const COLORS = [
-  { hex: '#FF9500', name: 'Orange' }, { hex: '#FF2D87', name: 'Rose' },
-  { hex: '#1C1C1E', name: 'Noir' },  { hex: '#FFD60A', name: 'Jaune' },
-  { hex: '#30D158', name: 'Vert' },  { hex: '#0A84FF', name: 'Bleu' },
-  { hex: '#FFFFFF', name: 'Blanc' }, { hex: '#FF453A', name: 'Rouge' },
+  { id: 'red', name: 'Rouge', hex: '#FF6B6B', emoji: '🔴' },
+  { id: 'blue', name: 'Bleu', hex: '#4DABF7', emoji: '🔵' },
+  { id: 'green', name: 'Vert', hex: '#51CF66', emoji: '🟢' },
+  { id: 'yellow', name: 'Jaune', hex: '#FFD43B', emoji: '🟡' },
+  { id: 'purple', name: 'Violet', hex: '#CC5DE8', emoji: '🟣' },
+  { id: 'orange', name: 'Orange', hex: '#FF922B', emoji: '🟠' },
+  { id: 'pink', name: 'Rose', hex: '#FF6BD5', emoji: '🩷' },
+  { id: 'white', name: 'Blanc', hex: '#F8F9FA', emoji: '⚪' },
+  { id: 'empty', name: 'Vide', hex: '#6C757D', emoji: '❌' }, // Nouveau marqueur
 ];
 
-function uid() { return Math.random().toString(36).slice(2, 9); }
+// ─── Plantes disponibles pour synchronisation ──────────────────────────────────
+const AVAILABLE_PLANTS = [
+  { id: 'tomato', name: 'Tomate', emoji: '🍅' },
+  { id: 'pepper', name: 'Poivron', emoji: '🫑' },
+  { id: 'lettuce', name: 'Laitue', emoji: '🥬' },
+  { id: 'carrot', name: 'Carotte', emoji: '🥕' },
+  { id: 'basil', name: 'Basilic', emoji: '🌿' },
+  { id: 'strawberry', name: 'Fraise', emoji: '🍓' },
+];
 
-function getPos(e: React.PointerEvent<HTMLCanvasElement>, c: HTMLCanvasElement) {
-  const r = c.getBoundingClientRect();
-  return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
-}
-
-function drawAllRows(
-  ctx: CanvasRenderingContext2D, rows: SeedRow[], w: number, h: number,
-  cur?: { color: string; points: { x: number; y: number }[] } | null
-) {
-  ctx.clearRect(0, 0, w, h);
-  const all = cur ? [...rows, { id: '__c', color: cur.color, points: cur.points, createdAt: 0 }] : rows;
-  for (const row of all) {
-    if (row.points.length < 2) continue;
-    ctx.beginPath(); ctx.strokeStyle = row.color; ctx.lineWidth = 4;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.shadowColor = row.color; ctx.shadowBlur = 10;
-    ctx.moveTo(row.points[0].x * w, row.points[0].y * h);
-    for (let i = 1; i < row.points.length; i++)
-      ctx.lineTo(row.points[i].x * w, row.points[i].y * h);
-    ctx.stroke(); ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.arc(row.points[0].x * w, row.points[0].y * h, 6, 0, Math.PI * 2);
-    ctx.fillStyle = row.color; ctx.fill();
-  }
-}
-
-export default function SeedRowPainter({ onRowsChange }: Props) {
+export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
+  const photos = usePhotoStore(s => s.photos);
   const addPhoto = usePhotoStore(s => s.addPhoto);
+  const updatePhoto = usePhotoStore(s => s.updatePhoto);
+  const deletePhoto = usePhotoStore(s => s.deletePhoto);
 
-  const [rows, setRows] = useState<SeedRow[]>([]);
-  const [activeColor, setActiveColor] = useState(COLORS[0].hex);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [cur, setCur] = useState<{ color: string; points: { x: number; y: number }[] } | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoId, setPhotoId] = useState<string | null>(null);
+  const [gps, setGps] = useState<any>(null);
+  const [gpsStatus, setGpsStatus] = useState<'idle'|'loading'|'found'|'none'>('idle');
+  const [rows, setRows] = useState<SeedRow[]>([]);
+  const [currentColor, setCurrentColor] = useState(COLORS[0].hex);
+  const [currentPoints, setCurrentPoints] = useState<DrawingPoint[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [mode, setMode] = useState<'photo' | 'camera'>('photo');
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingRow, setPendingRow] = useState<SeedRow | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editingRow, setEditingRow] = useState<string | null>(null);
   const [rowLabel, setRowLabel] = useState('');
-  const [gps, setGps] = useState<{ lat: number; lon: number; source: string } | null>(null);
-  const [gpsStatus, setGpsStatus] = useState<'idle' | 'loading' | 'found' | 'none'>('idle');
-  const [savedToStore, setSavedToStore] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  
+  // States pour synchronisation jardin
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncConfig, setSyncConfig] = useState<Record<string, { plantDefId: string; plantCount: number }>>({});
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // ─── Éteindre la caméra au unmount ──────────────────────────────────────────────
   useEffect(() => {
-    const c = canvasRef.current; if (!c) return;
-    const ctx = c.getContext('2d'); if (!ctx) return;
-    drawAllRows(ctx, rows, c.width, c.height, cur);
-  }, [rows, cur]);
+    return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
+  }, []);
 
-  useEffect(() => { onRowsChange?.(rows); }, [rows]);
-  useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()); }, []);
-
-  // ── GPS extraction sur import photo ──
-  const extractGPS = async (url: string) => {
-    setGpsStatus('loading');
-    const result = await getBestGPS(url);
-    if (result) { setGps({ lat: result.lat, lon: result.lon, source: result.source }); setGpsStatus('found'); }
-    else setGpsStatus('none');
+  // ─── Gestion photo ─────────────────────────────────────────────────────────────
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const url = ev.target?.result as string;
+      setPhotoUrl(url);
+      setMode('photo');
+      setGpsStatus('loading');
+      const gpsResult = await getBestGPS(url);
+      const gpsData = gpsResult ? { lat: gpsResult.lat, lon: gpsResult.lon, source: gpsResult.source } : undefined;
+      setGps(gpsData);
+      setGpsStatus(gpsData ? 'found' : 'none');
+      const id = addPhoto({ dataUrl: url, gps: gpsData as any, source: 'jardin' });
+      setPhotoId(id);
+    };
+    reader.readAsDataURL(f);
   };
 
-  // ── Caméra ──
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
-      setMode('camera'); setPhotoUrl(null);
-    } catch { alert('Caméra inaccessible. Utilisez "Choisir une photo".'); }
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setMode('camera');
+    } catch {
+      alert('Caméra inaccessible.');
+    }
   };
 
   const captureCamera = () => {
     const v = videoRef.current;
     const c = document.createElement('canvas');
-    c.width = v?.videoWidth || 640; c.height = v?.videoHeight || 360;
+    c.width = v?.videoWidth || 640;
+    c.height = v?.videoHeight || 360;
     c.getContext('2d')?.drawImage(v!, 0, 0);
     const url = c.toDataURL('image/jpeg', 0.85);
-    setPhotoUrl(url); streamRef.current?.getTracks().forEach(t => t.stop()); setMode('photo');
-    extractGPS(url); setSavedToStore(false);
-  };
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      const url = ev.target?.result as string;
-      setPhotoUrl(url); setRows([]); setSavedToStore(false);
-      extractGPS(url);
-    };
-    r.readAsDataURL(f);
-  };
-
-
-  // ── Drawing ──
-  const onDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); if (!canvasRef.current) return;
-    setIsDrawing(true); setCur({ color: activeColor, points: [getPos(e, canvasRef.current)] });
-  }, [activeColor]);
-
-  const onMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !cur || !canvasRef.current) return; e.preventDefault();
-    setCur(p => p ? { ...p, points: [...p.points, getPos(e, canvasRef.current!)] } : null);
-  }, [isDrawing, cur]);
-
-  const onUp = useCallback(() => {
-    if (!isDrawing || !cur) return; setIsDrawing(false);
-    if (cur.points.length >= 2) {
-      setPendingRow({ id: uid(), color: cur.color, points: cur.points, createdAt: Date.now() });
-      setRowLabel(''); setShowConfirm(true);
-    }
-    setCur(null);
-  }, [isDrawing, cur]);
-
-  const confirmRow = () => {
-    if (!pendingRow) return;
-    setRows(p => [...p, { ...pendingRow, label: rowLabel || `Rang ${p.length + 1}` }]);
-    setShowConfirm(false); setPendingRow(null); setSavedToStore(false);
-  };
-
-  // ── Sauvegarder vers le photo store (Jardin → Identificateur) ──
-  const saveToStore = () => {
-    if (!photoUrl) return;
-    addPhoto({
-      dataUrl: photoUrl,
-      gps: gps ? { lat: gps.lat, lon: gps.lon, source: gps.source as any } : undefined,
-      seedRows: rows,
-      source: 'jardin',
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    setPhotoUrl(url);
+    setMode('photo');
+    getBestGPS(url).then(gpsResult => {
+      const gpsData = gpsResult ? { lat: gpsResult.lat, lon: gpsResult.lon, source: gpsResult.source } : undefined;
+      setGps(gpsData);
+      setGpsStatus(gpsData ? 'found' : 'none');
+      const id = addPhoto({ dataUrl: url, gps: gpsData as any, source: 'jardin' });
+      setPhotoId(id);
     });
-    setSavedToStore(true);
   };
 
-  const clearAll = () => { setRows([]); setPhotoUrl(null); setGps(null); setGpsStatus('idle'); setSavedToStore(false); };
+  // ─── Dessin sur canvas ──────────────────────────────────────────────────────────
+  const redrawCanvas = () => {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    if (!canvas || !img) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+
+    // Dessiner tous les rangs
+    rows.forEach(row => {
+      if (row.points.length < 2) return;
+      ctx.strokeStyle = row.color;
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(row.points[0].x, row.points[0].y);
+      row.points.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+    });
+
+    // Dessiner le trait en cours
+    if (currentPoints.length > 0) {
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(currentPoints[0].x, currentPoints[0].y);
+      currentPoints.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+    }
+  };
+
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    setIsDrawing(true);
+    setCurrentPoints([{ x, y }]);
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    setCurrentPoints(prev => [...prev, { x, y }]);
+  };
+
+  const handleCanvasMouseUp = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    if (currentPoints.length > 1) {
+      const newRow: SeedRow = {
+        id: Math.random().toString(36).slice(2, 9),
+        color: currentColor,
+        points: currentPoints,
+      };
+      setRows(prev => {
+        const updated = [...prev, newRow];
+        onRowsChange?.(updated);
+        return updated;
+      });
+    }
+    setCurrentPoints([]);
+  };
+
+  // ─── Touch support ──────────────────────────────────────────────────────────────
+  const handleCanvasTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const touch = e.touches[0];
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+    setIsDrawing(true);
+    setCurrentPoints([{ x, y }]);
+  };
+
+  const handleCanvasTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const touch = e.touches[0];
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+    setCurrentPoints(prev => [...prev, { x, y }]);
+  };
+
+  const handleCanvasTouchEnd = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    if (currentPoints.length > 1) {
+      const newRow: SeedRow = {
+        id: Math.random().toString(36).slice(2, 9),
+        color: currentColor,
+        points: currentPoints,
+      };
+      setRows(prev => {
+        const updated = [...prev, newRow];
+        onRowsChange?.(updated);
+        return updated;
+      });
+    }
+    setCurrentPoints([]);
+  };
+
+  // Redessiner à chaque changement de rows / photoUrl
+  useEffect(() => {
+    if (canvasRef.current && imgRef.current) redrawCanvas();
+  }, [rows, photoUrl]);
+
+  const clearAll = () => {
+    if (!confirm('Effacer la photo et tous les rangs ?')) return;
+    setPhotoUrl(null);
+    const emptyRows: SeedRow[] = [];
+    setRows(emptyRows);
+    onRowsChange?.(emptyRows);
+    setGps(null);
+    setGpsStatus('idle');
+    setCurrentPoints([]);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+    }
+  };
+
+  const saveToPhotoStore = () => {
+    if (!photoUrl || !photoId) return;
+    updatePhoto(photoId, { seedRows: rows });
+    alert(`✅ Rangs sauvegardés !\n\n${rows.length} rang(s) tracé(s).`);
+    setShowModal(false);
+  };
+
+  const deleteRow = (id: string) => {
+    const updated = rows.filter(r => r.id !== id);
+    setRows(updated);
+    onRowsChange?.(updated);
+  };
+
+  const openRowEditor = (rowId: string) => {
+    const row = rows.find(r => r.id === rowId);
+    if (!row) return;
+    setEditingRow(rowId);
+    setRowLabel(row.label || '');
+  };
+
+  const saveRowLabel = () => {
+    if (!editingRow) return;
+    const updated = rows.map(r => r.id === editingRow ? { ...r, label: rowLabel } : r);
+    setRows(updated);
+    onRowsChange?.(updated);
+    setEditingRow(null);
+    setRowLabel('');
+  };
+
+  // ─── Synchronisation vers jardin ────────────────────────────────────────────────
+  const openSyncModal = () => {
+    // Initialiser syncConfig avec les rangs actuels
+    const initialConfig: Record<string, { plantDefId: string; plantCount: number }> = {};
+    rows.forEach(row => {
+      initialConfig[row.id] = {
+        plantDefId: row.plantDefId || 'tomato',
+        plantCount: row.plantCount || 5
+      };
+    });
+    setSyncConfig(initialConfig);
+    setShowSyncModal(true);
+  };
+
+  const updateSyncConfig = (rowId: string, field: 'plantDefId' | 'plantCount', value: string | number) => {
+    setSyncConfig(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [field]: value
+      }
+    }));
+  };
+
+  const syncToGarden = () => {
+    const createDigitalTwin = (useGameStore.getState() as any).createDigitalTwinInGarden;
+    if (!createDigitalTwin) {
+      alert('❌ Fonction non disponible.\n\nVeuillez mettre à jour game-store.ts.');
+      return;
+    }
+
+    let totalPlaced = 0;
+    let totalFailed = 0;
+    const startX = 100; // Position de départ
+    let currentX = startX;
+    const spacing = 80; // Espacement entre colonnes
+
+    rows.forEach((row, rowIndex) => {
+      const config = syncConfig[row.id];
+      if (!config || row.color === COLORS.find(c => c.id === 'empty')?.hex) return;
+
+      const { plantDefId, plantCount } = config;
+      const startY = 100;
+      const plantSpacing = 60;
+
+      for (let i = 0; i < plantCount; i++) {
+        const y = startY + (i * plantSpacing);
+        const result = createDigitalTwin(plantDefId, currentX, y, {
+          plantName: AVAILABLE_PLANTS.find(p => p.id === plantDefId)?.name || 'Plante',
+          confidence: 0.9,
+          growthStage: { stage: 1, estimatedAge: 7 },
+          healthStatus: { isHealthy: true, diseaseName: 'Sain' }
+        });
+
+        if (result.success) {
+          totalPlaced++;
+        } else {
+          totalFailed++;
+        }
+      }
+
+      currentX += spacing; // Passer à la colonne suivante
+    });
+
+    setShowSyncModal(false);
+    
+    alert(`✅ Synchronisation terminée !\n\n🌱 ${totalPlaced} plants placés\n${totalFailed > 0 ? `⚠️ ${totalFailed} échecs` : ''}\n\nRetrouve tes plants dans Jardin → Vue Plan !`);
+  };
+
+  // ─── Statistiques ───────────────────────────────────────────────────────────────
+  const totalPlants = rows.reduce((sum, r) => sum + (r.plantCount || 0), 0);
+  const emptySlots = rows.filter(r => r.color === COLORS.find(c => c.id === 'empty')?.hex).length;
 
   return (
     <div className="sp-wrap">
       {/* Header */}
-      <div className="sp-head">
-        <h2 className="sp-title">📸 Marquer vos semences</h2>
-        <p className="sp-sub">Photo + GPS + rangs colorés → Identificateur IA</p>
+      <div className="sp-header">
+        <div>
+          <h2 className="sp-title">🏷️ GrainTag - Marquage Photos</h2>
+          <p className="sp-sub">Marquez vos plants/semences • Comptez • Synchronisez</p>
+        </div>
+        <div className="sp-stats">
+          {rows.length} rang{rows.length !== 1 ? 's' : ''}
+        </div>
+      </div>
+
+      {/* Aide dépliable */}
+      <div className="sp-help-section">
+        <button className="sp-help-toggle" onClick={() => setShowHelp(!showHelp)}>
+          📖 Mode d'emploi {showHelp ? '▼' : '▶'}
+        </button>
+        {showHelp && (
+          <div className="sp-help-content">
+            <p><strong>Prenez une photo</strong> de votre jardin ou mini serre</p>
+            <p><strong>Choisissez une couleur</strong> dans la palette (ou ❌ pour marquer un emplacement vide)</p>
+            <p><strong>Tracez un trait</strong> sur chaque rangée de plants avec votre doigt</p>
+            <p><strong>Sélectionnez le type de plante</strong> et indiquez le nombre de plants</p>
+            <p><strong>Synchronisez</strong> avec la grille du jardin ou les mini serres</p>
+            <p className="sp-help-hint">💡 Astuce : Le marqueur ❌ permet de compter les emplacements vides</p>
+          </div>
+        )}
       </div>
 
       {/* Boutons source */}
       <div className="sp-bar">
-        <button className="sp-btn sp-primary" onClick={() => fileRef.current?.click()}>🖼️ Photo</button>
-        <button className="sp-btn sp-secondary" onClick={startCamera}>📷 Caméra</button>
-        {photoUrl && <button className="sp-btn sp-danger" onClick={clearAll}>🗑️ Effacer</button>}
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
+        <button className="sp-btn sp-primary" onClick={() => fileRef.current?.click()}>
+          🖼️ Photo
+        </button>
+        <button className="sp-btn sp-secondary" onClick={startCamera}>
+          📷 Caméra
+        </button>
+        {photoUrl && (
+          <button className="sp-btn sp-danger" onClick={clearAll}>
+            🗑️ Effacer
+          </button>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={handleFile}
+        />
       </div>
 
       {/* Badge GPS */}
@@ -184,140 +446,339 @@ export default function SeedRowPainter({ onRowsChange }: Props) {
         </div>
       )}
 
+      {/* Statistiques */}
+      {rows.length > 0 && (
+        <div className="sp-stats-panel">
+          <div className="sp-stat-item">
+            <span className="sp-stat-emoji">🌱</span>
+            <span className="sp-stat-label">{totalPlants} plants</span>
+          </div>
+          <div className="sp-stat-item">
+            <span className="sp-stat-emoji">❌</span>
+            <span className="sp-stat-label">{emptySlots} vides</span>
+          </div>
+        </div>
+      )}
+
       {/* Caméra live */}
       {mode === 'camera' && (
         <div className="sp-cam-wrap">
           <video ref={videoRef} className="sp-video" playsInline muted />
           <button className="sp-capture" onClick={captureCamera}>⚪</button>
+          <button className="sp-cam-close" onClick={() => {
+            streamRef.current?.getTracks().forEach(t => t.stop());
+            setMode('photo');
+          }}>✕</button>
         </div>
       )}
 
-      {/* Zone canvas */}
+      {/* Canvas de dessin */}
       {photoUrl && mode === 'photo' && (
-        <div className="sp-canvas-zone">
-          <img src={photoUrl} alt="Jardin" className="sp-bg" draggable={false} />
-          <canvas ref={canvasRef} className="sp-canvas" width={800} height={450}
-            onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp}
-            style={{ touchAction: 'none' }} />
-          {rows.length === 0 && !isDrawing && (
-            <div className="sp-hint">✏️ Tracez un rang sur la photo</div>
-          )}
+        <div className="sp-canvas-wrap">
+          <img
+            ref={imgRef}
+            src={photoUrl}
+            alt="Photo jardin"
+            className="sp-photo"
+            style={{ display: 'none' }}
+            onLoad={redrawCanvas}
+          />
+          <canvas
+            ref={canvasRef}
+            className="sp-canvas"
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={handleCanvasMouseUp}
+            onTouchStart={handleCanvasTouchStart}
+            onTouchMove={handleCanvasTouchMove}
+            onTouchEnd={handleCanvasTouchEnd}
+          />
         </div>
       )}
 
-      {/* Placeholder */}
-      {!photoUrl && mode === 'photo' && (
-        <div className="sp-placeholder" onClick={() => fileRef.current?.click()}>
-          <div style={{ fontSize: 48 }}>🌱</div>
-          <p>Choisir une photo de votre jardin</p>
-          <p className="sp-placeholder-sub">ou utilisez la caméra pour capturer avec GPS</p>
-        </div>
-      )}
-
-      {/* Palette */}
-      {photoUrl && (
+      {/* Palette de couleurs */}
+      {photoUrl && mode === 'photo' && (
         <div className="sp-palette">
-          {COLORS.map(c => (
-            <button key={c.hex} className={`sp-color ${activeColor === c.hex ? 'sp-color-active' : ''}`}
-              style={{ background: c.hex }} onClick={() => setActiveColor(c.hex)} title={c.name} />
-          ))}
-          <span style={{ marginLeft: 'auto', fontSize: 22 }}>🎨</span>
-        </div>
-      )}
-
-
-      {/* Liste rangs */}
-      {rows.length > 0 && (
-        <div className="sp-rows">
-          <div className="sp-rows-title">🌾 Rangs tracés ({rows.length})</div>
-          {rows.map((r, i) => (
-            <motion.div key={r.id} className="sp-row-item" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-              <div className="sp-row-dot" style={{ background: r.color }} />
-              <span className="sp-row-lbl">{r.label || `Rang ${i + 1}`}</span>
-              <button className="sp-row-del" onClick={() => setRows(p => p.filter(x => x.id !== r.id))}>✕</button>
-            </motion.div>
-          ))}
-
-          {/* Boutons d'action */}
-          <div className="sp-actions">
-            <button className="sp-btn sp-sync" onClick={() => onRowsChange?.(rows)}>
-              🗺️ Sync grille jardin
-            </button>
-            <button
-              className={`sp-btn ${savedToStore ? 'sp-saved' : 'sp-identify'}`}
-              onClick={saveToStore}
-              disabled={savedToStore}
-            >
-              {savedToStore ? '✅ Envoyé à l\'Identificateur' : '🔍 Envoyer à l\'Identificateur'}
-            </button>
+          <div className="sp-palette-label">🎨 Couleur :</div>
+          <div className="sp-palette-grid">
+            {COLORS.map(c => (
+              <button
+                key={c.id}
+                className={`sp-color-btn ${currentColor === c.hex ? 'sp-color-active' : ''}`}
+                style={{ background: c.hex }}
+                onClick={() => setCurrentColor(c.hex)}
+                title={c.name}
+              >
+                {c.emoji}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Modale nommer rang */}
+      {/* Liste des rangs */}
+      {rows.length > 0 && (
+        <div className="sp-rows-list">
+          <div className="sp-rows-header">
+            <span>📊 {rows.length} rang{rows.length !== 1 ? 's' : ''} tracé{rows.length !== 1 ? 's' : ''}</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="sp-sync-btn" onClick={openSyncModal} title="Synchroniser avec le jardin virtuel">
+                🌱 Sync Jardin
+              </button>
+              <button className="sp-save-btn" onClick={() => setShowModal(true)}>
+                💾 Sauvegarder
+              </button>
+            </div>
+          </div>
+          {rows.map((row, idx) => (
+            <div key={row.id} className="sp-row-item">
+              <div className="sp-row-color" style={{ background: row.color }} />
+              <div className="sp-row-info">
+                <span className="sp-row-name">
+                  {row.label || `Rang ${idx + 1}`}
+                  {row.plantCount && <span className="sp-row-count"> ({row.plantCount} plants)</span>}
+                </span>
+                <span className="sp-row-pts">{row.points.length} points</span>
+              </div>
+              <button className="sp-row-edit" onClick={() => openRowEditor(row.id)}>✏️</button>
+              <button className="sp-row-delete" onClick={() => deleteRow(row.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modale d'édition de rang */}
       <AnimatePresence>
-        {showConfirm && pendingRow && (
-          <motion.div className="sp-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div className="sp-modal" initial={{ scale: 0.85 }} animate={{ scale: 1 }} exit={{ scale: 0.85 }}>
-              <div className="sp-modal-head">
-                <div className="sp-modal-dot" style={{ background: pendingRow.color }} />
-                <span>Nommer ce rang</span>
+        {editingRow && (
+          <motion.div
+            className="sp-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setEditingRow(null)}
+          >
+            <motion.div
+              className="sp-modal"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="sp-modal-close" onClick={() => setEditingRow(null)}>✕</button>
+              <h3 className="sp-modal-title">✏️ Éditer le rang</h3>
+              <div className="sp-modal-field">
+                <label className="sp-modal-label">Nom du rang</label>
+                <input
+                  type="text"
+                  className="sp-modal-input"
+                  value={rowLabel}
+                  onChange={(e) => setRowLabel(e.target.value)}
+                  placeholder="Ex: Tomates"
+                />
               </div>
-              <input className="sp-modal-input" placeholder="Ex: Carottes, Tomates..." value={rowLabel}
-                onChange={e => setRowLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && confirmRow()} autoFocus />
-              <div className="sp-modal-btns">
-                <button className="sp-btn sp-secondary" onClick={() => setShowConfirm(false)}>Annuler</button>
-                <button className="sp-btn sp-primary" onClick={confirmRow}>✓ Ajouter</button>
-              </div>
+              <button className="sp-modal-save" onClick={saveRowLabel}>
+                ✅ Sauvegarder
+              </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Modale de sauvegarde */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            className="sp-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowModal(false)}
+          >
+            <motion.div
+              className="sp-modal"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="sp-modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3 className="sp-modal-title">💾 Sauvegarder les rangs</h3>
+              <p className="sp-modal-text">
+                {rows.length} rang{rows.length !== 1 ? 's' : ''} tracé{rows.length !== 1 ? 's' : ''}
+              </p>
+              {gps && (
+                <div className="sp-modal-gps">
+                  📍 GPS: {gps.lat.toFixed(5)}°, {gps.lon.toFixed(5)}°
+                </div>
+              )}
+              <button className="sp-modal-save" onClick={saveToPhotoStore}>
+                ✅ Confirmer
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Modale de synchronisation jardin */}
+      <AnimatePresence>
+        {showSyncModal && (
+          <motion.div
+            className="sp-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSyncModal(false)}
+          >
+            <motion.div
+              className="sp-modal sp-modal-wide"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="sp-modal-close" onClick={() => setShowSyncModal(false)}>✕</button>
+              <h3 className="sp-modal-title">🌱 Synchroniser avec le Jardin</h3>
+              <p className="sp-modal-text">Configure chaque rang avant import dans le jardin virtuel</p>
+              
+              <div className="sp-sync-list">
+                {rows.map((row, idx) => {
+                  const config = syncConfig[row.id] || { plantDefId: 'tomato', plantCount: 5 };
+                  const isEmpty = row.color === COLORS.find(c => c.id === 'empty')?.hex;
+                  
+                  return (
+                    <div key={row.id} className={`sp-sync-row ${isEmpty ? 'sp-sync-row-disabled' : ''}`}>
+                      <div className="sp-sync-row-header">
+                        <div className="sp-sync-row-color" style={{ background: row.color }} />
+                        <span className="sp-sync-row-label">{row.label || `Rang ${idx + 1}`}</span>
+                        {isEmpty && <span className="sp-sync-empty-badge">❌ Vide</span>}
+                      </div>
+                      
+                      {!isEmpty && (
+                        <div className="sp-sync-row-config">
+                          <div className="sp-sync-field">
+                            <label className="sp-sync-label">Type de plante</label>
+                            <select
+                              className="sp-sync-select"
+                              value={config.plantDefId}
+                              onChange={(e) => updateSyncConfig(row.id, 'plantDefId', e.target.value)}
+                            >
+                              {AVAILABLE_PLANTS.map(plant => (
+                                <option key={plant.id} value={plant.id}>
+                                  {plant.emoji} {plant.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="sp-sync-field sp-sync-field-small">
+                            <label className="sp-sync-label">Nombre</label>
+                            <input
+                              type="number"
+                              className="sp-sync-input"
+                              min="1"
+                              max="20"
+                              value={config.plantCount}
+                              onChange={(e) => updateSyncConfig(row.id, 'plantCount', parseInt(e.target.value) || 1)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="sp-sync-info">
+                💡 Les plants seront placés en colonnes dans votre jardin virtuel
+              </div>
+
+              <button className="sp-modal-save" onClick={syncToGarden}>
+                🌱 Importer dans le Jardin
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Styles */}
       <style>{`
-        .sp-wrap{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);border-radius:20px;padding:20px;color:#fff;font-family:system-ui,sans-serif;position:relative;}
-        .sp-head{margin-bottom:14px}.sp-title{font-size:19px;font-weight:800;margin:0 0 3px}.sp-sub{font-size:12px;color:#aaa;margin:0}
-        .sp-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+        .sp-wrap{min-height:60vh;background:linear-gradient(135deg,#0d1117,#111827,#1a1a2e);color:#fff;padding:20px;font-family:system-ui,sans-serif;border-radius:16px}
+        .sp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+        .sp-title{font-size:22px;font-weight:800;margin:0 0 3px}
+        .sp-sub{font-size:12px;color:#888;margin:0}
+        .sp-stats{background:rgba(255,255,255,.1);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
+        .sp-help-section{margin-bottom:14px}
+        .sp-help-toggle{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ccc;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .2s}
+        .sp-help-toggle:hover{background:rgba(255,255,255,.08)}
+        .sp-help-content{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;margin-top:8px;font-size:12px;line-height:1.8;color:#aaa}
+        .sp-help-content p{margin:6px 0}
+        .sp-help-content strong{color:#FFD60A;font-weight:700}
+        .sp-help-hint{color:#30D158;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05)}
+        .sp-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
         .sp-btn{padding:9px 16px;border-radius:11px;font-weight:700;font-size:12px;border:none;cursor:pointer;transition:all .2s}
         .sp-btn:active{transform:scale(.95)}
-        .sp-primary{background:#30D158;color:#fff}.sp-primary:hover{background:#25a645}
-        .sp-secondary{background:rgba(255,255,255,.15);color:#fff}.sp-secondary:hover{background:rgba(255,255,255,.25)}
-        .sp-danger{background:#FF453A;color:#fff}
-        .sp-sync{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;width:100%}
-        .sp-identify{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;width:100%;margin-top:6px}
-        .sp-saved{background:#30D158;color:#fff;width:100%;margin-top:6px;opacity:.7}
-        .sp-gps-badge{padding:7px 12px;border-radius:10px;font-size:11px;font-weight:700;margin-bottom:10px}
-        .sp-gps-ok{background:rgba(48,209,88,.2);border:1px solid rgba(48,209,88,.4);color:#30D158}
-        .sp-gps-loading{background:rgba(255,214,10,.2);border:1px solid rgba(255,214,10,.4);color:#FFD60A}
-        .sp-gps-none{background:rgba(255,69,58,.15);border:1px solid rgba(255,69,58,.3);color:#FF453A}
-        .sp-cam-wrap{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px}
-        .sp-video{width:100%;max-height:280px;object-fit:cover;display:block}
-        .sp-capture{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.9);border:4px solid white;border-radius:50%;width:58px;height:58px;font-size:18px;cursor:pointer}
-        .sp-canvas-zone{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px;aspect-ratio:16/9;background:#000}
-        .sp-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-        .sp-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
-        .sp-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;padding:6px 14px;border-radius:18px;font-size:12px;pointer-events:none;white-space:nowrap}
-        .sp-placeholder{border:2px dashed rgba(255,255,255,.2);border-radius:14px;padding:44px 16px;text-align:center;cursor:pointer;margin-bottom:12px}
-        .sp-placeholder-sub{color:#888;font-size:11px;margin-top:4px}
-        .sp-palette{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-        .sp-color{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-        .sp-color-active{transform:scale(1.3);border-color:#fff!important;box-shadow:0 0 0 2px rgba(255,255,255,.4),0 4px 12px rgba(0,0,0,.4)}
-        .sp-rows{background:rgba(255,255,255,.07);border-radius:14px;padding:14px}
-        .sp-rows-title{font-size:14px;font-weight:700;margin-bottom:10px}
-        .sp-row-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:9px;padding:7px 10px;margin-bottom:6px}
-        .sp-row-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
-        .sp-row-lbl{flex:1;font-weight:600;font-size:12px}
-        .sp-row-del{background:rgba(255,69,58,.2);border:none;color:#FF453A;border-radius:5px;padding:2px 7px;cursor:pointer;font-weight:700}
-        .sp-actions{margin-top:10px;display:flex;flex-direction:column;gap:0}
-        .sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
-        .sp-modal{background:#1c1c2e;border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:22px;width:300px;max-width:90vw}
-        .sp-modal-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700;font-size:15px}
-        .sp-modal-dot{width:18px;height:18px;border-radius:50%}
-        .sp-modal-input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:14px;margin-bottom:14px;box-sizing:border-box;outline:none}
-        .sp-modal-input:focus{border-color:#30D158}
-        .sp-modal-input::placeholder{color:#666}
-        .sp-modal-btns{display:flex;gap:8px;justify-content:flex-end}
+        .sp-primary{background:#30D158;color:#fff}
+        .sp-secondary{background:rgba(255,255,255,.15);color:#fff}
+        .sp-danger{background:rgba(255,69,58,.2);color:#FF6B6B;border:1px solid rgba(255,69,58,.3)}
+        .sp-gps-badge{padding:6px 12px;border-radius:9px;font-size:11px;font-weight:700;margin-bottom:8px}
+        .sp-gps-ok{background:rgba(48,209,88,.12);border:1px solid rgba(48,209,88,.3);color:#30D158}
+        .sp-gps-loading{background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.3);color:#FFD60A}
+        .sp-gps-none{background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);color:#FF6B6B}
+        .sp-stats-panel{display:flex;gap:10px;margin-bottom:12px}
+        .sp-stat-item{background:rgba(255,255,255,.05);padding:8px 14px;border-radius:10px;display:flex;align-items:center;gap:8px;flex:1}
+        .sp-stat-emoji{font-size:18px}
+        .sp-stat-label{font-size:12px;font-weight:700;color:#ccc}
+        .sp-cam-wrap{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px;background:#000}
+        .sp-video{width:100%;max-height:260px;object-fit:cover;display:block}
+        .sp-capture{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.9);border:4px solid #fff;border-radius:50%;width:56px;height:56px;font-size:18px;cursor:pointer}
+        .sp-cam-close{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer}
+        .sp-canvas-wrap{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px;background:#000}
+        .sp-canvas{width:100%;display:block;cursor:crosshair;touch-action:none}
+        .sp-photo{max-width:100%;border-radius:14px}
+        .sp-palette{background:rgba(255,255,255,.05);border-radius:12px;padding:12px;margin-bottom:12px}
+        .sp-palette-label{font-size:11px;font-weight:700;color:#888;margin-bottom:8px}
+        .sp-palette-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+        .sp-color-btn{width:44px;height:44px;border-radius:10px;border:2px solid rgba(255,255,255,.1);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .sp-color-btn:hover{transform:scale(1.05)}
+        .sp-color-active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+        .sp-rows-list{background:rgba(255,255,255,.04);border-radius:12px;padding:12px}
+        .sp-rows-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;font-weight:700;color:#ccc}
+        .sp-save-btn{background:#30D158;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer}
+        .sp-row-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:9px;padding:9px;margin-bottom:6px}
+        .sp-row-color{width:20px;height:20px;border-radius:4px;flex-shrink:0}
+        .sp-row-info{flex:1;min-width:0}
+        .sp-row-name{font-size:13px;font-weight:600;display:block;color:#fff}
+        .sp-row-count{color:#30D158;font-size:11px;font-weight:700}
+        .sp-row-pts{font-size:10px;color:#888}
+        .sp-row-edit{background:rgba(255,214,10,.15);border:none;color:#FFD60A;padding:5px 9px;border-radius:6px;font-size:13px;cursor:pointer}
+        .sp-row-delete{background:rgba(255,69,58,.15);border:none;color:#FF6B6B;padding:5px 9px;border-radius:6px;font-size:13px;cursor:pointer}
+        .sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(6px);padding:16px}
+        .sp-modal{background:#13131f;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:20px;width:100%;max-width:400px;position:relative}
+        .sp-modal-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:13px}
+        .sp-modal-title{font-size:18px;font-weight:800;margin:0 0 12px;color:#fff}
+        .sp-modal-text{font-size:13px;color:#ccc;margin-bottom:10px}
+        .sp-modal-gps{background:rgba(48,209,88,.08);padding:8px 12px;border-radius:8px;font-size:11px;color:#30D158;margin-bottom:10px}
+        .sp-modal-field{margin-bottom:12px}
+        .sp-modal-label{display:block;font-size:11px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase}
+        .sp-modal-input{width:100%;padding:9px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:9px;color:#fff;font-size:13px}
+        .sp-modal-save{width:100%;padding:10px;background:#30D158;border:none;color:#fff;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+        .sp-sync-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
+        .sp-sync-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.4)}
+        .sp-modal-wide{max-width:500px}
+        .sp-sync-list{max-height:400px;overflow-y:auto;margin-bottom:14px}
+        .sp-sync-row{background:rgba(255,255,255,.05);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.08)}
+        .sp-sync-row-disabled{opacity:.4;pointer-events:none}
+        .sp-sync-row-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .sp-sync-row-color{width:16px;height:16px;border-radius:4px;flex-shrink:0}
+        .sp-sync-row-label{font-size:13px;font-weight:700;color:#fff;flex:1}
+        .sp-sync-empty-badge{font-size:10px;background:rgba(255,255,255,.1);padding:3px 8px;border-radius:6px;color:#888}
+        .sp-sync-row-config{display:flex;gap:10px}
+        .sp-sync-field{flex:1}
+        .sp-sync-field-small{flex:0 0 100px}
+        .sp-sync-label{display:block;font-size:10px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase}
+        .sp-sync-select{width:100%;padding:8px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;cursor:pointer}
+        .sp-sync-input{width:100%;padding:8px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;text-align:center}
+        .sp-sync-info{background:rgba(102,126,234,.12);border:1px solid rgba(102,126,234,.3);color:#a5b4fc;padding:10px 14px;border-radius:10px;font-size:11px;margin-bottom:14px;text-align:center}
       `}</style>
     </div>
   );

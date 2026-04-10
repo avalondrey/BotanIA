@@ -10,20 +10,20 @@ export const WeatherEffects: React.FC = () => {
 
   // Generate rain drops
   useEffect(() => {
-    if (realWeather?.currentConditions?.precipProbability && realWeather.currentConditions.precipProbability > 30) {
+    if (realWeather?.current?.isRaining && (realWeather.current as any)?.precipProbability > 30) {
       const drops = Array.from({ length: 100 }, (_, i) => i);
       setRainDrops(drops);
     } else {
       setRainDrops([]);
     }
-  }, [realWeather?.currentConditions?.precipProbability]);
+  }, [realWeather?.current?.isRaining]);
 
-  if (!realWeather?.currentConditions) return null;
+  if (!realWeather?.current) return null;
 
-  const { cloudcover, precipProbability, temp } = realWeather.currentConditions;
-  const isRaining = (precipProbability ?? 0) > 30;
-  const isCloudy = (cloudcover ?? 0) > 50;
-  const isSunny = (cloudcover ?? 0) < 30 && (temp ?? 0) > 15;
+  const { windSpeed, temperature } = realWeather.current;
+  const isRaining = realWeather.current.isRaining;
+  const isCloudy = false; // Simplified
+  const isSunny = (temperature ?? 0) > 15 && !isRaining;
 
   return (
     <div className="weather-effects-container">

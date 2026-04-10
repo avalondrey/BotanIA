@@ -110,7 +110,7 @@ export async function loadAllPlantMemories(): Promise<PlantMemory[]> {
 
 export async function addHarvestRecord(plantId: string, record: HarvestRecord): Promise<void> {
   const existing = await loadPlantMemory(plantId);
-  const memory = existing || createEmptyMemory(plantId, record.plantId || plantId);
+  const memory = existing || createEmptyMemory(plantId, plantId);
   memory.harvests.push(record);
   memory.averages = calculateAverages(memory);
   await savePlantMemory(memory);

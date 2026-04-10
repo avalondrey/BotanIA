@@ -26,7 +26,7 @@ export interface PlantCard {
   id: string;
 
   // Catégorie (nouveau)
-  plantCategory?: 'vegetable' | 'fruit-tree' | 'forest-tree';
+  plantCategory?: 'vegetable' | 'fruit-tree' | 'forest-tree' | 'hedge';
 
   // Températures seuils (°C)
   tBase: number;      // Température de base — en dessous, croissance nulle
@@ -755,7 +755,6 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.40,
     pestResistance: 0.35,
   },
-  },
 
   // ─── COURGE BUTTERNUT COCO ───
   squash: {
@@ -791,7 +790,244 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     pestResistance: 0.50,
   },
 
-// ═══ FIN PLANT_CARDS ═══
+  // ─── GOJI ───
+  goji: {
+    id: 'goji',
+    tBase: 8,
+    tCap: 32,
+    stageGDD: [60, 180, 350, 600],
+    kc: 0.80,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 12,
+    optimalSoilTemp: 18,
+    lightNeedHours: 7,
+    stageDurations: [14, 28, 35, 50],
+    companions: [
+      { plantId: 'lycium', type: 'beneficial', reason: 'Mêmes besoins, pollinisation croisée' },
+      { plantId: 'basil', type: 'beneficial', reason: 'Plante compagne classique' },
+    ],
+    diseaseRisks: [
+      { name: 'Oïdium', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-28°C', prevention: 'Aérer, eviter exces azote' },
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Printemps, temps sec', prevention: 'Insectes auxiliaires, savons doux' },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer', 'autumn'],
+    totalDaysToHarvest: 127,
+    plantFamily: 'Solanaceae',
+    droughtResistance: 0.80,
+    diseaseResistance: 0.65,
+    pestResistance: 0.55,
+  },
+
+  // ─── LYCIET ───
+  lycium: {
+    id: 'lycium',
+    tBase: 6,
+    tCap: 35,
+    stageGDD: [50, 160, 300, 500],
+    kc: 0.75,
+    waterNeedMmPerDay: 3.0,
+    minSoilTempForSowing: 10,
+    optimalSoilTemp: 16,
+    lightNeedHours: 6,
+    stageDurations: [12, 25, 30, 45],
+    companions: [
+      { plantId: 'goji', type: 'beneficial', reason: 'Pollinisation croisée, mêmes besoins' },
+    ],
+    diseaseRisks: [
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Printemps', prevention: 'Coccinelles, savons doux' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%', prevention: 'Aérer, drainage' },
+    ],
+    optimalPlantMonths: [3, 4, 9, 10],
+    harvestSeason: ['autumn', 'winter'],
+    totalDaysToHarvest: 112,
+    plantFamily: 'Solanaceae',
+    droughtResistance: 0.85,
+    diseaseResistance: 0.70,
+    pestResistance: 0.60,
+  },
+
+  // ─── MIRABELLIER ───
+  mirabellier: {
+    id: 'mirabellier',
+    tBase: 7,
+    tCap: 30,
+    stageGDD: [150, 350, 700, 1200],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 8,
+    optimalSoilTemp: 15,
+    lightNeedHours: 7,
+    stageDurations: [21, 35, 50, 70],
+    companions: [
+      { plantId: 'basil', type: 'beneficial', reason: 'Herbe compagne utile' },
+      { plantId: 'carrot', type: 'beneficial', reason: 'Espace bien utilisé' },
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25°C', prevention: 'Variétés resistantes, taille' },
+      { name: 'Monilia', emoji: '🦠', triggerConditions: 'Humidité élevée', prevention: 'Élagage, eviter blessures' },
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Printemps', prevention: 'Auxiliaires, savon noir' },
+    ],
+    optimalPlantMonths: [11, 12, 1, 2, 3],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 176,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.70,
+    diseaseResistance: 0.60,
+    pestResistance: 0.50,
+  },
+
+  // ─── PHOTINIA ───
+  photinia: {
+    id: 'photinia',
+    plantCategory: 'hedge',
+    tBase: 5,
+    tCap: 35,
+    stageGDD: [100, 300, 600, 1000],
+    kc: 0.70,
+    waterNeedMmPerDay: 3.0,
+    minSoilTempForSowing: 5,
+    optimalSoilTemp: 15,
+    lightNeedHours: 6,
+    stageDurations: [21, 40, 60, 90],
+    companions: [
+      { plantId: 'eleagnus', type: 'beneficial', reason: 'Complément visuel, même utilisation' },
+      { plantId: 'laurus', type: 'beneficial', reason: 'Haie variée et aromatique' },
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25°C', prevention: 'Tailler, eviter humidité stagnante' },
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Printemps', prevention: 'Auxiliaires, savons doux' },
+    ],
+    optimalPlantMonths: [10, 11, 2, 3, 4],
+    harvestSeason: ['spring', 'autumn', 'winter'],
+    totalDaysToHarvest: 211,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.65,
+    diseaseResistance: 0.55,
+    pestResistance: 0.50,
+  },
+
+  // ─── ELEAGNUS / CHALEF ───
+  eleagnus: {
+    id: 'eleagnus',
+    plantCategory: 'hedge',
+    tBase: 5,
+    tCap: 38,
+    stageGDD: [100, 350, 600, 1000],
+    kc: 0.65,
+    waterNeedMmPerDay: 2.5,
+    minSoilTempForSowing: 5,
+    optimalSoilTemp: 15,
+    lightNeedHours: 6,
+    stageDurations: [21, 45, 60, 90],
+    companions: [
+      { plantId: 'photinia', type: 'beneficial', reason: 'Couleurs complémentaires' },
+      { plantId: 'laurus', type: 'beneficial', reason: 'Association classique haie' },
+    ],
+    diseaseRisks: [
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Temps sec', prevention: 'Jetting eau, auxiliaires' },
+      { name: 'Oïdium', emoji: '🌞', triggerConditions: 'HR 60-80%', prevention: 'Aérer, eviter exces azote' },
+    ],
+    optimalPlantMonths: [10, 11, 2, 3, 4],
+    harvestSeason: ['autumn', 'winter'],
+    totalDaysToHarvest: 216,
+    plantFamily: 'Elaeagnaceae',
+    droughtResistance: 0.85,
+    diseaseResistance: 0.70,
+    pestResistance: 0.60,
+  },
+
+  // ─── LAURIER SAUCE ───
+  laurus: {
+    id: 'laurus',
+    plantCategory: 'hedge',
+    tBase: 5,
+    tCap: 35,
+    stageGDD: [100, 350, 700, 1100],
+    kc: 0.70,
+    waterNeedMmPerDay: 3.0,
+    minSoilTempForSowing: 5,
+    optimalSoilTemp: 15,
+    lightNeedHours: 5,
+    stageDurations: [21, 50, 70, 100],
+    companions: [
+      { plantId: 'photinia', type: 'beneficial', reason: 'Complément haie persistedante' },
+      { plantId: 'eleagnus', type: 'beneficial', reason: 'Diversite aromatique' },
+    ],
+    diseaseRisks: [
+      { name: 'Cochenilles', emoji: '🐛', triggerConditions: 'Temps sec, faibles', prevention: 'Huile blanche, auxiliary' },
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'Humidité', prevention: 'Tailler, aérer' },
+    ],
+    optimalPlantMonths: [3, 4, 9, 10],
+    harvestSeason: ['spring', 'summer', 'autumn', 'winter'],
+    totalDaysToHarvest: 241,
+    plantFamily: 'Lauraceae',
+    droughtResistance: 0.75,
+    diseaseResistance: 0.65,
+    pestResistance: 0.55,
+  },
+
+  // ─── CORNOUILLIER ───
+  cornus: {
+    id: 'cornus',
+    plantCategory: 'hedge',
+    tBase: 5,
+    tCap: 32,
+    stageGDD: [100, 300, 600, 1000],
+    kc: 0.70,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 5,
+    optimalSoilTemp: 15,
+    lightNeedHours: 6,
+    stageDurations: [21, 45, 70, 100],
+    companions: [
+      { plantId: 'photinia', type: 'beneficial', reason: 'Intérêt ornemental complémentaire' },
+      { plantId: 'eleagnus', type: 'beneficial', reason: 'Rusticité et couleur' },
+    ],
+    diseaseRisks: [
+      { name: 'Oïdium', emoji: '🌞', triggerConditions: 'HR 60-80%', prevention: 'Aérer, eviter exces azote' },
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Printemps', prevention: 'Coccinelles, savons doux' },
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['summer', 'autumn'],
+    totalDaysToHarvest: 236,
+    plantFamily: 'Cornaceae',
+    droughtResistance: 0.70,
+    diseaseResistance: 0.65,
+    pestResistance: 0.55,
+  },
+
+  // ─── CASSEILLE ───
+  casseille: {
+    id: 'casseille',
+    plantCategory: 'hedge',
+    tBase: 5,
+    tCap: 30,
+    stageGDD: [80, 200, 400, 700],
+    kc: 0.80,
+    waterNeedMmPerDay: 4.0,
+    minSoilTempForSowing: 5,
+    optimalSoilTemp: 15,
+    lightNeedHours: 6,
+    stageDurations: [18, 30, 40, 60],
+    companions: [
+      { plantId: 'eleagnus', type: 'beneficial', reason: 'Mêmes besoins, rusticité' },
+      { plantId: 'photinia', type: 'beneficial', reason: 'Complément haie' },
+    ],
+    diseaseRisks: [
+      { name: 'Oïdium', emoji: '🌞', triggerConditions: 'HR 60-80%', prevention: 'Aérer, eviter exces azote' },
+      { name: 'Pucerons', emoji: '🐛', triggerConditions: 'Printemps', prevention: 'Auxiliaires, savons doux' },
+    ],
+    optimalPlantMonths: [11, 12, 1, 2, 3],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 148,
+    plantFamily: 'Grossulariaceae',
+    droughtResistance: 0.65,
+    diseaseResistance: 0.60,
+    pestResistance: 0.45,
+  },
+};
+
 // ═══ FIN PLANT_CARDS ═══
 
 // ═══════════════════════════════════════════════════════════════

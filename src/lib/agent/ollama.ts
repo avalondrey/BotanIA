@@ -3,8 +3,8 @@
  * Handles chat (qwen2.5:7b) and embeddings (nomic-embed-text)
  */
 
-const OLLAMA_URL = process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://localhost:11434';
-const CHAT_MODEL = process.env.OLLAMA_CHAT_MODEL || 'qwen2.5:7b';
+const OLLAMA_URL = process.env.NEXT_PUBLIC_OLLAMA_URL || process.env.OLLAMA_URL || 'http://localhost:11434';
+const CHAT_MODEL = process.env.OLLAMA_CHAT_MODEL || process.env.OLLAMA_MODEL || 'llama3.2';
 const EMBEDDING_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -39,17 +39,21 @@ export interface OllamaEmbeddingResponse {
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 
 /**
- * Send a chat message to Ollama with full context
+ * Send a chat message to Ollama
+ * Côté serveur : appel direct | Côté client : via proxy /api/agent/chat
  */
 export async function chat(
   messages: OllamaMessage[],
   options: OllamaChatOptions = {}
 ): Promise<OllamaChatResponse> {
+  const isServer = typeof window === 'undefined';
+  const url = isServer ? `${OLLAMA_URL}/api/chat` : '/api/agent/chat';
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120000); // 2min timeout
+  const timeout = setTimeout(() => controller.abort(), 120000);
 
   try {
-    const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -83,7 +87,7 @@ export async function chat(
 }
 
 /**
- * Simple one-shot chat with system prompt + user message
+ * Simple one-shot chat avec fallback Groq automatique si Ollama indisponible
  */
 export async function simpleChat(
   systemPrompt: string,
@@ -91,53 +95,93 @@ export async function simpleChat(
   contextPrompt?: string,
   options: OllamaChatOptions = {}
 ): Promise<string> {
-  const messages: OllamaMessage[] = [];
-
-  if (systemPrompt) {
-    messages.push({ role: 'system', content: systemPrompt });
+  // ── Tenter Ollama d'abord ──
+  try {
+    const messages: OllamaMessage[] = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    if (contextPrompt) messages.push({ role: 'system', content: `=== CONTEXTE ===\n${contextPrompt}\n=== FIN ===` });
+    messages.push({ role: 'user', content: userMessage });
+    const response = await chat(messages, options);
+    return response.message.content;
+  } catch (ollamaErr) {
+    console.warn('[Ollama] indisponible, fallback Groq:', ollamaErr);
   }
 
-  if (contextPrompt) {
-    messages.push({
-      role: 'system',
-      content: `=== CONTEXTE BOTANIA ===\n${contextPrompt}\n=== FIN CONTEXTE ===`,
-    });
+  // ── Fallback Groq (cloud) ──
+  const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const sysContent = contextPrompt
+        ? `${systemPrompt}\n\n=== CONTEXTE ===\n${contextPrompt}\n=== FIN ===`
+        : systemPrompt;
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: options.numPredict ?? 600,
+          temperature: options.temperature ?? 0.35,
+          messages: [
+            { role: 'system', content: sysContent },
+            { role: 'user', content: userMessage },
+          ],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content?.trim() || '';
+      }
+    } catch (groqErr) {
+      console.warn('[Groq] fallback échoué:', groqErr);
+    }
   }
 
-  messages.push({ role: 'user', content: userMessage });
-
-  const response = await chat(messages, options);
-  return response.message.content;
+  throw new Error('Ollama et Groq indisponibles');
 }
 
 // ─── Embeddings ────────────────────────────────────────────────────────────────
 
 /**
- * Generate embedding for a text using Ollama
+ * Generate embedding via proxy API route (évite CORS browser → localhost:11434)
+ * Passe par /api/agent/embed qui contacte Ollama côté serveur Next.js
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
+  // Détection client/serveur : côté serveur on appelle Ollama directement
+  const isServer = typeof window === 'undefined';
 
-  try {
-    const response = await fetch(`${OLLAMA_URL}/api/embeddings`, {
+  if (isServer) {
+    // Côté serveur : appel direct Ollama
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(`${OLLAMA_URL}/api/embeddings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: EMBEDDING_MODEL, prompt: text }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!response.ok) throw new Error(`Ollama embedding failed: ${response.status}`);
+      const data: OllamaEmbeddingResponse = await response.json();
+      return data.embedding;
+    } catch (err) {
+      clearTimeout(timeout);
+      throw err;
+    }
+  } else {
+    // Côté client : passe par le proxy API Next.js (pas de CORS)
+    const response = await fetch('/api/agent/embed', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: EMBEDDING_MODEL, prompt: text }),
-      signal: controller.signal,
+      body: JSON.stringify({ text, model: EMBEDDING_MODEL }),
+      signal: AbortSignal.timeout(20000),
     });
-
-    clearTimeout(timeout);
-
     if (!response.ok) {
-      throw new Error(`Ollama embedding failed: ${response.statusText}`);
+      const err = await response.json().catch(() => ({}));
+      throw new Error(`Embedding proxy failed: ${response.status} — ${err.error || ''}`);
     }
-
-    const data: OllamaEmbeddingResponse = await response.json();
+    const data = await response.json();
     return data.embedding;
-  } catch (err) {
-    clearTimeout(timeout);
-    throw err;
   }
 }
 

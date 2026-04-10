@@ -157,16 +157,54 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!chatInput.trim()) return;
     const userMsg: LiaTip = { id: 'user-' + Date.now(), type: 'general', priority: 'low', title: 'Toi', message: chatInput, icon: '👤' };
-    setMessages((p) => [...p, userMsg]);
+    setMessages(p => [...p, userMsg]);
+    const q = chatInput;
     setChatInput('');
     setIsTyping(true);
+
+    // ── Appel Groq (llama-3.3-70b) via ia-jardinier ──
+    try {
+      const key = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+      if (key) {
+        const memCtx = memories.length > 0
+          ? `\n\nMémoire jardin : ${memories.slice(0, 3).map(m => `${m.name}: ${m.averages.avgDaysToMaturity}j maturité, ${m.harvests.length} saisons`).join(' | ')}`
+          : '';
+        const plantCtx = plants.length > 0
+          ? `\n\nPlantes actuelles : ${plants.slice(0, 5).map((p: any) => `${p.plantDefId || p.name || '?'} (J${p.daysSincePlanting || 0}, eau ${p.waterLevel || 0}%)`).join(', ')}`
+          : '';
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 200,
+            temperature: 0.4,
+            messages: [
+              { role: 'system', content: `Tu es Lia, assistante de jardinage bio française. Réponds en 2-3 phrases max, pratique et bienveillant. Tu connais la permaculture et le maraîchage.${memCtx}${plantCtx}` },
+              { role: 'user', content: q }
+            ]
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const reply = data.choices?.[0]?.message?.content?.trim() || '';
+          if (reply) {
+            setMessages(p => [...p, { id: 'lia-' + Date.now(), type: 'general', priority: 'medium', title: '🌱 Lia', message: reply, icon: '🌱' }]);
+            setIsTyping(false);
+            return;
+          }
+        }
+      }
+    } catch { /* fallback local */ }
+
+    // ── Fallback local si Groq indisponible ──
     setTimeout(() => {
-      setMessages((p) => [...p, genResponse(chatInput, plants, memories)]);
+      setMessages(p => [...p, genResponse(q, plants, memories)]);
       setIsTyping(false);
-    }, 1200);
+    }, 600);
   };
 
   const borderMap: Record<string, string> = {

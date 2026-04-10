@@ -42,14 +42,14 @@ export function HarvestEntrySheet({ entry, defaultDate, trigger, onClose }: Harv
   const [notes, setNotes] = useState(entry?.notes || '');
   const [open, setOpen] = useState(false);
 
-  const selectedPlant = PLANTS.find(p => p.id === plantDefId);
+  const selectedPlant = PLANTS[plantDefId];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!plantDefId || !quantityKg) return;
 
-    const plantData = PLANTS.find(p => p.id === plantDefId);
+    const plantData = PLANTS[plantDefId];
 
     const harvestData = {
       date,
@@ -103,7 +103,7 @@ export function HarvestEntrySheet({ entry, defaultDate, trigger, onClose }: Harv
             <SelectValue placeholder="Sélectionner une plante..." />
           </SelectTrigger>
           <SelectContent>
-            {PLANTS.filter(p => p.type !== 'tree').map(plant => (
+            {Object.values(PLANTS).filter(p => (p as any).type !== 'tree').map(plant => (
               <SelectItem key={plant.id} value={plant.id}>
                 {plant.emoji} {plant.name}
               </SelectItem>

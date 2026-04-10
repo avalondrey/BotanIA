@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 8, note: "Levee en 5-10 jours a 20-25C" },
     firstLeaves: { days: 20, note: "Premieres feuilles vraies" },
     growth: { days: 40, note: "Croissance vegetative rapide" },

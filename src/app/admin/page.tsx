@@ -10,7 +10,7 @@ import { SEED_SHOPS, SEED_VARIETIES, CHAMBRE_CATALOG } from "@/store/game-store"
 const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
 const MONTH_NAMES_SHORT = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
 
-type CardType = "plante" | "variete" | "environnement" | "action" | "ressource" | "boutique" | "chambre";
+type CardType = "plante" | "variete" | "graine" | "environnement" | "action" | "ressource" | "boutique" | "chambre";
 
 const CARD_TYPE_OPTIONS: { key: CardType; label: string; emoji: string }[] = [
   { key: "plante", label: "Plante", emoji: "🌱" },

@@ -2031,6 +2031,7 @@ export interface GameState {
   moveGardenTree: (id: string, newX: number, newY: number) => void;
   moveGardenHedge: (id: string, newX: number, newY: number) => void;
   moveGardenZone: (id: string, newX: number, newY: number) => void;
+  resizeGardenZone: (id: string, newX: number, newY: number, newW: number, newH: number) => void;
   addGardenZone: (x: number, y: number, width: number, height: number, type?: GardenZone['type']) => void;
   expandGarden: (direction: 'width' | 'height') => boolean;
   waterPlantPepiniere: (index: number) => void;
@@ -3852,6 +3853,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((s) => {
       const newZones = s.gardenZones.map((z) =>
         z.id === id ? { ...z, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)) } : z
+      );
+      try { localStorage.setItem("jardin-culture-zones", JSON.stringify(newZones)); } catch {}
+      return { gardenZones: newZones };
+    });
+  },
+  resizeGardenZone: (id: string, newX: number, newY: number, newW: number, newH: number) => {
+    set((s) => {
+      const newZones = s.gardenZones.map((z) =>
+        z.id === id ? { ...z, x: Math.max(0, Math.round(newX)), y: Math.max(0, Math.round(newY)), width: Math.max(30, Math.round(newW)), height: Math.max(30, Math.round(newH)) } : z
       );
       try { localStorage.setItem("jardin-culture-zones", JSON.stringify(newZones)); } catch {}
       return { gardenZones: newZones };

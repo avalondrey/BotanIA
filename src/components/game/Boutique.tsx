@@ -7,6 +7,7 @@ import {
   SEED_SHOPS,
   SEED_VARIETIES,
   PLANTULE_CATALOG,
+  PLANTULES_LOCALES,
   MINI_SERRE_PRICE,
   CHAMBRE_CATALOG,
   MINI_SERRE_WIDTH_CM,
@@ -22,7 +23,7 @@ import Image from "next/image";
 
 const MONTH_NAMES = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
 
-type ShopTab = "graines" | "plantules" | "chambres" | "mini-serres" | "equipement" | "arbres";
+type ShopTab = "graines" | "plantules" | "chambres" | "mini-serres" | "equipement" | "arbres" | "achats-locaux";
 
 export function Boutique() {
   const coins = useGameStore((s) => s.coins);
@@ -33,6 +34,11 @@ export function Boutique() {
   const miniSerres = useGameStore((s) => s.miniSerres);
   const gardenWidthCm = useGameStore((s) => s.gardenWidthCm);
   const gardenHeightCm = useGameStore((s) => s.gardenHeightCm);
+  const gardenSheds = useGameStore((s) => s.gardenSheds);
+  const gardenTanks = useGameStore((s) => s.gardenTanks);
+  const gardenTrees = useGameStore((s) => s.gardenTrees);
+  const gardenHedges = useGameStore((s) => s.gardenHedges);
+  const gardenDrums = useGameStore((s) => s.gardenDrums);
   const buySeeds = useGameStore((s) => s.buySeeds);
   const buyPlantule = useGameStore((s) => s.buyPlantule);
   const buySerreTile = useGameStore((s) => s.buySerreTile);
@@ -62,6 +68,17 @@ export function Boutique() {
       setCustomPlantules(customPlantules);
     });
   }, []);
+
+  // Reset shop when changing tabs
+  useEffect(() => {
+    if (activeTab === "arbres") {
+      setSelectedShopId("guignard");
+    } else if (activeTab === "achats-locaux") {
+      setSelectedShopId("pepiniere-locale");
+    } else if (activeTab === "plantules") {
+      setSelectedShopId("jardiland");
+    }
+  }, [activeTab]);
 
   // Merged lists
   const allShops = [...SEED_SHOPS, ...customShops];
@@ -188,6 +205,7 @@ export function Boutique() {
           { key: "chambres" as ShopTab, label: "🏠 Chambres", desc: "Grow tents" },
           { key: "mini-serres" as ShopTab, label: "🏡 Mini Serres", desc: "Propagateurs" },
           { key: "equipement" as ShopTab, label: "🔧 Equipement", desc: "Terrain & serre" },
+          { key: "achats-locaux" as ShopTab, label: "🏪 Local", desc: "Pépinières" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -211,7 +229,7 @@ export function Boutique() {
         <div className="space-y-3">
           {/* Shop Selector - ONLY seed shops (no tree shops) */}
           <div className="flex gap-2">
-            {allShops.filter(shop => !["guignard", "inrae", "pepinieres-bordas", "arbres-tissot", "fruitiers-forest"].includes(shop.id)).map((shop) => (
+            {allShops.filter(shop => !["guignard", "inrae", "pepinieres-bordas", "arbres-tissot", "fruitiers-forest", "bientot-dispo", "jardiland", "gamm-vert", "esat-antes", "jardi-leclerc", "pepiniere-locale", "les-pepineres-quissac", "leaderplant", "marche-producteurs", "jardin-partage"].includes(shop.id)).map((shop) => (
               <button
                 key={shop.id}
                 onClick={() => setSelectedShopId(shop.id)}
@@ -253,7 +271,6 @@ export function Boutique() {
                   return (
                     <div
                       key={variety.id}
-                      layout
                       className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all cursor-pointer
                         ${canAfford ? "border-black shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc]"}`}
                     >
@@ -493,9 +510,17 @@ export function Boutique() {
       {/* Arbres Fruitiers Tab */}
       {activeTab === "arbres" && (
         <div className="space-y-3">
-          {/* Shop Selector for fruit trees - UNIQUEMENT shops d'arbres */}
+          {/* Shop Selector for fruit trees - Arbres + Bientôt dispo */}
           <div className="flex gap-2 flex-wrap">
-            {[SEED_SHOPS.find(s => s.id === "guignard"), SEED_SHOPS.find(s => s.id === "inrae"), SEED_SHOPS.find(s => s.id === "pepinieres-bordas"), SEED_SHOPS.find(s => s.id === "arbres-tissot"), SEED_SHOPS.find(s => s.id === "fruitiers-forest")].filter(Boolean).map((shop) => (
+            {[
+              SEED_SHOPS.find(s => s.id === "guignard"),
+              SEED_SHOPS.find(s => s.id === "inrae"),
+              SEED_SHOPS.find(s => s.id === "pepinieres-bordas"),
+              SEED_SHOPS.find(s => s.id === "arbres-tissot"),
+              SEED_SHOPS.find(s => s.id === "fruitiers-forest"),
+              SEED_SHOPS.find(s => s.id === "leaderplant"),
+              SEED_SHOPS.find(s => s.id === "bientot-dispo"),
+            ].filter(Boolean).map((shop) => (
               <button
                 key={shop!.id}
                 onClick={() => setSelectedShopId(shop!.id)}
@@ -533,7 +558,7 @@ export function Boutique() {
           {/* Fruit Tree Cards */}
           {(() => {
             // Tree shops ONLY (pas saintemarthe qui est dans graines)
-            const treeShopIds = ["guignard", "inrae", "pepinieres-bordas", "arbres-tissot", "fruitiers-forest"];
+            const treeShopIds = ["guignard", "inrae", "pepinieres-bordas", "arbres-tissot", "fruitiers-forest", "bientot-dispo"];
             // Filter by selected shop if it's a tree shop
             const treeVarieties = SEED_VARIETIES.filter(v =>
               treeShopIds.includes(v.shopId) &&
@@ -624,109 +649,170 @@ export function Boutique() {
 
       {/* Plantules Tab */}
       {activeTab === "plantules" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {allPlantules.map((item) => {
-            const plantDef = PLANTS[item.plantDefId];
-            const owned = plantuleCollection[item.plantDefId] || 0;
-            const canAfford = coins >= item.price;
-            const boughtKey = `plantule-${item.plantDefId}`;
-
-            return (
-              <motion.div
-                key={item.plantDefId}
-                layout
-                className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
-                  ${canAfford ? "border-emerald-600 shadow-[4px_4px_0_0_#059669] hover:shadow-[6px_6px_0_0_#059669]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+        <div className="space-y-3">
+          {/* Shop Selector - Magasins Plantules */}
+          <div className="flex gap-2 flex-wrap">
+            {[
+              SEED_SHOPS.find(s => s.id === "jardiland"),
+              SEED_SHOPS.find(s => s.id === "gamm-vert"),
+              SEED_SHOPS.find(s => s.id === "esat-antes"),
+              SEED_SHOPS.find(s => s.id === "jardi-leclerc"),
+            ].filter(Boolean).map((shop) => (
+              <button
+                key={shop!.id}
+                onClick={() => setSelectedShopId(shop!.id)}
+                className={`flex-1 py-2 px-3 rounded-xl border-2 transition-all flex items-center gap-2 min-w-[120px]
+                  ${selectedShopId === shop!.id
+                    ? `bg-gradient-to-br ${shop!.color} ${shop!.borderColor} shadow-[2px_2px_0_0_#000]`
+                    : "bg-white border-stone-200 hover:border-stone-400"}`}
               >
-                <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
-                  style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
-
-                <div className="relative h-28 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
-                  {plantDef && (
-                    <Image
-                      src={`/stages/${item.plantDefId}/1.png`}
-                      alt={item.name}
-                      width={80}
-                      height={80}
-                      className="object-contain drop-shadow-lg"
-                    />
-                  )}
-                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
-                    <Coins className="w-3 h-3 text-yellow-400" />
-                    {item.price}
-                  </div>
-                  {owned > 0 && (
-                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-lg flex items-center gap-1">
-                      ×{owned}
-                    </div>
-                  )}
-                  <AnimatePresence>
-                    {justBought === boughtKey && (
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        className="absolute inset-0 flex items-center justify-center bg-emerald-500/20"
-                      >
-                        <motion.div
-                          animate={{ y: -10, opacity: 0 }}
-                          transition={{ duration: 1, delay: 0.3 }}
-                          className="text-2xl"
-                        >
-                          ✅
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <span className="text-lg">{shop!.emoji}</span>
+                <div className="text-left">
+                  <p className={`text-[10px] font-black uppercase ${selectedShopId === shop!.id ? "text-black" : "text-stone-500"}`}>{shop!.name}</p>
+                  <p className={`text-[7px] font-bold ${selectedShopId === shop!.id ? "text-stone-600" : "text-stone-300"}`}>{shop!.description.slice(0, 30)}…</p>
                 </div>
+              </button>
+            ))}
+          </div>
 
-                <div className="p-3 space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xl">{item.emoji}</span>
-                    <div>
-                      <h3 className="text-sm font-black uppercase">{item.name}</h3>
-                      <p className="text-[8px] text-stone-400">Jeune plantule prête à pousser</p>
-                    </div>
+          {/* Selected Shop Banner */}
+          {(() => {
+            const shop = allShops.find(s => s.id === selectedShopId);
+            if (!shop) return null;
+            return (
+              <div className={`p-3 bg-gradient-to-br ${shop.color} ${shop.borderColor} border-[3px] rounded-2xl shadow-[4px_4px_0_0_#000]`}>
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{shop.emoji}</div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase">{shop.name}</h3>
+                    <p className="text-[8px] text-stone-500">{shop.description}</p>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-1.5 text-[9px]">
-                    <div className="px-1.5 py-1 bg-stone-50 rounded-lg border border-stone-100">
-                      <p className="text-stone-400 font-bold">Stade initial</p>
-                      <p className="font-black">🌿 Plantule</p>
-                    </div>
-                    <div className="px-1.5 py-1 bg-stone-50 rounded-lg border border-stone-100">
-                      <p className="text-stone-400 font-bold">Gain temps</p>
-                      <p className="font-black">~20j d&apos;avance</p>
-                    </div>
-                  </div>
-
-                  <motion.button
-                    whileHover={canAfford ? { scale: 1.03 } : {}}
-                    whileTap={canAfford ? { scale: 0.97 } : {}}
-                    onClick={() => canAfford && handleBuyPlantule(item.plantDefId)}
-                    disabled={!canAfford}
-                    className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
-                      ${canAfford
-                        ? "bg-gradient-to-b from-emerald-500 to-teal-600 text-white border-emerald-700 shadow-[2px_2px_0_0_#000] hover:from-emerald-400 hover:to-teal-500"
-                        : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
-                      }`}
-                  >
-                    {canAfford ? (
-                      <>
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        Acheter — {item.price} 🪙
-                      </>
-                    ) : (
-                      <>
-                        <Info className="w-3.5 h-3.5" />
-                        Pas assez de pièces
-                      </>
-                    )}
-                  </motion.button>
                 </div>
-              </motion.div>
+              </div>
             );
-          })}
+          })()}
+
+          {/* Plantules Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PLANTULES_LOCALES.filter(p => p.shopId === selectedShopId).map((item) => {
+              const plantDef = PLANTS[item.plantDefId];
+              const owned = plantuleCollection[item.plantDefId] || 0;
+              const canAfford = coins >= item.price;
+              const isFree = item.price === 0;
+              const boughtKey = `plantule-${item.id}`;
+
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+                    ${canAfford || isFree ? "border-emerald-600 shadow-[4px_4px_0_0_#059669] hover:shadow-[6px_6px_0_0_#059669]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+                >
+                  <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+                    style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+
+                  <div className="relative h-28 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
+                    {plantDef && (
+                      <Image
+                        src={`/stages/${item.plantDefId}/1.png`}
+                        alt={item.name}
+                        width={80}
+                        height={80}
+                        className="object-contain drop-shadow-lg"
+                      />
+                    )}
+                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                      {isFree ? (
+                        <span className="text-green-400">GRATUIT</span>
+                      ) : (
+                        <>
+                          <Coins className="w-3 h-3 text-yellow-400" />
+                          {item.price}
+                        </>
+                      )}
+                    </div>
+                    {owned > 0 && (
+                      <div className="absolute top-2 left-2 px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded-lg flex items-center gap-1">
+                        ×{owned}
+                      </div>
+                    )}
+                    <AnimatePresence>
+                      {justBought === boughtKey && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          className="absolute inset-0 flex items-center justify-center bg-emerald-500/20"
+                        >
+                          <motion.div
+                            animate={{ y: -10, opacity: 0 }}
+                            transition={{ duration: 1, delay: 0.3 }}
+                            className="text-2xl"
+                          >
+                            ✅
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xl">{item.emoji}</span>
+                      <div>
+                        <h3 className="text-sm font-black uppercase">{item.name}</h3>
+                        <p className="text-[8px] text-stone-400">Jeune plantule prête à pousser</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5 text-[9px]">
+                      <div className="px-1.5 py-1 bg-stone-50 rounded-lg border border-stone-100">
+                        <p className="text-stone-400 font-bold">Stade initial</p>
+                        <p className="font-black">🌿 Plantule</p>
+                      </div>
+                      <div className="px-1.5 py-1 bg-stone-50 rounded-lg border border-stone-100">
+                        <p className="text-stone-400 font-bold">Gain temps</p>
+                        <p className="font-black">~20j d&apos;avance</p>
+                      </div>
+                    </div>
+
+                    <motion.button
+                      whileHover={canAfford || isFree ? { scale: 1.03 } : {}}
+                      whileTap={canAfford || isFree ? { scale: 0.97 } : {}}
+                      onClick={() => (canAfford || isFree) && handleBuyPlantule(item.plantDefId)}
+                      disabled={!canAfford && !isFree}
+                      className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                        ${canAfford || isFree
+                          ? "bg-gradient-to-b from-emerald-500 to-teal-600 text-white border-emerald-700 shadow-[2px_2px_0_0_#000] hover:from-emerald-400 hover:to-teal-500"
+                          : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                        }`}
+                    >
+                      {isFree ? (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          Échanger
+                        </>
+                      ) : canAfford ? (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          Acheter — {item.price} 🪙
+                        </>
+                      ) : (
+                        <>
+                          <Info className="w-3.5 h-3.5" />
+                          Pas assez de pièces
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {PLANTULES_LOCALES.filter(p => p.shopId === selectedShopId).length === 0 && (
+            <p className="text-center text-stone-400 text-sm py-8">Aucun plantule disponible dans cette boutique.</p>
+          )}
         </div>
       )}
 
@@ -1171,6 +1257,621 @@ export function Boutique() {
               </div>
             </div>
           </motion.div>
+
+          {/* Cabane */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 300 ? "border-amber-600 shadow-[6px_6px_0_0_#92400e] hover:shadow-[8px_8px_0_0_#92400e]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+              <div className="text-6xl">🏚️</div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                300
+              </div>
+              {gardenSheds.length > 0 && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-lg flex items-center gap-1">
+                  ×{gardenSheds.length}
+                </div>
+              )}
+              <AnimatePresence>
+                {justBought === "shed" && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-amber-500/20"
+                  >
+                    <motion.div animate={{ y: -10, opacity: 0 }} transition={{ duration: 1, delay: 0.3 }} className="text-2xl">✅</motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🏚️</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Cabane à outils</h3>
+                  <p className="text-[8px] text-stone-400">200×180cm — Stockage</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-amber-50 rounded-lg border border-amber-100">
+                  <p className="text-amber-400 font-bold">200cm</p>
+                </div>
+                <div className="px-1.5 py-1 bg-amber-50 rounded-lg border border-amber-100">
+                  <p className="text-amber-400 font-bold">180cm</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Cabane de jardin pour ranger vos outils. Placement automatique dans le jardin.</p>
+              <motion.button
+                whileHover={coins >= 300 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 300 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyShed && state.buyShed(300)) {
+                    setJustBought("shed");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 300}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 300
+                    ? "bg-gradient-to-b from-amber-500 to-orange-600 text-white border-amber-700 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 300 ? (
+                  <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 300 🪙</>
+                ) : (
+                  <><Info className="w-3.5 h-3.5" /> Pas assez de pièces</>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Cuve 1000L */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 200 ? "border-blue-600 shadow-[6px_6px_0_0_#1e40af] hover:shadow-[8px_8px_0_0_#1e40af]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+              <div className="relative">
+                <div className="text-6xl">🛢️</div>
+                <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded border-2 border-white">1000L</div>
+              </div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                200
+              </div>
+              {gardenTanks.filter(t => t.capacity === 1000).length > 0 && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-blue-500 text-white text-[10px] font-black rounded-lg">×{gardenTanks.filter(t => t.capacity === 1000).length}</div>
+              )}
+              <AnimatePresence>
+                {justBought === "tank-1000" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute inset-0 flex items-center justify-center bg-blue-500/20">
+                    <motion.div animate={{ y: -10, opacity: 0 }} transition={{ duration: 1 }} className="text-2xl">✅</motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🛢️</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Cuve 1000L</h3>
+                  <p className="text-[8px] text-stone-400">Récupération eau de pluie</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-blue-50 rounded-lg border border-blue-100 text-center">
+                  <p className="text-blue-400 font-bold">1000 litres</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Cuve de récupération d'eau de pluie. Placement automatique.</p>
+              <motion.button
+                whileHover={coins >= 200 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 200 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyTank && state.buyTank(1000, 200)) {
+                    setJustBought("tank-1000");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 200}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 200
+                    ? "bg-gradient-to-b from-blue-500 to-cyan-600 text-white border-blue-700 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 200 ? <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 200 🪙</> : <><Info className="w-3.5 h-3.5" /> Pas assez</>}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Cuve 500L */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 120 ? "border-blue-500 shadow-[6px_6px_0_0_#1e40af] hover:shadow-[8px_8px_0_0_#1e40af]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center">
+              <div className="relative">
+                <div className="text-6xl">🛢️</div>
+                <div className="absolute -bottom-2 -right-2 bg-blue-400 text-white text-[10px] font-black px-1.5 py-0.5 rounded border-2 border-white">500L</div>
+              </div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                120
+              </div>
+              {gardenTanks.filter(t => t.capacity === 500).length > 0 && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-blue-400 text-white text-[10px] font-black rounded-lg">×{gardenTanks.filter(t => t.capacity === 500).length}</div>
+              )}
+              <AnimatePresence>
+                {justBought === "tank-500" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute inset-0 flex items-center justify-center bg-blue-500/20">
+                    <motion.div animate={{ y: -10, opacity: 0 }} transition={{ duration: 1 }} className="text-2xl">✅</motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🛢️</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Cuve 500L</h3>
+                  <p className="text-[8px] text-stone-400">Récupération eau de pluie</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-blue-50 rounded-lg border border-blue-100 text-center">
+                  <p className="text-blue-400 font-bold">500 litres</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Cuve compacte pour petits jardins. Placement automatique.</p>
+              <motion.button
+                whileHover={coins >= 120 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 120 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyTank && state.buyTank(500, 120)) {
+                    setJustBought("tank-500");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 120}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 120
+                    ? "bg-gradient-to-b from-blue-400 to-cyan-500 text-white border-blue-600 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 120 ? <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 120 🪙</> : <><Info className="w-3.5 h-3.5" /> Pas assez</>}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Cuve 800L */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 160 ? "border-blue-700 shadow-[6px_6px_0_0_#1e3a8a] hover:shadow-[8px_8px_0_0_#1e3a8a]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
+              <div className="relative">
+                <div className="text-6xl">🛢️</div>
+                <div className="absolute -bottom-2 -right-2 bg-indigo-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded border-2 border-white">800L</div>
+              </div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                160
+              </div>
+              {gardenTanks.filter(t => t.capacity === 800).length > 0 && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-indigo-500 text-white text-[10px] font-black rounded-lg">×{gardenTanks.filter(t => t.capacity === 800).length}</div>
+              )}
+              <AnimatePresence>
+                {justBought === "tank-800" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute inset-0 flex items-center justify-center bg-indigo-500/20">
+                    <motion.div animate={{ y: -10, opacity: 0 }} transition={{ duration: 1 }} className="text-2xl">✅</motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🛢️</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Cuve 800L</h3>
+                  <p className="text-[8px] text-stone-400">Récupération eau de pluie</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-indigo-50 rounded-lg border border-indigo-100 text-center">
+                  <p className="text-indigo-400 font-bold">800 litres</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Cuve moyenne capacité. Placement automatique.</p>
+              <motion.button
+                whileHover={coins >= 160 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 160 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyTank && state.buyTank(800, 160)) {
+                    setJustBought("tank-800");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 160}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 160
+                    ? "bg-gradient-to-b from-indigo-500 to-blue-600 text-white border-indigo-700 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 160 ? <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 160 🪙</> : <><Info className="w-3.5 h-3.5" /> Pas assez</>}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Arbre */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 100 ? "border-green-600 shadow-[6px_6px_0_0_#166534] hover:shadow-[8px_8px_0_0_#166534]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+              <div className="text-6xl">🌳</div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                100
+              </div>
+              {gardenTrees.length > 0 && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-black rounded-lg">×{gardenTrees.length}</div>
+              )}
+              <AnimatePresence>
+                {justBought === "tree" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute inset-0 flex items-center justify-center bg-green-500/20">
+                    <motion.div animate={{ y: -10, opacity: 0 }} transition={{ duration: 1 }} className="text-2xl">✅</motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🌳</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Arbre fruitier</h3>
+                  <p className="text-[8px] text-stone-400">Pommier — Fruitier</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-green-50 rounded-lg border border-green-100">
+                  <p className="text-green-400 font-bold">🌿 Fruitier</p>
+                </div>
+                <div className="px-1.5 py-1 bg-green-50 rounded-lg border border-green-100">
+                  <p className="text-green-400 font-bold">⏳ +croissance</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Arbre fruitier pour votre jardin. Placement automatique.</p>
+              <motion.button
+                whileHover={coins >= 100 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 100 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyTree && state.buyTree(100)) {
+                    setJustBought("tree");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 100}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 100
+                    ? "bg-gradient-to-b from-green-500 to-emerald-600 text-white border-green-700 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 100 ? <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 100 🪙</> : <><Info className="w-3.5 h-3.5" /> Pas assez</>}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Haie */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 50 ? "border-green-500 shadow-[6px_6px_0_0_#15803d] hover:shadow-[8px_8px_0_0_#15803d]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-lime-50 to-green-50 flex items-center justify-center">
+              <div className="text-6xl">🌿</div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                50
+              </div>
+              {gardenHedges.length > 0 && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-green-400 text-white text-[10px] font-black rounded-lg">×{gardenHedges.length}</div>
+              )}
+              <AnimatePresence>
+                {justBought === "hedge" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute inset-0 flex items-center justify-center bg-green-500/20">
+                    <motion.div animate={{ y: -10, opacity: 0 }} transition={{ duration: 1 }} className="text-2xl">✅</motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🌿</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Haie</h3>
+                  <p className="text-[8px] text-stone-400">Délimitation de zones</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-green-50 rounded-lg border border-green-100">
+                  <p className="text-green-400 font-bold">🌿 Brise-vent</p>
+                </div>
+                <div className="px-1.5 py-1 bg-green-50 rounded-lg border border-green-100">
+                  <p className="text-green-400 font-bold">🏠 Abrit</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Haie pour délimiter les zones du jardin. Placement automatique.</p>
+              <motion.button
+                whileHover={coins >= 50 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 50 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyHedge && state.buyHedge(50)) {
+                    setJustBought("hedge");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 50}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 50
+                    ? "bg-gradient-to-b from-green-400 to-emerald-500 text-white border-green-600 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 50 ? <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 50 🪙</> : <><Info className="w-3.5 h-3.5" /> Pas assez</>}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Fût PEHD 225L */}
+          <motion.div
+            layout
+            className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+              ${coins >= 80 ? "border-blue-500 shadow-[6px_6px_0_0_#1d4ed8] hover:shadow-[8px_8px_0_0_#1d4ed8]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+          >
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+            <div className="relative h-32 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+              <div className="text-6xl">🛢️</div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                <Coins className="w-3 h-3 text-yellow-400" />
+                80
+              </div>
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-blue-500 text-white text-[10px] font-black rounded-lg">
+                225L
+              </div>
+              {gardenDrums.length > 0 && (
+                <div className="absolute top-2 left-2 mt-6 px-2 py-0.5 bg-blue-400 text-white text-[10px] font-black rounded-lg">×{gardenDrums.length}</div>
+              )}
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🛢️</span>
+                <div>
+                  <h3 className="text-sm font-black uppercase">Fût PEHD</h3>
+                  <p className="text-[8px] text-stone-400">225L — Polyéthylène haute densité</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 text-[9px]">
+                <div className="px-1.5 py-1 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-blue-400 font-bold">🛢️ 225L</p>
+                </div>
+                <div className="px-1.5 py-1 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-blue-400 font-bold">♻️ PEHD</p>
+                </div>
+              </div>
+              <p className="text-[8px] text-stone-500">Fût de récupération d'eau de pluie. Placement automatique.</p>
+              <motion.button
+                whileHover={coins >= 80 ? { scale: 1.03 } : {}}
+                whileTap={coins >= 80 ? { scale: 0.97 } : {}}
+                onClick={() => {
+                  const state = useGameStore.getState();
+                  if (state.buyDrum && state.buyDrum(80)) {
+                    setJustBought("drum");
+                    setTimeout(() => setJustBought(null), 1500);
+                  }
+                }}
+                disabled={coins < 80}
+                className={`w-full py-2 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                  ${coins >= 80
+                    ? "bg-gradient-to-b from-blue-500 to-cyan-600 text-white border-blue-700 shadow-[2px_2px_0_0_#000]"
+                    : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                  }`}
+              >
+                {coins >= 80 ? <><ShoppingCart className="w-3.5 h-3.5" /> Acheter — 80 🪙</> : <><Info className="w-3.5 h-3.5" /> Pas assez</>}
+              </motion.button>
+            </div>
+          </motion.div>
+
+        </div>
+      )}
+
+      {/* Achats Locaux Tab */}
+      {activeTab === "achats-locaux" && (
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 border-[3px] border-amber-300 rounded-2xl shadow-[4px_4px_0_0_#000]">
+            <div className="flex items-center gap-3">
+              <div className="text-4xl">🏪</div>
+              <div>
+                <h3 className="text-sm font-black uppercase">Achat local et pepinieres</h3>
+                <p className="text-[8px] text-stone-500">Plants et plantules de producers locaux — Circuits courts</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Local Shop Selector */}
+          <div className="flex gap-2 flex-wrap">
+            {["pepiniere-locale", "les-pepineres-quissac", "leaderplant", "marche-producteurs", "jardin-partage"].map((shopId) => {
+              const shop = allShops.find(s => s.id === shopId);
+              if (!shop) return null;
+              return (
+                <button
+                  key={shop.id}
+                  onClick={() => setSelectedShopId(shop.id)}
+                  className={`flex-1 py-2 px-3 rounded-xl border-2 transition-all flex items-center gap-2 min-w-[120px]
+                    ${selectedShopId === shop.id
+                      ? `bg-gradient-to-br ${shop.color} ${shop.borderColor} shadow-[2px_2px_0_0_#000]`
+                      : "bg-white border-stone-200 hover:border-stone-400"}`}
+                >
+                  <span className="text-lg">{shop.emoji}</span>
+                  <div className="text-left">
+                    <p className={`text-[10px] font-black uppercase ${selectedShopId === shop.id ? "text-black" : "text-stone-500"}`}>{shop.name}</p>
+                    <p className={`text-[7px] font-bold ${selectedShopId === shop.id ? "text-stone-600" : "text-stone-300"}`}>{shop.description.slice(0, 30)}…</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selected Shop Banner */}
+          {(() => {
+            const shop = allShops.find(s => s.id === selectedShopId);
+            if (!shop) return null;
+            return (
+              <div className={`p-3 bg-gradient-to-br ${shop.color} ${shop.borderColor} border-[3px] rounded-2xl shadow-[4px_4px_0_0_#000]`}>
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{shop.emoji}</div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase">{shop.name}</h3>
+                    <p className="text-[8px] text-stone-500">{shop.description}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Plantules Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PLANTULES_LOCALES.filter(p => p.shopId === selectedShopId).map((item) => {
+              const canAfford = coins >= item.price;
+              const isFree = item.price === 0;
+              const boughtKey = `local-${item.id}`;
+
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  className={`relative bg-white border-[3px] rounded-2xl overflow-hidden transition-all
+                    ${canAfford || isFree ? "border-amber-400 shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000]" : "border-stone-300 shadow-[2px_2px_0_0_#ccc] opacity-80"}`}
+                >
+                  <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+                    style={{ backgroundImage: "radial-gradient(circle, #000 0.5px, transparent 0.5px)", backgroundSize: "3px 3px" }} />
+
+                  <div className="relative h-32 bg-gradient-to-br from-amber-50 to-yellow-50 flex items-center justify-center">
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={100}
+                        height={100}
+                        className="object-contain drop-shadow-lg"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <span className="text-5xl">{item.emoji}</span>
+                    )}
+                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-lg flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]">
+                      {isFree ? (
+                        <span className="text-green-400">GRATUIT</span>
+                      ) : (
+                        <>
+                          <Coins className="w-3 h-3 text-yellow-400" />
+                          {item.price}
+                        </>
+                      )}
+                    </div>
+                    {item.grams === 0 && (
+                      <div className="absolute top-2 left-2 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded-lg">
+                        Plantule
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xl">{item.emoji}</span>
+                      <div>
+                        <h3 className="text-[11px] font-black uppercase">{item.name}</h3>
+                        <p className="text-[7px] text-stone-400">
+                          {item.grams === 0 ? "Plantule" : `${item.grams}g`} · {item.realDaysToHarvest}j
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-[8px] text-stone-500 line-clamp-2">{item.description}</p>
+
+                    <motion.button
+                      whileHover={canAfford || isFree ? { scale: 1.03 } : {}}
+                      whileTap={canAfford || isFree ? { scale: 0.97 } : {}}
+                      onClick={() => (canAfford || isFree) && handleBuySeeds(item.id)}
+                      disabled={!canAfford && !isFree}
+                      className={`w-full py-2 text-[10px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center gap-1.5
+                        ${canAfford || isFree
+                          ? "bg-gradient-to-b from-amber-500 to-orange-600 text-white border-amber-700 shadow-[2px_2px_0_0_#000] hover:from-amber-400 hover:to-orange-500"
+                          : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                        }`}
+                    >
+                      {isFree ? (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          Échanger
+                        </>
+                      ) : canAfford ? (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          Acheter — {item.price} 🪙
+                        </>
+                      ) : (
+                        <>
+                          <Info className="w-3.5 h-3.5" />
+                          Pas assez de pièces
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {PLANTULES_LOCALES.filter(p => p.shopId === selectedShopId).length === 0 && (
+            <p className="text-center text-stone-400 text-sm py-8">Aucun plant disponible dans cette boutique.</p>
+          )}
+
+          {/* Info */}
+          <div className="text-center text-[9px] text-stone-400 mt-2">
+            🌍 Achat local = circuit court, plants adaptes a votre region !
+          </div>
         </div>
       )}
 

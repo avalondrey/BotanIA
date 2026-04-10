@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoStore, type GardenPhoto } from '@/store/photo-store';
 import { getBestGPS } from '@/lib/gps-extractor';
+import { useGameStore } from '@/store/game-store';
+import { Camera, Loader2, CheckCircle, XCircle, AlertTriangle, Leaf, Globe, Trophy } from 'lucide-react';
 
 // ─── Moteurs d'identification disponibles ─────────────────────────────────────
 const ENGINES = [
@@ -12,6 +14,18 @@ const ENGINES = [
   { id: 'plantid', label: 'Plant.id',     emoji: '🌿', color: '#22c55e', desc: 'API spécialisée plantes · 100/jour gratuit',    free: true },
   { id: 'claude',  label: 'Claude Vision',emoji: '🤖', color: '#8b5cf6', desc: 'Claude Opus · Précis · Clé API requise',        free: false },
 ];
+
+// ─── Helper: Mapper nom de plante → plantDefId ────────────────────────────────
+function mapPlantNameToDefId(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.includes('tomate')) return 'tomato';
+  if (lower.includes('poivron') || lower.includes('piment')) return 'pepper';
+  if (lower.includes('laitue') || lower.includes('salade')) return 'lettuce';
+  if (lower.includes('carotte')) return 'carrot';
+  if (lower.includes('basilic')) return 'basil';
+  if (lower.includes('fraise')) return 'strawberry';
+  return null;
+}
 
 async function identifyPlant(dataUrl: string, engine: string) {
   const base64 = dataUrl.split(',')[1];
@@ -38,6 +52,15 @@ export default function PlantIdentifier() {
   const [liveGps, setLiveGps] = useState<{lat:number;lon:number;source:string}|null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [engineError, setEngineError] = useState<string|null>(null);
+  const [ecoScanning, setEcoScanning] = useState(false);
+  const [ecoResult, setEcoResult] = useState<{verified:boolean;type:string;confidence:number;ecoPoints:number;message:string;description:string}|null>(null);
+  const [ecoError, setEcoError] = useState<string|null>(null);
+  const [ecoPreviewUrl, setEcoPreviewUrl] = useState<string|null>(null);
+  const [showEcoPanel, setShowEcoPanel] = useState(false);
+
+  const ecoPoints = useGameStore((s) => s.ecoPoints);
+  const ecoLevel = useGameStore((s) => s.ecoLevel);
+  const addEcoPoints = useGameStore((s) => s.addEcoPoints);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -94,6 +117,96 @@ export default function PlantIdentifier() {
     } finally { setAnalyzing(null); }
   };
 
+  // ─── Eco Gesture Scan ──────────────────────────────────────────────────────
+  const scanEcoGesture = useCallback(async (dataUrl: string) => {
+    setEcoScanning(true);
+    setEcoError(null);
+    setEcoResult(null);
+    setEcoPreviewUrl(dataUrl);
+
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const mediaType = dataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+      const res = await fetch('/api/scan-gesture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || data.hint || `Erreur ${res.status}`);
+      }
+      const data = await res.json();
+      setEcoResult(data);
+      if (data.verified) {
+        addEcoPoints(data.ecoPoints);
+      }
+    } catch (err: any) {
+      setEcoError(err.message || 'Erreur scan écologique');
+    } finally {
+      setEcoScanning(false);
+    }
+  }, [addEcoPoints]);
+
+  const handleEcoFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const url = ev.target?.result as string;
+      await scanEcoGesture(url);
+    };
+    reader.readAsDataURL(f);
+    if (e.target) e.target.value = '';
+  }, [scanEcoGesture]);
+
+  // ─── Créer jumeau numérique dans le jardin ────────────────────────────────────
+  const createTwin = (photo: GardenPhoto) => {
+    if (!photo.identificationResult) {
+      alert('⚠️ Aucune identification disponible.\n\nAnalysez d\'abord la photo avec un moteur IA.');
+      return;
+    }
+    
+    const plantDefId = mapPlantNameToDefId(photo.identificationResult.plantName);
+    
+    if (!plantDefId) {
+      alert(`❌ "${photo.identificationResult.plantName}" n'est pas dans le catalogue.
+
+Plantes disponibles :
+🍅 Tomate
+🫑 Poivron
+🥬 Laitue
+🥕 Carotte
+🌿 Basilic
+🍓 Fraise
+
+💡 Astuce : Prenez une photo de l'une de ces plantes.`);
+      return;
+    }
+    
+    // Position par défaut dans le jardin (on pourrait demander à l'utilisateur)
+    const x = 100 + Math.random() * 200;
+    const y = 100 + Math.random() * 200;
+    
+    const createFunc = (useGameStore.getState() as any).createDigitalTwinInGarden;
+    if (!createFunc) {
+      alert('❌ Fonction createDigitalTwinInGarden non disponible.\n\nVeuillez mettre à jour game-store.ts.');
+      return;
+    }
+    
+    const result = createFunc(plantDefId, x, y, {
+      plantName: photo.identificationResult.plantName,
+      confidence: photo.identificationResult.confidence,
+      growthStage: photo.identificationResult.growthStage,
+      healthStatus: photo.identificationResult.healthStatus,
+    });
+    
+    alert(result.message);
+    if (result.success) {
+      setSelectedPhoto(null); // Fermer la modale
+    }
+  };
+
 
   return (
     <div className="pi-wrap">
@@ -136,6 +249,134 @@ export default function PlantIdentifier() {
         <button className="pi-btn pi-secondary" onClick={startCamera}>📷 Caméra</button>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
       </div>
+
+      {/* ── Bouton Validation geste écologique ── */}
+      <div className="pi-eco-bar">
+        <button className="pi-eco-btn" onClick={() => setShowEcoPanel(!showEcoPanel)}>
+          🌍 Valider mon geste écologique
+          {ecoPoints > 0 && <span className="pi-eco-badge">{ecoPoints} pts</span>}
+        </button>
+        <input
+          id="eco-gesture-input"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={handleEcoFileSelect}
+        />
+      </div>
+
+      {/* ── Panel geste écologique ── */}
+      {showEcoPanel && (
+        <div className="pi-eco-panel">
+          {/* Niveau eco */}
+          <div className="pi-eco-level">
+            <div className="pi-eco-level-header">
+              <span className="pi-eco-level-label">
+                <Trophy className="w-3 h-3 text-amber-500" />
+                Niveau {ecoLevel}/10
+              </span>
+              <span className="pi-eco-level-pts">{ecoPoints} pts</span>
+            </div>
+            <div className="pi-eco-level-bar">
+              <div className="pi-eco-level-fill" style={{ width: `${Math.min(100, (ecoPoints % 50) / 50 * 100)}%` }} />
+            </div>
+          </div>
+
+          {/* Légende gestes */}
+          <div className="pi-eco-legend">
+            <span className="pi-eco-legend-item">🌾 Paillage +15</span>
+            <span className="pi-eco-legend-item">♻️ Compost +20</span>
+            <span className="pi-eco-legend-item">💧 Eau +10</span>
+          </div>
+
+          {/* Scan button */}
+          <button
+            className="pi-eco-scan-btn"
+            onClick={() => document.getElementById('eco-gesture-input')?.click()}
+            disabled={ecoScanning}
+          >
+            {ecoScanning ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Analyse en cours...</>
+            ) : (
+              <><Camera className="w-4 h-4" /> 📸 Prendre une photo</>
+            )}
+          </button>
+          <p className="pi-eco-hint">Photo de paillage, compost ou récupérateur d'eau</p>
+
+          {/* Preview */}
+          {ecoPreviewUrl && (
+            <div className="pi-eco-preview">
+              <img src={ecoPreviewUrl} alt="Preview" className="pi-eco-preview-img" />
+              {!ecoScanning && !ecoResult && (
+                <button className="pi-eco-preview-close" onClick={() => { setEcoPreviewUrl(null); setEcoResult(null); setEcoError(null); }}>✕</button>
+              )}
+            </div>
+          )}
+
+          {/* Loading */}
+          {ecoScanning && (
+            <div className="pi-eco-loading">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+              <p> Analyse IA en cours...</p>
+            </div>
+          )}
+
+          {/* Error */}
+          {ecoError && (
+            <div className="pi-eco-error">
+              <XCircle className="w-4 h-4" />
+              <span>{ecoError}</span>
+            </div>
+          )}
+
+          {/* Result verified */}
+          {ecoResult?.verified && (
+            <motion.div
+              className="pi-eco-result pi-eco-result-ok"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+            >
+              <CheckCircle className="w-6 h-6 text-green-500" />
+              <div>
+                <p className="pi-eco-result-title">
+                  {ecoResult.type === 'mulch' ? '🌾' : ecoResult.type === 'compost' ? '♻️' : '💧'} {ecoResult.type} vérifié !
+                </p>
+                <p className="pi-eco-result-conf">Confiance: {(ecoResult.confidence * 100).toFixed(0)}%</p>
+              </div>
+              <div className="pi-eco-result-pts">
+                <Leaf className="w-4 h-4 text-green-600" />
+                <span>+{ecoResult.ecoPoints} pts</span>
+              </div>
+              <p className="pi-eco-result-msg">{ecoResult.message}</p>
+            </motion.div>
+          )}
+
+          {/* Result not verified */}
+          {ecoResult && !ecoResult.verified && (
+            <motion.div
+              className="pi-eco-result pi-eco-result-no"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+            >
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+              <div>
+                <p className="pi-eco-result-title">Aucun geste détecté</p>
+                <p className="pi-eco-result-conf">Confiance: {(ecoResult.confidence * 100).toFixed(0)}% (seuil 60%)</p>
+              </div>
+              <p className="pi-eco-result-msg">{ecoResult.message}</p>
+              <button className="pi-eco-retry" onClick={() => { setEcoResult(null); setEcoPreviewUrl(null); }}>
+                Réessayer
+              </button>
+            </motion.div>
+          )}
+
+          <div className="pi-eco-footer">
+            <Globe className="w-3 h-3" />
+            Scan via Ollama Vision (local, 100% privé)
+          </div>
+        </div>
+      )}
 
       {/* ── Badge GPS ── */}
       {gpsStatus !== 'idle' && (
@@ -289,6 +530,39 @@ export default function PlantIdentifier() {
                       <ul>{selectedPhoto.identificationResult.careAdvice.map((a, i) => <li key={i}>{a}</li>)}</ul>
                     </div>
                   )}
+                  
+                  {/* Bouton Jumeau Numérique */}
+                  {selectedPhoto.identificationResult.growthStage && (
+                    <div style={{ marginTop: 14, padding: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 12, border: '2px solid rgba(255,255,255,0.2)' }}>
+                      <button
+                        onClick={() => createTwin(selectedPhoto)}
+                        style={{
+                          width: '100%',
+                          padding: '12px 20px',
+                          background: 'rgba(255,255,255,0.95)',
+                          border: 'none',
+                          borderRadius: 10,
+                          fontSize: 15,
+                          fontWeight: 700,
+                          color: '#667eea',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 8,
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
+                        onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                      >
+                        ✨ Créer Jumeau Numérique
+                      </button>
+                      <p style={{ margin: '8px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
+                        Ajoute cette plante réelle dans ton jardin virtuel
+                      </p>
+                    </div>
+                  )}
+                  
                   <button className="pi-reanalyze" onClick={() => { updatePhoto(selectedPhoto.id, { identificationResult: undefined }); setSelectedPhoto(prev => prev ? { ...prev, identificationResult: undefined } : prev); }}>
                     🔄 Ré-analyser avec un autre moteur
                   </button>
@@ -397,6 +671,39 @@ export default function PlantIdentifier() {
         .pi-modal-care ul{margin:6px 0 10px 0;padding-left:18px;font-size:12px;color:#aaa;line-height:1.8}
         .pi-reanalyze{width:100%;padding:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#ccc;border-radius:9px;font-size:12px;cursor:pointer;margin-top:4px;transition:background .2s}
         .pi-reanalyze:hover{background:rgba(255,255,255,.14)}
+        /* Eco Gesture */
+        .pi-eco-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+        .pi-eco-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;font-weight:700;font-size:12px;border:none;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+        .pi-eco-btn:hover{filter:brightness(1.1)}
+        .pi-eco-badge{background:rgba(255,255,255,.25);padding:2px 8px;border-radius:20px;font-size:10px}
+        .pi-eco-panel{background:linear-gradient(135deg,#064e3b,#065f46);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid rgba(16,185,129,.3)}
+        .pi-eco-level{margin-bottom:10px}
+        .pi-eco-level-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .pi-eco-level-label{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#6ee7b7}
+        .pi-eco-level-pts{font-size:11px;font-weight:700;color:#34d399}
+        .pi-eco-level-bar{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+        .pi-eco-level-fill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:3px;transition:width .5s}
+        .pi-eco-legend{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+        .pi-eco-legend-item{font-size:10px;font-weight:700;color:#a7f3d0;background:rgba(16,185,129,.15);padding:3px 8px;border-radius:20px;border:1px solid rgba(16,185,129,.3)}
+        .pi-eco-scan-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#10b981;color:#fff;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s}
+        .pi-eco-scan-btn:hover{background:#059669}
+        .pi-eco-scan-btn:disabled{opacity:.6;cursor:wait}
+        .pi-eco-hint{font-size:10px;color:#6ee7b7;text-align:center;margin-top:5px}
+        .pi-eco-preview{position:relative;border-radius:10px;overflow:hidden;margin-top:8px;border:2px solid rgba(16,185,129,.4)}
+        .pi-eco-preview-img{width:100%;height:140px;object-fit:cover;display:block}
+        .pi-eco-preview-close{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:11px}
+        .pi-eco-loading{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 0}
+        .pi-eco-loading p{font-size:12px;font-weight:600;color:#6ee7b7}
+        .pi-eco-error{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:9px;font-size:12px;font-weight:600;color:#fca5a5;margin-top:8px}
+        .pi-eco-result{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;margin-top:8px}
+        .pi-eco-result-ok{background:rgba(16,185,129,.15);border:2px solid #10b981}
+        .pi-eco-result-no{background:rgba(255,214,10,.1);border:2px solid rgba(255,214,10,.4)}
+        .pi-eco-result-title{font-size:13px;font-weight:800;color:#d1fae5}
+        .pi-eco-result-conf{font-size:10px;color:#6ee7b7}
+        .pi-eco-result-pts{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:800;color:#34d399}
+        .pi-eco-result-msg{font-size:11px;color:#a7f3d0;font-style:italic}
+        .pi-eco-retry{width:100%;padding:8px;background:rgba(255,214,10,.2);border:1px solid rgba(255,214,10,.4);color:#fef08a;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
+        .pi-eco-footer{display:flex;align-items:center;gap:4px;font-size:10px;color:#4ade80;margin-top:8px;opacity:.7}
       `}</style>
     </div>
   );

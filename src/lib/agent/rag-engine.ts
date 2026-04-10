@@ -132,14 +132,19 @@ export async function ragQuery(
   const limit = options.limit || 8;
   const scoreThreshold = options.scoreThreshold || 0.5;
 
-  // 1. Generate embedding for the question
-  const questionEmbedding = await generateEmbedding(userMessage);
-
-  // 2. Search Qdrant across collections
-  const results = await searchMulti(collections, questionEmbedding, limit);
-
-  // 3. Build context from results
-  const contextText = formatResultsAsContext(results);
+  // 1. Generate embedding for the question (with fallback if Ollama embeddings unavailable)
+  let questionEmbedding: number[] | null = null;
+  let contextText = '';
+  let results: Map<string, { id: string; score: number; payload: Record<string, unknown>; }[]> = new Map();
+  try {
+    questionEmbedding = await generateEmbedding(userMessage);
+    // 2. Search Qdrant across collections
+    results = await searchMulti(collections, questionEmbedding, limit);
+    // 3. Build context from results
+    contextText = formatResultsAsContext(results);
+  } catch (embedErr) {
+    console.warn('[RAG] Embeddings unavailable, falling back to simple chat:', embedErr);
+  }
 
   // 4. Build game state context
   const gameState = gameContext as unknown as GameStateSnapshot;
@@ -162,13 +167,17 @@ ${contextText}
 ${systemPromptPart}
 `.trim();
 
-  // 8. Generate answer via Ollama
-  const answer = await simpleChat(
-    LIA_PERSONA,
-    userMessage,
-    contextPrompt,
-    { temperature: 0.4, numPredict: 600 }
-  );
+  // 8. Generate answer via Ollama (with 30s timeout)
+  let answer: string;
+  try {
+    answer = await Promise.race([
+      simpleChat(LIA_PERSONA, userMessage, contextPrompt, { temperature: 0.4, numPredict: 600 }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('chat-timeout')), 30000)),
+    ]);
+  } catch (e) {
+    console.warn('[RAG] Chat timeout or error, using fallback:', e);
+    answer = "Je rencontre des difficultés à me connecter à Ollama. Peux-tu réessayer dans quelques secondes ?";
+  }
 
   // 9. Parse any actions from the answer
   const { suggestions, alerts } = parseActionsFromAnswer(answer);

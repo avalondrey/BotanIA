@@ -30,6 +30,20 @@ export interface GardenPhoto {
     description: string;
     careAdvice: string[];
     analyzedAt: number;
+    healthStatus?: {
+      isHealthy: boolean;
+      diseaseName: string;
+      severity: string;
+      treatment: string[];
+      confidence: number;
+    };
+    growthStage?: {            // NOUVEAU: estimation stade de croissance
+      stage: number;           // 0-5
+      stageName: string;
+      estimatedAge: number;    // jours estimés
+      description: string;
+      confidence: number;
+    };
   };
   diseaseResult?: {            // résultat IA détection maladies
     diseaseName: string;

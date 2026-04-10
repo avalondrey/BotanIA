@@ -31,6 +31,7 @@ interface SerrePlant {
 interface ShelfLevel {
   id: string;
   label: string;
+  sublabel: string;
   slots: (SerrePlant | null)[];
 }
 
@@ -919,8 +920,9 @@ function MiniSerresDetail({
     <div className="space-y-4">
       {/* Mini serre cards */}
       {miniSerres.map((serre, serreIdx) => {
-        const allPlants = serre.slots.flat().filter(p => p);
-        const readyPlants = allPlants.filter(p => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 5);
+        const allPlants = serre.slots.flat().filter((p) => p !== null);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const readyPlants = (allPlants as any[]).filter((p: any) => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 5);
 
         return (
           <div

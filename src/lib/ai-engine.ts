@@ -46,6 +46,9 @@ export interface PlantState {
   diseaseDays: number;
   pestDays: number;
   fertilizerBoost: number; // remaining days of fertilizer boost
+  fertilizerLevel: number; // 0-100, current fertilizer level
+  fruitSetRate: number; // 0-1, pollinator activity modifier for fruit formation
+  diseasePressureHours: number; // heures consécutives avec conditions favorables aux maladies
 }
 
 export interface EnvironmentState {
@@ -68,7 +71,7 @@ export interface WeatherData {
 
 export interface AlertData {
   id: string;
-  type: "water" | "health" | "harvest" | "death" | "stage" | "weather" | "combo" | "pest" | "disease" | "season";
+  type: "water" | "health" | "harvest" | "death" | "stage" | "weather" | "combo" | "pest" | "disease" | "season" | "pollinator" | "success";
   message: string;
   emoji: string;
   cellX: number;
@@ -197,6 +200,136 @@ export const PLANTS: Record<string, PlantDefinition> = {
     droughtResistance: 0.55, // medium root depth
     realDaysToHarvest: 130,
   },
+  // ── Petits fruits & plantes functional ──
+  goji: {
+    id: "goji", name: "Goji", emoji: "🍒",
+    image: "/cards/card-goji.png",
+    stageDurations: [14, 28, 35, 50],
+    optimalTemp: [15, 28],
+    waterNeed: 3.5,
+    lightNeed: 7,
+    harvestEmoji: "🍒",
+    cropCoefficient: 0.8,
+    optimalPlantMonths: [3, 4, 5],
+    optimalSeasons: ["spring", "summer"],
+    diseaseResistance: 65,
+    pestResistance: 55,
+    droughtResistance: 0.8,
+    realDaysToHarvest: 127,
+  },
+  lycium: {
+    id: "lycium", name: "Lyciet", emoji: "🍇",
+    image: "/cards/card-lycium.png",
+    stageDurations: [12, 25, 30, 45],
+    optimalTemp: [12, 30],
+    waterNeed: 3.0,
+    lightNeed: 6,
+    harvestEmoji: "🍇",
+    cropCoefficient: 0.75,
+    optimalPlantMonths: [3, 4, 9, 10],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 70,
+    pestResistance: 60,
+    droughtResistance: 0.85,
+    realDaysToHarvest: 112,
+  },
+  mirabellier: {
+    id: "mirabellier", name: "Mirabellier", emoji: "🫐",
+    image: "/cards/card-mirabellier.png",
+    stageDurations: [21, 35, 50, 70],
+    optimalTemp: [10, 25],
+    waterNeed: 4.5,
+    lightNeed: 7,
+    harvestEmoji: "🫐",
+    cropCoefficient: 0.95,
+    optimalPlantMonths: [11, 12, 1, 2, 3],
+    optimalSeasons: ["spring", "winter"],
+    diseaseResistance: 60,
+    pestResistance: 50,
+    droughtResistance: 0.7,
+    realDaysToHarvest: 176,
+  },
+  // ── Arbres et arbustes de haie ──
+  photinia: {
+    id: "photinia", name: "Photinia", emoji: "🌿",
+    image: "/cards/card-photinia.png",
+    stageDurations: [21, 40, 60, 90],
+    optimalTemp: [5, 30],
+    waterNeed: 3.0,
+    lightNeed: 6,
+    harvestEmoji: "🌿",
+    cropCoefficient: 0.70,
+    optimalPlantMonths: [10, 11, 2, 3, 4],
+    optimalSeasons: ["spring", "autumn", "winter"],
+    diseaseResistance: 55,
+    pestResistance: 50,
+    droughtResistance: 0.65,
+    realDaysToHarvest: 211,
+  },
+  eleagnus: {
+    id: "eleagnus", name: "Élagnus / Chalef", emoji: "🌾",
+    image: "/cards/card-eleagnus.png",
+    stageDurations: [21, 45, 60, 90],
+    optimalTemp: [5, 35],
+    waterNeed: 2.5,
+    lightNeed: 6,
+    harvestEmoji: "🌾",
+    cropCoefficient: 0.65,
+    optimalPlantMonths: [10, 11, 2, 3, 4],
+    optimalSeasons: ["spring", "autumn", "winter"],
+    diseaseResistance: 70,
+    pestResistance: 60,
+    droughtResistance: 0.85,
+    realDaysToHarvest: 216,
+  },
+  laurus: {
+    id: "laurus", name: "Laurier Sauce", emoji: "🌿",
+    image: "/cards/card-laurus.png",
+    stageDurations: [21, 50, 70, 100],
+    optimalTemp: [5, 30],
+    waterNeed: 3.0,
+    lightNeed: 5,
+    harvestEmoji: "🌿",
+    cropCoefficient: 0.70,
+    optimalPlantMonths: [3, 4, 9, 10],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 65,
+    pestResistance: 55,
+    droughtResistance: 0.75,
+    realDaysToHarvest: 241,
+  },
+  cornus: {
+    id: "cornus", name: "Cornouillier", emoji: "🌸",
+    image: "/cards/card-cornus.png",
+    stageDurations: [21, 45, 70, 100],
+    optimalTemp: [5, 28],
+    waterNeed: 3.5,
+    lightNeed: 6,
+    harvestEmoji: "🌸",
+    cropCoefficient: 0.70,
+    optimalPlantMonths: [10, 11, 2, 3],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 65,
+    pestResistance: 55,
+    droughtResistance: 0.70,
+    realDaysToHarvest: 236,
+  },
+  casseille: {
+    id: "casseille", name: "Casseille", emoji: "🫐",
+    image: "/cards/card-casseille.png",
+    stageDurations: [18, 30, 40, 60],
+    optimalTemp: [5, 25],
+    waterNeed: 4.0,
+    lightNeed: 6,
+    harvestEmoji: "🫐",
+    cropCoefficient: 0.80,
+    optimalPlantMonths: [11, 12, 1, 2, 3],
+    optimalSeasons: ["spring", "winter"],
+    diseaseResistance: 60,
+    pestResistance: 45,
+    droughtResistance: 0.65,
+    realDaysToHarvest: 148,
+  },
 };
 
 export const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
@@ -210,6 +343,14 @@ export const STAGE_IMAGES: Record<string, string[]> = {
   lettuce:     ["/stages/lettuce/0.png", "/stages/lettuce/1.png", "/stages/lettuce/2.png", "/stages/lettuce/3.png", "/stages/lettuce/4.png", "/stages/lettuce/5.png"],
   basil:       ["/stages/basil/0.png",   "/stages/basil/1.png",   "/stages/basil/2.png",   "/stages/basil/3.png",   "/stages/basil/4.png",   "/stages/basil/5.png"],
   pepper:      ["/stages/pepper/0.png",  "/stages/pepper/1.png",  "/stages/pepper/2.png",  "/stages/pepper/3.png",  "/stages/pepper/4.png",  "/stages/pepper/5.png"],
+  goji:        ["/stages/goji/0.png",    "/stages/goji/1.png",    "/stages/goji/2.png",    "/stages/goji/3.png",    "/stages/goji/4.png",    "/stages/goji/5.png"],
+  lycium:      ["/stages/lycium/0.png",  "/stages/lycium/1.png",  "/stages/lycium/2.png",  "/stages/lycium/3.png",  "/stages/lycium/4.png",  "/stages/lycium/5.png"],
+  mirabellier: ["/stages/mirabellier/0.png", "/stages/mirabellier/1.png", "/stages/mirabellier/2.png", "/stages/mirabellier/3.png", "/stages/mirabellier/4.png", "/stages/mirabellier/5.png"],
+  photinia:    ["/stages/photinia/0.png", "/stages/photinia/1.png", "/stages/photinia/2.png", "/stages/photinia/3.png", "/stages/photinia/4.png", "/stages/photinia/5.png"],
+  eleagnus:    ["/stages/eleagnus/0.png", "/stages/eleagnus/1.png", "/stages/eleagnus/2.png", "/stages/eleagnus/3.png", "/stages/eleagnus/4.png", "/stages/eleagnus/5.png"],
+  laurus:      ["/stages/laurus/0.png",   "/stages/laurus/1.png",   "/stages/laurus/2.png",   "/stages/laurus/3.png",   "/stages/laurus/4.png",   "/stages/laurus/5.png"],
+  cornus:      ["/stages/cornus/0.png",   "/stages/cornus/1.png",   "/stages/cornus/2.png",   "/stages/cornus/3.png",   "/stages/cornus/4.png",   "/stages/cornus/5.png"],
+  casseille:   ["/stages/casseille/0.png", "/stages/casseille/1.png", "/stages/casseille/2.png", "/stages/casseille/3.png", "/stages/casseille/4.png", "/stages/casseille/5.png"],
 };
 
 export const ENVIRONMENTS: Record<
@@ -297,9 +438,9 @@ const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 /** Jour de l'année (1-366) à partir d'une Date */
 export function getDayOfYear(date: Date): number {
-  const start = new Date(date.getFullYear(), 0, 0);
+  const start = new Date(date.getFullYear(), 0, 1); // 1er janvier
   const diff = date.getTime() - start.getTime();
-  return Math.floor(diff / 86_400_000);
+  return Math.floor(diff / 86_400_000) + 1; // +1 : 1er jan = jour 1
 }
 
 /** Jour de l'année d'aujourd'hui */
@@ -635,7 +776,8 @@ export function simulateDay(
     }
   } else {
     // Random disease chance (higher in humid weather, much lower indoor)
-    const indoorFactor = (zoneId === "garden") ? 1.0 : 0.1;
+    // Default to outdoor (garden) factor for backward compatibility
+    const indoorFactor = 0.1; // Lower disease risk indoors (pepiniere/serre)
     // Maladies : rare en conditions normales, plus fréquentes par temps humide
     // Réaliste : mildiou apparaît tous les 2-3 semaines en conditions favorables
     const diseaseChance = weather.type === "rainy" ? 0.008 : weather.type === "stormy" ? 0.015 : 0.002;
@@ -680,7 +822,7 @@ export function simulateDay(
       });
     }
   } else {
-    const indoorFactor = (zoneId === "garden") ? 1.0 : 0.15;
+    const indoorFactor = 0.15; // Lower pest risk indoors
     // Parasites : pucerons plus fréquents en été, aleurodes en serre
     // Réaliste : attaque tous les 3-4 semaines en été
     const pestChance = season === "summer" ? 0.008 : 0.003;
@@ -827,6 +969,9 @@ export function createInitialPlantState(plantDefId: string): PlantState {
     isDead: false, needsWater: false, isHarvestable: false,
     comboBonus: 0, hasDisease: false, hasPest: false,
     diseaseDays: 0, pestDays: 0, fertilizerBoost: 0,
+    fertilizerLevel: 50,
+    fruitSetRate: 1.0,
+    diseasePressureHours: 0,
   };
 }
 
@@ -916,6 +1061,63 @@ export interface RealWeatherParams {
  * Simulate one day using REAL weather data instead of synthetic seasonal data.
  * This is the new recommended simulation function.
  */
+// ═══════════════════════════════════════════════════════════════
+//  POLLINATOR ACTIVITY — Abeilles & insects réels
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Calcule l'activité des pollinisateurs (abeilles, bourdons, etc.)
+ * basée sur les conditions météo réelles.
+ *
+ * Les insectes ne volent pas :
+ * - Si T° < 12°C (trop froid)
+ * - Si vent > 20 km/h (trop venteux)
+ * - Sous la pluie
+ *
+ * Source : biologie entomologique, observations INRAE
+ */
+export function getPollinatorActivity(
+  temperature: number,
+  windSpeed: number,
+  isRaining: boolean
+): number {
+  if (temperature < 12) return 0.1;  // T° trop froide
+  if (temperature < 15) return 0.3;  // T° fraîche, activité réduite
+  if (windSpeed > 25) return 0.2;     // Vent trop fort
+  if (windSpeed > 20) return 0.4;    // Vent modéré
+  if (isRaining) return 0.1;        // Pluie = pas de vol
+  if (temperature > 30) return 0.6; // Chaleur forte, activité réduite
+  return 1.0;                          // Conditions optimales
+}
+
+/**
+ * Plantes qui dépendent des pollinisateurs pour la nouaison
+ * (fleurs → fruits). Certaines plantes sont autogames.
+ */
+const POLLINATOR_DEPENDENT: Set<string> = new Set([
+  'tomato',   // Autogame mais mejor nouaison avec vibration
+  'pepper',   // Autogame
+  'eggplant', // Autogame
+  'cucumber', // Nécessite pollinisation
+  'zucchini', // Nécessite pollinisation (courge)
+  'bean',     // Autogame
+  'pea',      // Autogame
+  'strawberry', // Parciallement autogame
+  'cabbage',  // nécessite pollinisation
+]);
+
+/**
+ * Retourne true si la plante a besoin de pollinisateurs
+ * lorsuq'elle est en phase de floraison.
+ */
+export function needsPollinators(plantDefId: string): boolean {
+  return POLLINATOR_DEPENDENT.has(plantDefId);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REAL WEATHER SIMULATION
+// ═══════════════════════════════════════════════════════════════
+
 export function simulateDayWithRealWeather(
   plantDef: PlantDefinition,
   state: PlantState,
@@ -1056,6 +1258,51 @@ export function simulateDayWithRealWeather(
     }
   }
 
+  // ── Disease Pressure Tracking (Mildiou / Oïdium prediction) ──
+  // Track consecutive hours of favorable disease conditions
+  // Mildiou: HR>90%, T°15-25°C (phytophthora infestans)
+  // Oïdium: HR 60-80%, T°15-25°C, temps sec (erysiphe)
+  if (zoneId === "garden" && newState.stage >= 1 && !newState.hasDisease) {
+    const isMildiouConditions =
+      realWeather.humidity > 90 &&
+      realWeather.temperature >= 10 &&
+      realWeather.temperature <= 28;
+    const isOidieConditions =
+      realWeather.humidity >= 55 &&
+      realWeather.humidity <= 82 &&
+      realWeather.temperature >= 15 &&
+      realWeather.temperature <= 28 &&
+      realWeather.precipitation === 0;
+
+    if (isMildiouConditions || isOidieConditions) {
+      newState.diseasePressureHours += 24; // Chaque tick = 1 jour = 24h
+    } else {
+      // Reset pressure si conditions défavorables
+      newState.diseasePressureHours = Math.max(0, newState.diseasePressureHours - 48);
+    }
+
+    // Alerte prédictive : risque imminent après 48h连续 conditions
+    if (newState.diseasePressureHours >= 48 && newState.diseasePressureHours < 72) {
+      const diseaseType = isMildiouConditions ? "mildiou" : "oïdium";
+      const advice = diseaseType === "mildiou"
+        ? "Applique purin d'ortie ou décoction de prêle maintenant."
+        : "Pulvérise du bicarbonate de soude en préventif.";
+      alerts.push({
+        id: `disease-forecast-${Date.now()}`,
+        type: "disease",
+        message: `⚠️ ${plantDef.emoji} ${plantDef.name} : risque ${diseaseType} élevé dans 24h. ${advice}`,
+        emoji: "🦠", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "warning",
+      });
+    } else if (newState.diseasePressureHours >= 72) {
+      alerts.push({
+        id: `disease-critical-${Date.now()}`,
+        type: "disease",
+        message: `🚨 ${plantDef.emoji} ${plantDef.name} : conditions idéales pour mildiou/oïdium ! Traitement urgent nécessaire.`,
+        emoji: "🚨", cellX: 0, cellY: 0, timestamp: Date.now(), severity: "critical",
+      });
+    }
+  }
+
   // ── Pest (higher chance in warm weather) ──
   if (newState.hasPest) {
     newState.pestDays++;
@@ -1110,6 +1357,34 @@ export function simulateDayWithRealWeather(
   // ── Fertilizer countdown ──
   if (newState.fertilizerBoost > 0) {
     newState.fertilizerBoost--;
+  }
+
+  // ── Pollinator Activity (Abeilles & insects) ──
+  // Only applies to plants in flowering stage (stage 3) that need pollinators
+  if (newState.stage === 3 && needsPollinators(plantDef.id)) {
+    const isRaining = realWeather.precipitation > 0;
+    const pollinatorActivity = getPollinatorActivity(
+      realWeather.temperature,
+      realWeather.windSpeed,
+      isRaining
+    );
+    newState.fruitSetRate = pollinatorActivity;
+
+    // Alert if pollinator activity is low during flowering
+    if (pollinatorActivity < 0.4) {
+      const tip = pollinatorActivity < 0.2
+        ? "Secoue délicatement les fleurs de tomates ce soir pour favoriser la nouaison."
+        : "Activité pollinisatrice réduite aujourd'hui.";
+      alerts.push({
+        id: `pollinator-${Date.now()}-${Math.random()}`,
+        type: "pollinator",
+        message: `🐝 ${tip} (activité: ${Math.round(pollinatorActivity * 100)}%)`,
+        emoji: "🐝", cellX: 0, cellY: 0, timestamp: Date.now(), severity: pollinatorActivity < 0.2 ? "warning" : "info",
+      });
+    }
+  } else {
+    // Reset fruitSetRate when not in flowering or not needing pollinators
+    newState.fruitSetRate = 1.0;
   }
 
   // ── Frost damage (real temp based) ──

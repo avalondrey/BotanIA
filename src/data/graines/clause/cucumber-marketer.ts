@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 7, note: "Levee rapide 5-10 jours a 20C" },
     transplant: { days: 30, note: "Repiquage quand 3-4 feuilles" },
     firstFlowers: { days: 45, note: "Floraison - fleurs males puis females" },

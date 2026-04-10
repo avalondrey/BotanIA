@@ -1,7 +1,7 @@
 {
-  "name": "BotanIA — Jardin Culture",
+  "name": "BotanIA — Application de Jardinage Botanique",
   "short_name": "BotanIA",
-  "description": "Simulateur de jardinage botanique français connecté à la météo réelle",
+  "description": "Application de jardinage botanique scientifique connectée à la météo réelle",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F5F5DC",
@@ -15,6 +15,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "education"],
+  "categories": ["utilities", "education"],
   "lang": "fr"
 }

@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 30, note: "Levee tres lente 20-40 jours, besoin de froid" },
     firstLeaves: { days: 60, note: "Rosette de feuilles" },
     flowering: { days: 100, note: "Fleurs blanches apparaissent" },

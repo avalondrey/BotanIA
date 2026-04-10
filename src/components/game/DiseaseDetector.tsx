@@ -144,12 +144,13 @@ export default function DiseaseDetector() {
   const recognitionRef = useRef<SpeechRecognition|null>(null);
 
   const startVoiceInput = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    const win = window as typeof window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition };
+    const SR = win.SpeechRecognition || win.webkitSpeechRecognition;
+    if (!SR) {
       alert('Dictée vocale non supportée par ce navigateur.');
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition = new SR();
     recognition.lang = 'fr-FR';
     recognition.continuous = true;
     recognition.interimResults = true;

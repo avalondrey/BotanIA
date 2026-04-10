@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 7, note: "Levee en 5-10 jours a 15-20C" },
     firstLeaves: { days: 30, note: "Rosette de feuilles" },
     headFormation: { days: 90, note: "Pomme commence a se former" },

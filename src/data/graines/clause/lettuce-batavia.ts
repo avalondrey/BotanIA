@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 6, note: "Levee rapide 4-8 jours a 15-20C" },
     transplant: { days: 25, note: "Repiquage possible ou semis direct" },
     firstLeaves: { days: 35, note: "Pousse vegetative rapide" },

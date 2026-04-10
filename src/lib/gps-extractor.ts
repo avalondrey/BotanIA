@@ -83,7 +83,7 @@ function parseExifGPS(buffer: ArrayBuffer): { lat: number; lon: number; altitude
             gpsData[tag] = str;
           } else if (type === 5) { // RATIONAL
             const off = readUint32(valOffset);
-            const vals = [];
+            const vals: number[] = [];
             for (let j = 0; j < count; j++) {
               const num = readUint32(off + j * 8);
               const den = readUint32(off + j * 8 + 4);

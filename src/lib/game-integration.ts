@@ -6,19 +6,21 @@ export function saveGardenState(state: any) { try { localStorage.setItem(STORAGE
 export function loadGardenState(): any { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; } }
 
 // 💡 Déclencheur IA automatique
+const advicePendingSet = new WeakSet<object>();
+
 export async function triggerAutoAdvice(
   plant: { name: string; stage: number; health: number; needsWater: boolean },
   weather: { timeLabel?: string; weatherLabel?: string },
   zone: 'pepiniere' | 'serre' | 'jardin',
   onAdvice?: (text: string) => void
 ) {
-  if ((plant.health < 30 || plant.needsWater) && !plant._advicePending) {
-    plant._advicePending = true;
+  if ((plant.health < 30 || plant.needsWater) && !advicePendingSet.has(plant)) {
+    advicePendingSet.add(plant);
     const q = plant.health < 30 ? "Ma plante va mal, que faire ?" : "Elle a besoin d'eau, conseil ?";
     const w = weather || { timeLabel: "Jour", weatherLabel: "Normal" };
     const advice = await getPlantAdviceSafe(plant.name, plant.stage, w.timeLabel!, w.weatherLabel!, zone, q);
     if (advice && onAdvice) onAdvice(advice);
-    setTimeout(() => { plant._advicePending = false; }, 60000); // Cooldown 1min
+    setTimeout(() => { advicePendingSet.delete(plant); }, 60000); // Cooldown 1min
   }
 }
 

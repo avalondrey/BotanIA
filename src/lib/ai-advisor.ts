@@ -304,7 +304,11 @@ export function getAdvisorSuggestions(context: AdvisorContext): AdvisorSuggestio
 
   // Watering advice
   allSuggestions.push(...getWateringAdvice(
-    context.gardenPlants.map(p => ({ ...p, plant: p.plant })),
+    context.gardenPlants.map(p => ({
+      plantDefId: p.plantDefId,
+      waterLevel: p.plant.waterLevel ?? 50,
+      plant: p.plant,
+    })),
     context.realWeather
   ));
 

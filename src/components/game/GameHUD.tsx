@@ -7,7 +7,7 @@ import {
   Coins, Thermometer, Wind, Sun, MapPin, RefreshCw, Zap,
   Warehouse,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   getRealDateDisplay,
   getRealDateFull,
@@ -15,11 +15,10 @@ import {
   getSeasonLabel,
 } from "@/lib/ai-engine";
 import {
-  getWeatherEmoji,
-  getWeatherLabel,
   type RealWeatherData,
   isFrostRisk,
 } from "@/lib/weather-service";
+import { getAdvisorSuggestions } from "@/lib/ai-advisor"; // Utilisation de la fonction principale de l'advisor
 
 // ═══ Analog Clock Component — Real time (client-only, no SSR) ═══
 function AnalogClock() {
@@ -88,7 +87,6 @@ export function GameHUD() {
   const season = useGameStore((s) => s.season);
   const speed = useGameStore((s) => s.speed);
   const setSpeed = useGameStore((s) => s.setSpeed);
-  const alerts = useGameStore((s) => s.alerts);
   const harvested = useGameStore((s) => s.harvested);
   const showConsole = useGameStore((s) => s.showConsole);
   const toggleConsole = useGameStore((s) => s.toggleConsole);
@@ -97,12 +95,32 @@ export function GameHUD() {
   const coins = useGameStore((s) => s.coins);
   const realWeather = useGameStore((s) => s.realWeather);
   const gpsCoords = useGameStore((s) => s.gpsCoords);
+  const gardenPlants = useGameStore((s) => s.gardenPlants);
+  const pepiniere = useGameStore((s) => s.pepiniere);
+  const alerts = useGameStore((s) => s.alerts);
   const weatherLoading = useGameStore((s) => s.weatherLoading);
   const weatherError = useGameStore((s) => s.weatherError);
-  const gardenPlants = useGameStore((s) => s.gardenPlants);
   const gardenSerreZones = useGameStore((s) => s.gardenSerreZones);
-  const pepiniere = useGameStore((s) => s.pepiniere);
   const serreTiles = useGameStore((s) => s.serreTiles);
+
+  // 🧠 IA Advice Memoized: Refresh only every 15 mins or on day change
+  const aiAdvice = useMemo(() => {
+    // Note: pepiniere est PlantState[] mais l'advisor attend {plantDefId, plant}[]
+    // Cast temporaire — à corriger quand le type sera unifié
+    const pepinierePlantsForAdvisor = pepiniere.map((p: any) => ({
+      plantDefId: 'unknown',
+      plant: p,
+    }));
+    return getAdvisorSuggestions({
+      day,
+      season,
+      realWeather,
+      gardenPlants: gardenPlants.map(p => ({ ...p, plant: p.plant, daysSincePlanting: p.plant.daysSincePlanting })),
+      pepinierePlants: pepinierePlantsForAdvisor,
+      recentAlerts: alerts.map(a => ({ type: a.type, severity: 'medium' })),
+      coins
+    });
+  }, [day, season, realWeather, gardenPlants.length, pepiniere.length]);
 
   const recentAlerts = alerts.slice(-8).reverse();
   const jardinPlants = gardenPlants.length;
@@ -208,7 +226,7 @@ export function GameHUD() {
           <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-stone-50 rounded-lg border border-stone-200 flex-shrink-0">
             <MapPin className="w-3.5 h-3.5 text-stone-400" />
             <p className="text-[8px] font-bold text-stone-500">
-              {gpsCoords?.latitude != null && gpsCoords?.longitude != null ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "Localisation..."}
+              {gpsCoords?.lat != null && gpsCoords?.lon != null ? `${gpsCoords.lat.toFixed(2)}°, ${gpsCoords.lon.toFixed(2)}°` : "Localisation..."}
             </p>
           </div>
         )}
@@ -251,7 +269,7 @@ export function GameHUD() {
           <div className="flex items-center gap-1">
             <Thermometer className="w-3.5 h-3.5 text-red-500" />
             <span className="text-[10px] font-bold">
-              {gpsCoords?.latitude != null && gpsCoords?.longitude != null ? `${gpsCoords.latitude.toFixed(2)}°, ${gpsCoords.longitude.toFixed(2)}°` : "Localisation..."}
+              {gpsCoords?.lat != null && gpsCoords?.lon != null ? `${gpsCoords.lat.toFixed(2)}°, ${gpsCoords.lon.toFixed(2)}°` : "Localisation..."}
             </span>
           </div>
           <div className="flex items-center gap-1">
@@ -272,11 +290,11 @@ export function GameHUD() {
               UV {realWeather?.today?.uvIndex ?? "—"}
             </span>
           </div>
-           {(realWeather?.today?.precipitation ?? 0) > 0 && (
+           {(realWeather?.today?.precipitationMm ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Droplets className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-[10px] font-bold text-blue-700">
-                🌧️ {realWeather.today.precipitation} mm
+                🌧️ {realWeather.today.precipitationMm} mm
               </span>
             </div>
           )}

@@ -30,8 +30,8 @@ function autoSelectEngine(): string {
 }
 
 // ─── Réponse standard ─────────────────────────────────────────────────────────
-function okResult(plantName: string, confidence: number, description: string, careAdvice: string[], engine: string) {
-  return NextResponse.json({ plantName, confidence, description, careAdvice, engine });
+function okResult(plantName: string, confidence: number, description: string, careAdvice: string[], engine: string, healthStatus?: any) {
+  return NextResponse.json({ plantName, confidence, description, careAdvice, engine, healthStatus });
 }
 
 const SYSTEM_PROMPT = `Tu es un botaniste expert. Quand on te décrit ou montre une plante, réponds UNIQUEMENT avec ce JSON valide (pas de texte avant/après, pas de backticks) :
@@ -39,8 +39,38 @@ const SYSTEM_PROMPT = `Tu es un botaniste expert. Quand on te décrit ou montre 
   "plantName": "Nom commun français (Nom latin)",
   "confidence": 0.85,
   "description": "Description courte de la plante en 1-2 phrases.",
-  "careAdvice": ["Conseil 1", "Conseil 2", "Conseil 3"]
+  "careAdvice": ["Conseil 1", "Conseil 2", "Conseil 3"],
+  "healthStatus": {
+    "isHealthy": true,
+    "diseaseName": "Sain",
+    "severity": "none",
+    "treatment": [],
+    "confidence": 0.9
+  },
+  "growthStage": {
+    "stage": 2,
+    "stageName": "Plantule 2 feuilles",
+    "estimatedAge": 15,
+    "description": "Petite plantule avec 2 vraies feuilles",
+    "confidence": 0.8
+  }
 }
+
+STAGES DE CROISSANCE (0-5) :
+- 0 : Graine semée (terre, aucune pousse visible)
+- 1 : Germination (monticule, première levée)
+- 2 : Plantule 2 feuilles (cotylédons ouverts)
+- 3 : Plantule 4 feuilles (vraies feuilles développées)
+- 4 : Plant mature (5+ feuilles, robuste)
+- 5 : Floraison/Fructification (fleurs ou fruits visibles)
+
+ESTIME LE STADE en observant :
+- Nombre de feuilles visibles
+- Taille et robustesse du plant
+- Présence de fleurs ou fruits
+- Développement des tiges
+
+Si tu détectes une maladie ou un ravageur, mets isHealthy à false, nomme la maladie et suggère des traitements.
 Si tu n'arrives pas à identifier la plante, mets plantName "Plante non identifiée" et confidence 0.1.`;
 
 // ─── Groq (llama-3.3-70b) ─────────────────────────────────────────────────────
@@ -71,7 +101,7 @@ async function identifyWithGroq(imageBase64: string, mediaType = 'image/jpeg') {
   const data = await res.json();
   const text = data.choices?.[0]?.message?.content || '';
   const parsed = safeParseJSON(text);
-  return okResult(parsed.plantName, parsed.confidence, parsed.description, parsed.careAdvice, 'groq');
+  return okResult(parsed.plantName, parsed.confidence, parsed.description, parsed.careAdvice, 'groq', parsed.healthStatus);
 }
 
 // ─── Ollama local ─────────────────────────────────────────────────────────────
@@ -110,7 +140,7 @@ async function identifyWithOllama(_imageBase64: string) {
   const data = await res.json();
   const text = data.message?.content || '';
   const parsed = safeParseJSON(text);
-  return okResult(parsed.plantName, parsed.confidence, parsed.description, parsed.careAdvice, hasLlava ? 'ollama-vision' : 'ollama-text');
+  return okResult(parsed.plantName, parsed.confidence, parsed.description, parsed.careAdvice, hasLlava ? 'ollama-vision' : 'ollama-text', parsed.healthStatus);
 }
 
 // ─── Plant.id (API gratuite spécialisée plantes) ──────────────────────────────
@@ -135,7 +165,7 @@ async function identifyWithPlantId(imageBase64: string, _mediaType = 'image/jpeg
   const name = `${top.name}` + (top.details?.common_names?.[0] ? ` (${top.details.common_names[0]})` : '');
   const desc = top.details?.description?.value || top.details?.wiki_description?.value || 'Plante identifiée par Plant.id.';
   const care = top.details?.watering ? [`Arrosage : ${top.details.watering}`] : ['Consulter les conseils spécifiques à cette espèce.'];
-  return okResult(name, top.probability || 0.5, desc.slice(0, 250), care, 'plantid');
+  return okResult(name, top.probability || 0.5, desc.slice(0, 250), care, 'plantid', { isHealthy: true, diseaseName: 'Sain', severity: 'none', treatment: [], confidence: 0.9 });
 }
 
 // ─── Claude Vision ────────────────────────────────────────────────────────────
@@ -162,7 +192,7 @@ async function identifyWithClaude(imageBase64: string, mediaType = 'image/jpeg')
   const data = await res.json();
   const text = data.content?.[0]?.text || '';
   const parsed = safeParseJSON(text);
-  return okResult(parsed.plantName, parsed.confidence, parsed.description, parsed.careAdvice, 'claude');
+  return okResult(parsed.plantName, parsed.confidence, parsed.description, parsed.careAdvice, 'claude', parsed.healthStatus);
 }
 
 // ─── JSON sécurisé ────────────────────────────────────────────────────────────

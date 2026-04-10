@@ -21,9 +21,10 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
   const fillMiniSerre = useGameStore((s) => s.fillMiniSerre);
   const waterAllMiniSerre = useGameStore((s) => s.waterAllMiniSerre);
   const removeMiniSerre = useGameStore((s) => s.removeMiniSerre);
+  const selectedMiniSerreId = useGameStore((s) => s.selectedMiniSerreId);
+  const selectedSlot = useGameStore((s) => s.selectedSlot);
+  const setSelectedSlot = useGameStore((s) => s.setSelectedSlot);
 
-  const [selectedSlot, setSelectedSlot] = useState<{ row: number; col: number } | null>(null);
-  const _selectedSlot = selectedSlot;
   const [showFillMenu, setShowFillMenu] = useState(false);
   const [showSlotMenu, setShowSlotMenu] = useState(false);
   const [pendingSlot, setPendingSlot] = useState<{ row: number; col: number } | null>(null);
@@ -64,7 +65,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
   const handleSlotClick = (row: number, col: number) => {
     const plant = serre.slots[row]?.[col];
     if (plant) {
-      setSelectedSlot(selectedSlot?.row === row && selectedSlot?.col === col ? null : { row, col });
+      setSelectedSlot(serre.id, selectedMiniSerreId === serre.id && selectedSlot?.row === row && selectedSlot?.col === col ? null : { row, col });
     } else {
       setPendingSlot({ row, col });
       setShowSlotMenu(true);
@@ -205,7 +206,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
         >
           {serre.slots.map((row, rowIdx) =>
             row.map((plant, colIdx) => {
-              const isSelected = selectedSlot?.row === rowIdx && selectedSlot?.col === colIdx;
+              const isSelected = selectedMiniSerreId === serre.id && selectedSlot?.row === rowIdx && selectedSlot?.col === colIdx;
               const plantDef = plant ? PLANTS[plant.plantDefId] : null;
               const pepStage = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) : -1;
               const isReady = pepStage >= 5;
@@ -283,7 +284,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
 
       {/* Selected slot detail */}
       <AnimatePresence>
-        {selectedSlot && (() => {
+        {selectedMiniSerreId === serre.id && selectedSlot && (() => {
           const plant = serre.slots[selectedSlot.row]?.[selectedSlot.col];
           if (!plant) return null;
           const plantDef = PLANTS[plant.plantDefId];
@@ -309,7 +310,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                     <p className="text-[7px] text-stone-400">{stageName} · J{plant.daysSincePlanting}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedSlot(null)} className="text-stone-400 hover:text-black"><X className="w-3 h-3" /></button>
+                <button onClick={() => setSelectedSlot(serre.id, null)} className="text-stone-400 hover:text-black"><X className="w-3 h-3" /></button>
               </div>
               <div className="grid grid-cols-2 gap-1 mb-1.5">
                 <div className="flex items-center gap-0.5">
@@ -348,7 +349,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                           plantName: def?.name || plant.plantDefId,
                           plantEmoji: def?.emoji || "",
                         });
-                        setSelectedSlot(null);
+                        setSelectedSlot(serre.id, null);
                         useGameStore.setState({ activeTab: "jardin" });
                       }}
                       className="px-1.5 py-0.5 bg-gradient-to-b from-emerald-400 to-green-500 text-white text-[7px] font-bold rounded hover:from-emerald-300 hover:to-green-400 shadow-[1px_1px_0_0_#000]"
@@ -356,7 +357,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                       Transplanter
                     </button>
                   )}
-                  <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().removeMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); setSelectedSlot(null); }} className="px-1.5 py-0.5 bg-red-100 text-red-600 text-[7px] font-bold rounded hover:bg-red-200" title="Supprimer"><X className="w-2.5 h-2.5" /></button>
+                  <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().removeMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); setSelectedSlot(serre.id, null); }} className="px-1.5 py-0.5 bg-red-100 text-red-600 text-[7px] font-bold rounded hover:bg-red-200" title="Supprimer"><X className="w-2.5 h-2.5" /></button>
                 </div>
               </div>
             </motion.div>

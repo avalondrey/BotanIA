@@ -11,6 +11,7 @@ export interface PhotoMetadata {
   plantCount: number;
   harvested: number;
   score: number;
+  dataUrl?: string;
 }
 
 // Photo gallery storage

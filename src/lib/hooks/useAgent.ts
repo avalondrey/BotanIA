@@ -7,6 +7,7 @@ import { useAgentStore, selectUnreadCount, selectCriticalSuggestions } from '@/s
 import { ragQuery } from '@/lib/agent/rag-engine';
 import { getAgentModeLabel } from '@/lib/agent/fallback-chain';
 import { useGameStore } from '@/store/game-store';
+import { generateTip } from '@/lib/lia-data';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -31,52 +32,58 @@ export function useAgent(options: UseAgentOptions = {}) {
   const ask = useCallback(async (question: string) => {
     if (!question.trim()) return;
 
-    // Add user message
     store.addMessage({ role: 'user', content: question });
     store.setThinking(true);
 
     try {
-      // Build game context from store
       const gameContext = buildGameContext(gameStore);
+      const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
 
-      // Query RAG
-      const result = await ragQuery(question, gameContext);
+      // ── Essai RAG complet (Ollama + Qdrant) ──
+      if (store.status.isLocalAIActive && store.status.isOllamaAvailable) {
+        try {
+          const result = await ragQuery(question, gameContext);
+          store.addMessage({ role: 'assistant', content: result.answer, engine: result.engine, actions: result.suggestions });
+          result.alerts.forEach(alert => store.addNotification({ type: 'alert', title: '⚠️ Alerte BotanIA', message: alert, priority: 'high' }));
+          result.suggestions.forEach(sug => store.addSuggestion({ category: 'plant', title: sug.slice(0, 50), description: sug, priority: 'medium' }));
+          return;
+        } catch (ragErr) {
+          console.warn('[useAgent] RAG failed, falling back to Groq:', ragErr);
+        }
+      }
 
-      // Add assistant response
-      store.addMessage({
-        role: 'assistant',
-        content: result.answer,
-        engine: result.engine,
-        actions: result.suggestions,
-      });
-
-      // Add any alerts as notifications
-      result.alerts.forEach(alert => {
-        store.addNotification({
-          type: 'alert',
-          title: '⚠️ Alerte BotanIA',
-          message: alert,
-          priority: 'high',
+      // ── Fallback direct Groq (sans embeddings) ──
+      if (groqKey) {
+        const plants = (gameContext.plants as any[]) || [];
+        const ctx = `Jardin: ${plants.length} plantes. Météo: ${gameContext.temperatureCelsius}°C. Saison: ${gameContext.season}. Eau: ${gameContext.waterLiters}L.`;
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 400,
+            temperature: 0.35,
+            messages: [
+              { role: 'system', content: `Tu es Lia, assistante de jardinage bio française. Réponds en 2-3 phrases max, pratique et bienveillant. Contexte: ${ctx}` },
+              { role: 'user', content: question },
+            ],
+          }),
         });
-      });
+        if (res.ok) {
+          const data = await res.json();
+          const reply = data.choices?.[0]?.message?.content?.trim() || 'Je ne sais pas.';
+          store.addMessage({ role: 'assistant', content: reply, engine: 'groq' });
+          return;
+        }
+      }
 
-      // Add suggestions
-      result.suggestions.forEach(sug => {
-        store.addSuggestion({
-          category: 'plant',
-          title: sug.slice(0, 50),
-          description: sug,
-          priority: 'medium',
-        });
-      });
+      // ── Fallback statique ──
+      const tip = generateTip({ plants: (gameContext.plants as any[]) || [], weather: { temperature: gameContext.temperatureCelsius as number } });
+      store.addMessage({ role: 'assistant', content: tip.message, engine: 'fallback' });
 
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Erreur inconnue';
-      store.addMessage({
-        role: 'assistant',
-        content: `Désolée, j'ai eu un problème: ${error}. Réessaie!`,
-        engine: 'fallback',
-      });
+      store.addMessage({ role: 'assistant', content: `Désolée, j'ai eu un problème: ${error}. Réessaie!`, engine: 'fallback' });
     } finally {
       store.setThinking(false);
     }

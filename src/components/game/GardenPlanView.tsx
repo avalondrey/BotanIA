@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useGameStore, DEFAULT_GARDEN_WIDTH_CM, DEFAULT_GARDEN_HEIGHT_CM } from '@/store/game-store';
 import { PLANTS } from '@/lib/ai-engine';
 import { useAgroData, type PlantAgroData } from '@/hooks/useAgroData';
+import { useMissingSprites } from '@/hooks/useMissingSprites';
 import type { SeedRow } from './SeedRowPainter';
 
 interface GardenPlanViewProps {
@@ -14,9 +15,10 @@ interface GardenPlanViewProps {
   editMode?: 'place' | 'select';
   onToolUsed?: () => void;
   onSelectElement?: (type: string, id: string) => void;
+  onEditModeChange?: (mode: 'place' | 'select') => void;
 }
 
-const DISPLAY_SCALE = 0.55;
+const DISPLAY_SCALE = 0.65;
 
 const TOOL_SIZES: Record<string, { w: number; h: number }> = {
   serre: { w: 600, h: 400 },
@@ -34,6 +36,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   editMode = 'place',
   onToolUsed,
   onSelectElement,
+  onEditModeChange,
 }) => {
   const gardenPlants     = useGameStore((s) => s.gardenPlants);
   const gardenSerreZones = useGameStore((s) => s.gardenSerreZones);
@@ -54,6 +57,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const moveGardenDrum   = useGameStore((s) => (s as any).moveGardenDrum as (id: string, x: number, y: number) => void);
   const moveGardenTree   = useGameStore((s) => (s as any).moveGardenTree as (id: string, x: number, y: number) => void);
   const moveGardenZone   = useGameStore((s) => (s as any).moveGardenZone as (id: string, x: number, y: number) => void);
+  const resizeGardenZone = useGameStore((s) => (s as any).resizeGardenZone as (id: string, x: number, y: number, w: number, h: number) => void);
   const addGardenZone    = useGameStore((s) => (s as any).addGardenZone as (x: number, y: number, w: number, h: number, type?: string) => void);
   const removeGardenShed  = useGameStore((s) => (s as any).removeGardenShed as (id: string) => void);
   const moveGardenShed    = useGameStore((s) => (s as any).moveGardenShed as (id: string, x: number, y: number) => void);
@@ -71,6 +75,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const addGardenShed    = useGameStore((s) => (s as any).addGardenShed as (x: number, y: number) => void);
   const canvasRef        = useRef<HTMLCanvasElement>(null);
   const agro             = useAgroData();
+  const { reportMissing } = useMissingSprites();
 
   // ── Drag state ──
   const dragRef = useRef<{
@@ -84,6 +89,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   } | null>(null);
   const [dragPos, setDragPos] = useState<{ id: string; x: number; y: number } | null>(null);
   const [selectedElement, setSelectedElement] = useState<{ type: string; id: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: string; id: string } | null>(null);
 
   // ── Dessin de zone par glisser ──
   type ZoneDrawState = { startX: number; startY: number; curX: number; curY: number; zoneType: 'uncultivated' | 'hedge' | 'water_recovery' | 'grass' | 'fleur' } | null;
@@ -249,6 +255,13 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
     };
   }, [dragPos, moveSerreZone, moveGardenPlant, moveGardenHedge, moveGardenTank, moveGardenDrum, moveGardenShed, moveGardenTree, moveGardenZone]);
 
+  // ── Context menu ──
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
+
 
   // ── Canvas overlay rangs ──────────────────────────────────────────────────
   useEffect(() => {
@@ -305,57 +318,63 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
       </div>
 
       {/* Grille scrollable */}
-      <div className="garden-scroll-wrapper">
-        
-        {/* Règles graduées */}
-        <div style={{ position: 'relative', marginLeft: 30, marginTop: 20 }}>
-          {/* Règle horizontale (haut) */}
-          <div style={{ 
-            position: 'absolute', 
-            top: -20, 
-            left: 0, 
-            width: displayW, 
-            height: 20,
-            display: 'flex',
-            borderBottom: '1px solid #666'
-          }}>
-            {Array.from({ length: Math.ceil(gardenWidthCm / 100) + 1 }).map((_, i) => (
-              <div key={`h-${i}`} style={{ 
-                flex: '1 0 ' + (100 * DISPLAY_SCALE) + 'px',
-                borderLeft: i === 0 ? 'none' : '1px solid #999',
-                fontSize: 10,
-                color: '#666',
-                paddingLeft: 2
-              }}>
-                {i}m
-              </div>
-            ))}
-          </div>
-          
-          {/* Règle verticale (gauche) */}
-          <div style={{
-            position: 'absolute',
-            left: -30,
-            top: 0,
-            width: 30,
-            height: displayH,
-            borderRight: '1px solid #666'
-          }}>
-            {Array.from({ length: Math.ceil(gardenHeightCm / 100) + 1 }).map((_, i) => (
-              <div key={`v-${i}`} style={{
-                position: 'absolute',
-                top: i * 100 * DISPLAY_SCALE,
-                right: 2,
-                fontSize: 10,
-                color: '#666',
-                borderTop: i === 0 ? 'none' : '1px solid #999',
-                width: 28,
-                textAlign: 'right'
-              }}>
-                {i}m
-              </div>
-            ))}
-          </div>
+      <div style={{ position: 'relative' }}>
+
+        /* Règle horizontale (haut) */
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: displayW,
+          height: 20,
+          display: 'flex',
+          borderBottom: '1px solid #666',
+          zIndex: 10,
+          background: 'rgba(232,245,233,0.95)',
+          pointerEvents: 'none',
+        }}>
+          {Array.from({ length: Math.ceil(gardenWidthCm / 100) + 1 }).map((_, i) => (
+            <div key={`h-${i}`} style={{
+              flex: '1 0 ' + (100 * DISPLAY_SCALE) + 'px',
+              borderLeft: i === 0 ? 'none' : '1px solid #999',
+              fontSize: 10,
+              color: '#666',
+              paddingLeft: 2
+            }}>
+              {i}m
+            </div>
+          ))}
+        </div>
+
+        {/* Règle verticale (droite) */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: 40,
+          height: displayH,
+          borderLeft: '1px solid #666',
+          zIndex: 10,
+          background: 'rgba(232,245,233,0.95)',
+          pointerEvents: 'none',
+          paddingTop: 20,
+          boxSizing: 'border-box',
+        }}>
+          {Array.from({ length: Math.ceil(gardenHeightCm / 100) + 1 }).map((_, i) => (
+            <div key={`v-${i}`} style={{
+              position: 'absolute',
+              top: i * 100 * DISPLAY_SCALE,
+              left: 0,
+              width: 40,
+              borderTop: i === 0 ? 'none' : '1px solid #999',
+              fontSize: 10,
+              color: '#666',
+              paddingTop: 1,
+              textAlign: 'center',
+            }}>
+              {i}m
+            </div>
+          ))}
         </div>
 
         <div
@@ -364,7 +383,6 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           style={{
             width: displayW,
             height: displayH,
-            position: 'relative',
             flexShrink: 0,
             cursor: activeTool !== 'none' ? 'crosshair' : 'default',
           }}
@@ -440,6 +458,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                   if (editMode === 'select') { setSelectedElement({ type: 'serre', id: serre.id }); onSelectElement?.('serre', serre.id); }
                   else setActiveTab('serre');
                 }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'serre', id: serre.id }); }}
                 title="Glisser pour déplacer · Cliquer pour entrer dans la serre"
               >
                 {selectedElement?.id === serre.id && selectedElement?.type === 'serre' && (
@@ -464,6 +483,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             <div key={zone.id}
               onMouseDown={(e) => { e.stopPropagation(); if (activeTool === 'none') startDrag(e, 'zone', zone.id, zone.x, zone.y); }}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'zone', id: zone.id }); onSelectElement?.('zone', zone.id); } }}
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'zone', id: zone.id }); }}
               style={{
                 position: 'absolute',
                 left: zone.x * DISPLAY_SCALE,
@@ -487,13 +507,61 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               title={zone.label || (zone.type === 'water_recovery' ? '💧 Zone récupération eau' : zone.type === 'hedge' ? '🌿 Zone haie' : zone.type === 'grass' ? '🌱 Zone herbe' : zone.type === 'fleur' ? '🌸 Zone fleur' : '🟢 Zone culture')}
             >
               {selectedElement?.id === zone.id && selectedElement?.type === 'zone' && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); removeGardenZone?.(zone.id); setSelectedElement(null); }}
-                  style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
-                  title="Supprimer"
-                >
-                  🗑️ Supprimer
-                </button>
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeGardenZone?.(zone.id); setSelectedElement(null); }}
+                    style={{ position:'absolute', top:-32, right:0, background:'#ef4444', color:'#fff', border:'none', borderRadius:6, padding:'4px 8px', fontSize:11, cursor:'pointer', fontWeight:700, zIndex:9999 }}
+                    title="Supprimer"
+                  >
+                    🗑️ Supprimer
+                  </button>
+                  <div
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const startX = e.clientX;
+                      const startY = e.clientY;
+                      const startW = zone.width;
+                      const startH = zone.height;
+                      const startZx = zone.x;
+                      const startZy = zone.y;
+                      const onMove = (me: MouseEvent) => {
+                        const dx = me.clientX - startX;
+                        const dy = me.clientY - startY;
+                        const newW = Math.max(30, Math.round(startW + dx / DISPLAY_SCALE));
+                        const newH = Math.max(30, Math.round(startH + dy / DISPLAY_SCALE));
+                        const newX = startZx;
+                        const newY = startZy;
+                        resizeGardenZone?.(zone.id, newX, newY, newW, newH);
+                      };
+                      const onUp = () => {
+                        window.removeEventListener('mousemove', onMove);
+                        window.removeEventListener('mouseup', onUp);
+                      };
+                      window.addEventListener('mousemove', onMove);
+                      window.addEventListener('mouseup', onUp);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      width: 16,
+                      height: 16,
+                      background: '#22c55e',
+                      borderRadius: '0 0 6px 0',
+                      cursor: 'se-resize',
+                      zIndex: 9999,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 10,
+                      color: '#fff',
+                    }}
+                    title="Glisser pour redimensionner"
+                  >
+                    ↘
+                  </div>
+                </>
               )}
               <div style={{ position:'absolute', top:4, left:6, fontSize:9, color: zone.type === 'water_recovery' ? 'rgba(100,116,139,.6)' : zone.type === 'hedge' ? 'rgba(45,80,22,.7)' : 'rgba(139,195,74,.7)', fontWeight:600 }}>
                 {zone.label || (zone.type === 'water_recovery' ? '💧' : zone.type === 'hedge' ? '🌿' : zone.type === 'grass' ? '🌱' : zone.type === 'fleur' ? '🌸' : '🟢')}
@@ -505,6 +573,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {gardenHedges.map((hedge: any) => (
             <div key={hedge.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'hedge', id: hedge.id }); onSelectElement?.('hedge', hedge.id); } }}
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'hedge', id: hedge.id }); }}
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y); }}
               style={{
                 position: 'absolute',
@@ -552,6 +621,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             return (
             <div key={tank.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tank', id: tank.id }); onSelectElement?.('tank', tank.id); } }}
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'tank', id: tank.id }); }}
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tank', tank.id, tank.x, tank.y); }}
               style={{
                 position: 'absolute',
@@ -638,6 +708,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {gardenSheds.map((shed: any) => (
             <div key={shed.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'shed', id: shed.id }); onSelectElement?.('shed', shed.id); } }}
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'shed', id: shed.id }); }}
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'shed', shed.id, shed.x, shed.y); }}
               style={{
                 position: 'absolute',
@@ -689,6 +760,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {gardenDrums.map((drum: any) => (
             <div key={drum.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'drum', id: drum.id }); onSelectElement?.('drum', drum.id); } }}
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'drum', id: drum.id }); }}
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'drum', drum.id, drum.x, drum.y); }}
               style={{
                 position: 'absolute',
@@ -736,6 +808,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {gardenTrees.map((tree: any) => (
             <div key={tree.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tree', id: tree.id }); onSelectElement?.('tree', tree.id); } }}
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'tree', id: tree.id }); }}
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tree', tree.id, tree.x, tree.y); }}
               style={{
                 position: 'absolute',
@@ -818,6 +891,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 }}
                 onMouseDown={(e) => startDrag(e, 'plant', gp.id, gp.x, gp.y)}
                 onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'plant', id: gp.id }); onSelectElement?.('plant', gp.id); } }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'plant', id: gp.id }); }}
                 onMouseEnter={(e) => {
                   if (!agroData || dragRef.current) return;
                   if (tooltipTimer.current) clearTimeout(tooltipTimer.current);
@@ -829,7 +903,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 <div style={{ position:'absolute', inset:-3, borderRadius:'50%', border:`2px solid ${ringColor}`, boxShadow:`0 0 ${isDragging ? 12 : 6}px ${ringColor}88`, pointerEvents:'none', zIndex:1 }} />
                 <img src={`/plants/${gp.plantDefId}-stage-${Math.min(plant.stage, 6)}.png`}
                   alt={plantDef?.name || 'Plante'} className="plant-sprite-image"
-                  draggable={false} style={{ width:'100%', height:'100%', objectFit:'contain' }} />
+                  draggable={false} style={{ width:'100%', height:'100%', objectFit:'contain' }}
+                  onError={() => reportMissing(gp.plantDefId)} />
                 <div className="day-badge-manga" style={{ fontSize:8, width:26, height:26 }}>J{plant.daysSincePlanting}</div>
                 <div className="water-bar-manga">
                   <div className="water-fill-manga" style={{
@@ -920,6 +995,51 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
       </div>
 
 
+      {/* ── Context menu (clic droit) ── */}
+      {contextMenu && typeof document !== 'undefined' && createPortal(
+        <div
+          className="zone-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="ctx-menu-title">Options</div>
+          <button className="ctx-btn ctx-btn-delete"
+            onClick={() => {
+              if (contextMenu.type === 'zone') removeGardenZone?.(contextMenu.id);
+              else if (contextMenu.type === 'serre') removeSerreZone?.(contextMenu.id);
+              else if (contextMenu.type === 'hedge') removeGardenHedge?.(contextMenu.id);
+              else if (contextMenu.type === 'tank') removeGardenTank?.(contextMenu.id);
+              else if (contextMenu.type === 'drum') removeGardenDrum?.(contextMenu.id);
+              else if (contextMenu.type === 'shed') removeGardenShed?.(contextMenu.id);
+              else if (contextMenu.type === 'tree') removeGardenTree?.(contextMenu.id);
+              setContextMenu(null);
+            }}
+          >
+            🗑️ Supprimer
+          </button>
+          <button className="ctx-btn"
+            onClick={() => {
+              setSelectedElement({ type: contextMenu.type, id: contextMenu.id });
+              onSelectElement?.(contextMenu.type, contextMenu.id);
+              onEditModeChange?.('select');
+              setContextMenu(null);
+            }}
+          >
+            ✏️ Sélectionner
+          </button>
+          <button className="ctx-btn"
+            onClick={() => {
+              setSelectedElement(null);
+              onEditModeChange?.('place');
+              setContextMenu(null);
+            }}
+          >
+            ✕ Quitter
+          </button>
+        </div>,
+        document.body
+      )}
+
       {/* ── Tooltip portal — rendu hors du scroll-wrapper pour ne jamais être coupé ── */}
       {tooltip && typeof document !== 'undefined' && createPortal(
         <div
@@ -948,16 +1068,24 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
 
 
       <style>{`
-        .garden-dims-bar{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:10px;padding:6px 12px;background:rgba(255,255,255,0.7);border-radius:8px;flex-wrap:wrap}
+        .garden-dims-bar{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:8px;padding:6px 12px;background:rgba(255,255,255,0.7);border-radius:8px;flex-wrap:wrap}
         .dims-scale{color:#9f7aea;font-weight:700}
         .dims-tool-active{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:2px 10px;border-radius:8px;font-weight:700;animation:pulse-tool 1.5s ease-in-out infinite}
         @keyframes pulse-tool{0%,100%{opacity:1}50%{opacity:.65}}
-        .garden-scroll-wrapper{overflow:auto;max-width:100%;max-height:70vh;border-radius:12px;border:2px solid rgba(255,255,255,0.5);box-shadow:inset 0 2px 8px rgba(0,0,0,0.08)}
+        .garden-scroll-wrapper{position:absolute;top:0;left:0;overflow:auto;max-width:100%;max-height:100%;padding-top:20px;padding-right:40px;box-sizing:border-box;width:100%;height:100%}
         /* overflow:visible sur la grille elle-même pour que les tooltips sortent */
-        .garden-grid{overflow:visible!important}
+        .garden-grid{overflow:visible!important;position:relative;width:displayW;height:displayH}
         .seed-rows-legend{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none}
         .seed-row-legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#fff;font-weight:600}
         .seed-row-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+        /* ── Context menu ── */
+        .zone-context-menu{position:fixed;z-index:99999;background:rgba(10,20,35,.97);border:1px solid rgba(144,202,249,.4);border-radius:10px;padding:8px 0;min-width:160px;box-shadow:0 16px 40px rgba(0,0,0,.75)}
+        .ctx-menu-title{font-size:10px;font-weight:800;color:#90caf9;padding:0 12px 6px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:4px}
+        .ctx-btn{width:100%;text-align:left;padding:7px 12px;font-size:11px;font-weight:600;color:#e2e8f0;background:none;border:none;cursor:pointer;transition:background .15s}
+        .ctx-btn:hover{background:rgba(144,202,249,.15)}
+        .ctx-btn-delete{color:#fca5a5}
+        .ctx-btn-delete:hover{background:rgba(239,68,68,.15)}
 
         /* ── Badges agronomiques ── */
         .agro-badges-grid{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);display:flex;gap:2px;align-items:center;z-index:8;white-space:nowrap}

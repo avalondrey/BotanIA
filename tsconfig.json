@@ -37,6 +37,16 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "examples",
+    "game",
+    "mini-services",
+    "cards",
+    "assets",
+    "prisma",
+    "skills",
+    "scripts",
+    ".zscripts",
+    ".github"
   ]
 }

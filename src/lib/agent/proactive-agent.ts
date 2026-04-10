@@ -35,24 +35,28 @@ export function analyzeGameState(): {
   // ─── Water Analysis ────────────────────────────────────────────────────────
 
   const tank = game.gardenTanks?.[0];
-  const waterLiters = tank?.currentLevel ?? 0;
-  const waterCapacity = tank?.capacity ?? 2000;
+  if (!tank) {
+    // No tank placed yet — skip water analysis
+  } else {
+    const waterLiters = tank.currentLevel ?? 0;
+    const waterCapacity = tank.capacity ?? 2000;
 
-  if (waterLiters < WATER_CRITICAL_LITERS) {
-    notifications.push({
-      type: 'alert',
-      title: '💧 Cuve presque vide!',
-      message: `Il ne reste que ${waterLiters}L dans ta cuve principale. Arrosage compromis si pas de pluie!`,
-      priority: 'critical',
-    });
-  } else if (waterLiters < WATER_URGENT_LITERS) {
-    suggestions.push({
-      category: 'water',
-      title: 'Cuve principale basse',
-      description: `Cuve à ${waterLiters}L/${waterCapacity}L. Prévois un remplissage bientôt.`,
-      reasoning: 'En dessous du seuil de 600L, urgence modérée',
-      priority: 'high',
-    });
+    if (waterLiters < WATER_CRITICAL_LITERS) {
+      notifications.push({
+        type: 'alert',
+        title: '💧 Cuve presque vide!',
+        message: `Il ne reste que ${waterLiters}L dans ta cuve principale. Arrosage compromis si pas de pluie!`,
+        priority: 'critical',
+      });
+    } else if (waterLiters < WATER_URGENT_LITERS) {
+      suggestions.push({
+        category: 'water',
+        title: 'Cuve principale basse',
+        description: `Cuve à ${waterLiters}L/${waterCapacity}L. Prévois un remplissage bientôt.`,
+        reasoning: 'En dessous du seuil de 600L, urgence modérée',
+        priority: 'high',
+      });
+    }
   }
 
   // ─── Plant Water Needs ──────────────────────────────────────────────────────
@@ -105,17 +109,50 @@ export function analyzeGameState(): {
     });
   }
 
-  // ─── Season / Calendar ─────────────────────────────────────────────────────
+  // ─── Missing Sprites Detection ─────────────────────────────────────────────
+  // Real sprite detection happens client-side in GardenPlanView via img onError
+  // Here we read from the agent store which is populated by GardenPlanView
+  const store = useAgentStore.getState();
+  const realMissingSprites = [...store.missingSprites];
 
-  const month = Math.floor((game.day % 365) / 30.4); // 0-11
-  const seasonalTasks = getSeasonalTasks(month);
+  for (const plantDefId of realMissingSprites) {
+    suggestions.push({
+      category: 'purchase',
+      title: `🖼️ Sprite manquant: ${plantDefId}`,
+      description: `Le sprite pour ${plantDefId} n'a pas été trouvé. Clique sur "Générer le sprite" dans l'onglet Tâches de Lia.`,
+      reasoning: 'Image non trouvée via onError dans GardenPlanView',
+      priority: 'medium',
+    });
+  }
+
+  // ─── Season / Calendar ─────────────────────────────────────────────────────
+  // day 0 = spring start (day 0-59 spring, 60-151 summer, 152-243 fall, 244-364 winter)
+  const SPRING_START = 0;
+  const SPRING_END = 60;
+  const SUMMER_END = 152;
+  const FALL_END = 244;
+  const WINTER_END = 365;
+
+  const dayOfYear = game.day % 365;
+  let seasonName: string;
+  if (dayOfYear < SPRING_END) {
+    seasonName = 'printemps';
+  } else if (dayOfYear < SUMMER_END) {
+    seasonName = 'été';
+  } else if (dayOfYear < FALL_END) {
+    seasonName = 'automne';
+  } else {
+    seasonName = 'hiver';
+  }
+
+  const seasonalTasks = getSeasonalTasks(dayOfYear);
 
   if (seasonalTasks.length > 0 && Math.random() < 0.3) { // Only 30% chance each scan to not spam
     suggestions.push({
       category: 'calendar',
       title: `📅 Tâches de saison`,
       description: seasonalTasks[0],
-      reasoning: `Mois ${month + 1}, saison: ${game.season}`,
+      reasoning: `Saison: ${seasonName}, jour ${game.day % 365}/365`,
       priority: 'low',
     });
   }
@@ -130,29 +167,26 @@ export function analyzeGameState(): {
 /**
  * Get seasonal tasks based on month
  */
-function getSeasonalTasks(month: number): string[] {
+function getSeasonalTasks(dayOfYear: number): string[] {
   const tasks: string[] = [];
 
-  // Spring (months 2-4: March-May)
-  if (month >= 2 && month <= 4) {
+  // Spring: day 0-59
+  if (dayOfYear < 60) {
     tasks.push('C\'est le moment de semer les tomates, poivrons, aubergines en intérieur');
     tasks.push('Prépare le sol pour les semis de printemps');
   }
-
-  // Summer (months 5-7: June-August)
-  if (month >= 5 && month <= 7) {
+  // Summer: day 60-151
+  else if (dayOfYear < 152) {
     tasks.push('Arrosage régulier indispensable en période de chaleur');
     tasks.push('Surveille les maladies cryptogamiques (mildiou, oïdium)');
   }
-
-  // Fall (months 8-10: September-November)
-  if (month >= 8 && month <= 10) {
+  // Fall: day 152-243
+  else if (dayOfYear < 244) {
     tasks.push('C\'est la saison des récoltes! Récolte avant les gelées');
     tasks.push('Commence à préparer le sol pour l\'hiver');
   }
-
-  // Winter (months 11, 0, 1: December-February)
-  if (month === 11 || month <= 1) {
+  // Winter: day 244-364
+  else {
     tasks.push('Taille des arbres fruitiers avant la reprise de sève');
     tasks.push('Planifie les rotations de cultures pour la prochaine saison');
   }
@@ -203,7 +237,7 @@ export async function snapshotGameState(): Promise<void> {
     })),
   };
 
-  const snapshotId = `snapshot-${Date.now()}`;
+  const snapshotId = Date.now(); // numeric ID required by Qdrant
   const searchableText = buildSnapshotText(snapshot);
 
   try {

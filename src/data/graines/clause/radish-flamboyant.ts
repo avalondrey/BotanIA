@@ -66,7 +66,7 @@ export const CARD_DATA = {
   },
 
   // === STADES DE DEVELOPPEMENT ===
-  stages: {
+  developmentStages: {
     germination: { days: 5, note: "Levee tres rapide 3-7 jours" },
     firstLeaves: { days: 15, note: "Feuilles en rosette" },
     rootGrowth: { days: 22, note: "Racine en grossissement" },

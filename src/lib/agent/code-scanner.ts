@@ -344,8 +344,11 @@ export async function scanAndIndex(
   // Generate embedding
   const vector = await generateEmbedding(searchableText);
 
+  // Use UUID as point ID (Qdrant requires UUID or unsigned integer)
+  const pointId = crypto.randomUUID();
+
   // Upsert to Qdrant
-  await upsertPoint('botania_components', scanned.path, vector, {
+  await upsertPoint('botania_components', pointId, vector, {
     path: scanned.path,
     name: scanned.name,
     type: scanned.type,
