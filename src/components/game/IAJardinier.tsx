@@ -56,9 +56,8 @@ export function IAJardinier() {
         plantes,
         meteo: {
           temperature: realWeather?.current?.temperature || 20,
-          precipitation: realWeather?.current?.precipitation || 0,
-          conditions: realWeather?.current?.weathercode ?
-            `Code ${realWeather.current.weathercode}` : 'Ensoleillé',
+          precipitation: realWeather?.today?.precipitationMm || 0,
+          conditions: realWeather?.current?.weatherDescription || 'Ensoleillé',
         },
         saison: season,
         jour: day,
