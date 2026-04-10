@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/game-store';
 import { getConseilQuotidien, type JardinContext, type IAResponse } from '@/lib/ia-jardinier';
+import { PLANTS } from '@/lib/ai-engine';
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
 export function IAJardinier() {
@@ -34,7 +35,7 @@ export function IAJardinier() {
       // Construire contexte jardin
       const plantes = [
         ...gardenPlants.map(gp => ({
-          name: gp.plant.plantName,
+          name: PLANTS[gp.plantDefId]?.name || gp.plantDefId,
           stage: gp.plant.stage,
           daysSincePlanting: gp.plant.daysSincePlanting,
           waterLevel: gp.plant.waterLevel,
@@ -43,11 +44,11 @@ export function IAJardinier() {
         ...(pepiniere || [])
           .filter(p => p !== null)
           .map(p => ({
-            name: p!.plantName,
-            stage: p!.stage,
-            daysSincePlanting: p!.daysSincePlanting,
-            waterLevel: p!.waterLevel,
-            health: p!.health,
+            name: PLANTS[p.plantDefId]?.name || p.plantDefId,
+            stage: p.stage,
+            daysSincePlanting: p.daysSincePlanting,
+            waterLevel: p.waterLevel,
+            health: p.health,
           })),
       ];
 
