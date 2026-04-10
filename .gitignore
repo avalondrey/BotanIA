@@ -73,3 +73,5 @@ _lia-b64.txt
 # Editor
 .vscode/
 .idea/
+
+.vercel
