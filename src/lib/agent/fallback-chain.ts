@@ -56,7 +56,7 @@ export async function getAgentResponse(
   try {
     // Build proper JardinContext from game state
     const plainPlants = (gameContext.plants as { plantDefId: string; zone?: string; stage: number; needsWater: boolean }[]) || [];
-    const weather = (gameContext.weather as { temperature?: number; condition?: string }) || {};
+    const weather = (gameContext.weather as { temperature?: number; condition?: string; precipitation?: number }) || {};
 
     const jardinContext: JardinContext = {
       plantes: plainPlants.map((p) => ({
@@ -69,6 +69,7 @@ export async function getAgentResponse(
       })),
       meteo: {
         temperature: weather.temperature ?? 20,
+        precipitation: weather.precipitation ?? 0,
         conditions: weather.condition || 'ensoleille',
       },
       saison: (gameContext.season as string) || 'printemps',
