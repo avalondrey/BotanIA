@@ -119,7 +119,7 @@ export async function getAgentResponse(
       .slice(0, 5)
       .map((s) => `${s.type}: ${s.description}`);
 
-    const alerts = iaResponse.alertes || [];
+    const alerts: string[] = [];
 
     return {
       engine: 'groq',
