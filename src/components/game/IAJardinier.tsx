@@ -17,7 +17,7 @@ export function IAJardinier() {
   const day = useGameStore((s) => s.day);
   const season = useGameStore((s) => s.season);
   const gardenPlants = useGameStore((s) => s.gardenPlants);
-  const pepinierePlants = useGameStore((s) => s.pepinierePlants);
+  const pepiniere = useGameStore((s) => s.pepiniere);
   const realWeather = useGameStore((s) => s.realWeather);
   const gpsCoords = useGameStore((s) => s.gpsCoords);
 
@@ -40,7 +40,7 @@ export function IAJardinier() {
           waterLevel: gp.plant.waterLevel,
           health: gp.plant.health,
         })),
-        ...(pepinierePlants || [])
+        ...(pepiniere || [])
           .filter(p => p !== null)
           .map(p => ({
             name: p!.plantName,
