@@ -4,7 +4,6 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useAgentStore, selectUnreadCount, selectCriticalSuggestions } from '@/store/agent-store';
-import { ragQuery } from '@/lib/agent/rag-engine';
 import { getAgentModeLabel } from '@/lib/agent/fallback-chain';
 import { useGameStore } from '@/store/game-store';
 import { generateTip } from '@/lib/lia-data';
@@ -39,20 +38,7 @@ export function useAgent(options: UseAgentOptions = {}) {
       const gameContext = buildGameContext(gameStore);
       const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
 
-      // ── Essai RAG complet (Ollama + Qdrant) ──
-      if (store.status.isLocalAIActive && store.status.isOllamaAvailable) {
-        try {
-          const result = await ragQuery(question, gameContext);
-          store.addMessage({ role: 'assistant', content: result.answer, engine: result.engine, actions: result.suggestions });
-          result.alerts.forEach(alert => store.addNotification({ type: 'alert', title: '⚠️ Alerte BotanIA', message: alert, priority: 'high' }));
-          result.suggestions.forEach(sug => store.addSuggestion({ category: 'plant', title: sug.slice(0, 50), description: sug, priority: 'medium' }));
-          return;
-        } catch (ragErr) {
-          console.warn('[useAgent] RAG failed, falling back to Groq:', ragErr);
-        }
-      }
-
-      // ── Fallback direct Groq (sans embeddings) ──
+      // ── Direct Groq (sans RAG — RAG requires local Ollama+Qdrant) ──
       if (groqKey) {
         const plants = (gameContext.plants as any[]) || [];
         const ctx = `Jardin: ${plants.length} plantes. Météo: ${gameContext.temperatureCelsius}°C. Saison: ${gameContext.season}. Eau: ${gameContext.waterLiters}L.`;
