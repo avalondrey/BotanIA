@@ -1,0 +1,86 @@
+═══════════════════════════════════════════════════════════════
+✅ MODIFICATIONS TERMINÉES - BotanIA v0.12.2
+═══════════════════════════════════════════════════════════════
+
+## 🎉 Ce qui a été fait
+
+### 1️⃣ Renommage "Marquage" → "GrainTag"
+
+✅ **Jardin.tsx** - Onglet renommé
+   - Texte: "🏷️ GrainTag" (au lieu de "📸 Marquage")
+   - Tooltip: "Marquer ses plants/semences"
+   
+✅ **SeedRowPainter.tsx** - Titre mis à jour
+   - "🏷️ GrainTag - Marquage Photos"
+   - Sous-titre: "Marquez vos plants/semences • Comptez • Synchronisez"
+
+
+### 2️⃣ Bouton "Jumeau Numérique" ajouté
+
+✅ **PlantIdentifier.tsx** - Modifications complètes
+   - Import de `useGameStore`
+   - Fonction `mapPlantNameToDefId()` pour mapper noms → IDs
+   - Fonction `createTwin()` pour créer jumeau dans jardin
+   - Bouton "✨ Créer Jumeau Numérique" dans la modale
+   - N'apparaît QUE si `growthStage` est présent dans le résultat
+
+
+═══════════════════════════════════════════════════════════════
+🧪 TEST IMMÉDIAT
+═══════════════════════════════════════════════════════════════
+
+1. Ouvre l'app : http://localhost:3000
+
+2. **Test GrainTag**
+   - Va dans 🌿 Jardin
+   - Clique sur "🏷️ GrainTag"
+   - Survole le bouton → tooltip "Marquer ses plants/semences"
+   - Prends une photo ou importe
+   - Trace des rangs ✅
+
+3. **Test Jumeau Numérique**
+   - Va dans "🔍 Identificateur"
+   - Prends/importe une photo de plante (tomate, poivron...)
+   - Clique "Analyser" avec Groq/Ollama
+   - Attends le résultat
+   - Si `growthStage` détecté → Bouton "✨ Créer Jumeau" apparaît
+   - Clique le bouton
+   - → Message de confirmation
+   - Va dans Jardin → Vue Plan
+   - → Ton plant devrait être là ! 🎉
+
+
+═══════════════════════════════════════════════════════════════
+⚠️ POINT IMPORTANT
+═══════════════════════════════════════════════════════════════
+
+**Le jumeau numérique NE MARCHERA PAS ENCORE** car il manque :
+
+La fonction `createDigitalTwinInGarden` dans **game-store.ts**
+
+📄 **Code prêt dans** : CODE-JUMEAU-JARDIN.txt
+
+Pour activer la fonctionnalité :
+1. Ouvre `src/store/game-store.ts`
+2. Copie la fonction depuis CODE-JUMEAU-JARDIN.txt
+3. Ajoute dans l'interface GameState
+4. Teste !
+
+
+═══════════════════════════════════════════════════════════════
+📂 Fichiers modifiés
+═══════════════════════════════════════════════════════════════
+
+✅ src/components/game/Jardin.tsx
+✅ src/components/game/SeedRowPainter.tsx  
+✅ src/components/game/PlantIdentifier.tsx
+
+
+═══════════════════════════════════════════════════════════════
+🚀 Prochaine étape
+═══════════════════════════════════════════════════════════════
+
+Si tu veux activer complètement le Jumeau Numérique :
+→ Installe la fonction dans game-store.ts (code dans CODE-JUMEAU-JARDIN.txt)
+
+Sinon, profite de GrainTag qui fonctionne à 100% ! 🏷️✨

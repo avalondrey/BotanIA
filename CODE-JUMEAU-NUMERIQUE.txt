@@ -1,0 +1,271 @@
+═══════════════════════════════════════════════════════════════
+CODE COMPLET - JUMEAU NUMÉRIQUE
+À ajouter dans game-store.ts
+═══════════════════════════════════════════════════════════════
+
+// ═════════════════════════════════════════════════════════════
+// ÉTAPE 1 : Ajouter dans l'interface GameState (vers ligne 1170)
+// ═════════════════════════════════════════════════════════════
+
+  createDigitalTwinFromScan: (
+    plantDefId: string,
+    scanData: {
+      plantName: string;
+      confidence: number;
+      growthStage?: { stage: number; estimatedAge: number };
+      healthStatus?: { isHealthy: boolean; diseaseName: string };
+    }
+  ) => { success: boolean; message: string; rewards: any };
+
+// ═════════════════════════════════════════════════════════════
+// ÉTAPE 2 : Implémentation (après importPlantsFromPhoto)
+// ═════════════════════════════════════════════════════════════
+
+  createDigitalTwinFromScan: (plantDefId, scanData) => {
+    const state = get();
+    
+    // 1. Vérifier que la plante existe
+    const plantDef = PLANTS[plantDefId];
+    if (!plantDef) {
+      return {
+        success: false,
+        message: `❌ Type de plante "${plantDefId}" non reconnu.\n\nPlantes disponibles : tomate, poivron, laitue, carotte, basilic, fraise.`,
+        rewards: null
+      };
+    }
+    
+    // 2. Créer le plant avec l'état scanné
+    const growthStage = scanData.growthStage || { stage: 2, estimatedAge: 15 };
+    const healthStatus = scanData.healthStatus || { isHealthy: true, diseaseName: 'Sain' };
+    
+    const newPlant: PlantState = {
+      ...createInitialPlantState(plantDefId),
+      stage: Math.min(5, growthStage.stage),
+      daysSincePlanting: growthStage.estimatedAge,
+      daysInCurrentStage: Math.min(10, growthStage.estimatedAge),
+      health: healthStatus.isHealthy ? 85 : 60,
+      hasDisease: !healthStatus.isHealthy,
+      diseaseDays: healthStatus.isHealthy ? 0 : 3,
+      waterLevel: 70,
+      fertilizerLevel: 50,
+    };
+    
+    // 3. Ajouter à la pépinière
+    const newPepiniere = [...state.pepiniere, newPlant];
+    savePepiniere(newPepiniere);
+    
+    // 4. Calculer récompenses
+    const rewards = {
+      coins: 50,
+      xp: 100,
+      achievement: null as string | null,
+      bonusSeeds: null as { plantDefId: string; count: number } | null,
+    };
+    
+    // Bonus qualité scan
+    if (scanData.confidence > 0.8) {
+      rewards.coins += 25;
+      rewards.xp += 50;
+    }
+    
+    // Bonus graines rares si stade avancé
+    if (growthStage.stage >= 4) {
+      rewards.bonusSeeds = { plantDefId, count: 3 };
+      const newCollection = { ...state.seedCollection };
+      newCollection[plantDefId] = (newCollection[plantDefId] || 0) + 3;
+      saveSeedCollection(newCollection);
+      set({ seedCollection: newCollection });
+    }
+    
+    // 5. Achievement si 5+ scans
+    const totalScans = newPepiniere.filter(p => p.daysSincePlanting > 0).length;
+    if (totalScans >= 5) {
+      rewards.achievement = 'botaniste_confirme';
+      useAchievementStore.getState().unlockAchievement('botaniste_confirme');
+    }
+    
+    // 6. Ajouter pièces
+    const newCoins = state.coins + rewards.coins;
+    saveCoins(newCoins);
+    
+    // 7. Alert succès
+    const alerts = [
+      ...state.alerts.slice(-25),
+      {
+        id: `twin-${Date.now()}`,
+        type: "success" as const,
+        message: `✨ Jumeau numérique créé ! ${plantDef.emoji} ${plantDef.name}`,
+        emoji: "🌱",
+        cellX: 0,
+        cellY: 0,
+        timestamp: Date.now(),
+        severity: "info" as const,
+      },
+    ];
+    
+    set({
+      pepiniere: newPepiniere,
+      coins: newCoins,
+      alerts,
+    });
+    
+    useSoundManager.getState().playEventSound('plant');
+    triggerVisualEffect("success-pop");
+    
+    return {
+      success: true,
+      message: `✅ Jumeau numérique créé !
+
+🌱 ${plantDef.emoji} ${plantDef.name}
+📊 Stade ${growthStage.stage}/5 (${growthStage.estimatedAge}j)
+💚 Santé : ${healthStatus.isHealthy ? 'Saine ✅' : '⚠️ ' + healthStatus.diseaseName}
+
+🎁 Récompenses :
+  • +${rewards.coins} 🪙 pièces
+  • +${rewards.xp} ⭐ XP
+${rewards.bonusSeeds ? `  • +3 graines ${plantDef.emoji}` : ''}
+${rewards.achievement ? `  • 🏆 Achievement : Botaniste Confirmé` : ''}
+
+Retrouve ton plant dans Chambre de Culture !`,
+      rewards,
+    };
+  },
+
+
+═══════════════════════════════════════════════════════════════
+CODE POUR PlantIdentifier.tsx
+═══════════════════════════════════════════════════════════════
+
+// ─── Imports à ajouter en haut ───
+import { useGameStore } from '@/store/game-store';
+
+// ─── Dans le composant ───
+const createDigitalTwinFromScan = useGameStore((s) => (s as any).createDigitalTwinFromScan);
+
+// ─── Helper fonction ───
+function mapPlantNameToDefId(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.includes('tomate')) return 'tomato';
+  if (lower.includes('poivron') || lower.includes('piment')) return 'pepper';
+  if (lower.includes('laitue') || lower.includes('salade')) return 'lettuce';
+  if (lower.includes('carotte')) return 'carrot';
+  if (lower.includes('basilic')) return 'basil';
+  if (lower.includes('fraise')) return 'strawberry';
+  return null;
+}
+
+// ─── Fonction createTwin ───
+const createTwin = (photo: GardenPhoto) => {
+  if (!photo.identificationResult) {
+    alert('⚠️ Aucune identification disponible.\n\nAnalysez d\'abord la photo avec un moteur IA.');
+    return;
+  }
+  
+  const plantDefId = mapPlantNameToDefId(photo.identificationResult.plantName);
+  
+  if (!plantDefId) {
+    alert(`❌ "${photo.identificationResult.plantName}" n'est pas dans le catalogue.
+
+Plantes disponibles :
+🍅 Tomate
+🫑 Poivron
+🥬 Laitue
+🥕 Carotte
+🌿 Basilic
+🍓 Fraise
+
+💡 Astuce : Prenez une photo de l'une de ces plantes.`);
+    return;
+  }
+  
+  const result = createDigitalTwinFromScan(plantDefId, {
+    plantName: photo.identificationResult.plantName,
+    confidence: photo.identificationResult.confidence,
+    growthStage: photo.identificationResult.growthStage,
+    healthStatus: photo.identificationResult.healthStatus,
+  });
+  
+  alert(result.message);
+};
+
+// ─── JSX à ajouter dans la modale de détail photo ───
+{selectedPhoto?.identificationResult && (
+  <div style={{
+    marginTop: 16,
+    padding: 14,
+    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    borderRadius: 12,
+    border: '2px solid rgba(255,255,255,0.2)'
+  }}>
+    <button
+      onClick={() => createTwin(selectedPhoto)}
+      style={{
+        width: '100%',
+        padding: '12px 20px',
+        background: 'rgba(255,255,255,0.95)',
+        border: 'none',
+        borderRadius: 10,
+        fontSize: 15,
+        fontWeight: 700,
+        color: '#667eea',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        transition: 'all 0.2s'
+      }}
+      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+    >
+      ✨ Créer Jumeau Numérique
+    </button>
+    <p style={{
+      margin: '8px 0 0',
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.9)',
+      textAlign: 'center'
+    }}>
+      Ajoute cette plante réelle à ta chambre de culture
+    </p>
+  </div>
+)}
+
+
+═══════════════════════════════════════════════════════════════
+ACHIEVEMENT À AJOUTER
+═══════════════════════════════════════════════════════════════
+
+Fichier : src/store/achievement-store.ts
+
+Dans ACHIEVEMENT_DEFINITIONS, ajouter :
+
+  botaniste_confirme: {
+    id: 'botaniste_confirme',
+    name: 'Botaniste Confirmé',
+    description: 'Scanner 5 plantes réelles et créer leurs jumeaux numériques',
+    emoji: '🔬',
+    unlocked: false,
+    unlockedAt: null,
+    category: 'scan',
+  },
+
+
+═══════════════════════════════════════════════════════════════
+RÉSUMÉ DES CHANGEMENTS
+═══════════════════════════════════════════════════════════════
+
+✅ FAIT :
+1. Prompt IA mis à jour avec estimation stade de croissance
+2. Type photo-store.ts mis à jour avec growthStage
+
+À FAIRE :
+1. Ajouter fonction createDigitalTwinFromScan dans game-store.ts
+2. Ajouter bouton + fonction dans PlantIdentifier.tsx
+3. Ajouter achievement dans achievement-store.ts
+
+Une fois terminé :
+- Prendre photo d'une vraie tomate/basilic
+- L'identifier avec Groq/Ollama
+- Cliquer "✨ Créer Jumeau Numérique"
+- Vérifier dans Chambre de Culture !

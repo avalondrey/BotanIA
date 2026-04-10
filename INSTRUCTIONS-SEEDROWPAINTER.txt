@@ -1,0 +1,42 @@
+INSTRUCTION RAPIDE - Compléter SeedRowPainter.tsx
+================================================
+
+Le fichier SeedRowPainter.tsx est à ~80% complet. Il manque juste la fin du JSX.
+
+Copie-colle ce code À LA FIN du fichier actuel (après la ligne "<li><strong>Prenez une photo</strong>...") :
+
+```tsx
+              <li><strong>Choisissez une couleur</strong> (ou ❌ pour marquer un emplacement vide)</li>
+              <li><strong>Tracez un trait</strong> sur chaque rangée</li>
+              <li><strong>Sélectionnez le type de plante</strong> et indiquez le nombre</li>
+              <li><strong>Synchronisez</strong> avec la grille jardin ou mini serre</li>
+            </ol>
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#aaa' }}>
+              💡 <strong>Astuce :</strong> Le ❌ marque les emplacements vides (mini serre)
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Résultat sync */}
+      <AnimatePresence>
+        {syncResult && (
+          <motion.div
+            className="sp-sync-result"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <button className="sp-sync-close" onClick={() => setSyncResult(null)}>✕</button>
+            <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{syncResult}</pre>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+PUIS utilise l'ancien fichier complet qu'on avait avant pour copier tout le reste du JSX
+(boutons, canvas, palette, liste, modale, styles CSS).
+
+OU utilise ce fichier de référence complet que je vais créer maintenant :
+```
+
+Voir fichier : SEEDROWPAINTER-COMPLETE-REFERENCE.tsx

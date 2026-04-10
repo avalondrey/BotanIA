@@ -1,0 +1,114 @@
+📸 MISE À JOUR SEED ROW PAINTER - v0.12.2
+=========================================
+
+✅ TOUTES TES DEMANDES ONT ÉTÉ IMPLÉMENTÉES
+
+## 1️⃣ Changement de nom de l'onglet
+- Avant : "📸 Rangs"
+- Après : "📸 Marquage"
+- Plus explicite et professionnel
+
+## 2️⃣ Aide détaillée ajoutée
+- Bouton ❓ en haut à droite pour afficher/masquer l'aide
+- Guide complet en 5 étapes :
+  1. Prendre une photo (caméra ou galerie)
+  2. Choisir une couleur (ou ❌ pour cases vides)
+  3. Tracer un trait sur chaque rangée
+  4. Nommer le rang + indiquer le nombre de plants
+  5. Synchroniser avec jardin ou mini serre
+
+## 3️⃣ Compteur de plants par trait ✨ NOUVEAU
+- Champ "Nombre de plants sous ce trait" dans la modale
+- Type number avec minimum = 1
+- Affichage dans la liste : "Tomates × 12"
+- Statistique totale en haut : "45 plants"
+
+## 4️⃣ Marqueur d'emplacements vides ❌ ✨ NOUVEAU
+- La couleur ROUGE a été remplacée par un bouton ❌ "Vide"
+- Quand sélectionné :
+  - Dessine une croix rouge sur la photo au lieu d'un trait
+  - Compte comme "emplacement vide" dans les stats
+  - Permet de marquer les cases vides d'une mini serre
+- Exemple : 6×4 = 24 emplacements → si 1 croix = 23 occupés
+
+## 5️⃣ Synchronisation Mini Serres ✨ NOUVEAU
+- Nouveau bouton vert : "🌱 Envoyer vers les Mini Serres"
+- Vérification automatique de l'inventaire :
+  - ✅ Si mini serres disponibles → affiche confirmation avec stats
+  - ❌ Si aucune mini serre → message d'erreur :
+    "Action impossible - Veuillez acheter des mini serres"
+
+## 6️⃣ Refonte des boutons d'action
+Avant :
+- 🗺️ Sync grille jardin
+- 🔍 Envoyer à l'Identificateur
+
+Après :
+- 🗺️ Envoyer vers la grille Jardin
+- 🌱 Envoyer vers les Mini Serres (NOUVEAU)
+- 🔍 Envoyer à l'Identificateur
+
+## 7️⃣ Statistiques enrichies
+Dans le titre de la liste des rangs :
+"🌾 Rangs tracés (4) • 45 plants • 2 vides"
+- Nombre de rangs
+- Total de plants (somme de tous les compteurs)
+- Nombre d'emplacements vides (croix ❌)
+
+═══════════════════════════════════════
+
+📂 FICHIERS MODIFIÉS
+
+1. src/components/game/SeedRowPainter.tsx
+   - Interface SeedRow : ajout de `plantCount?: number`
+   - Nouveau state : `plantCount`, `showHelp`
+   - Nouvelle couleur : `{ hex: 'EMPTY', name: 'Vide ❌', isSpecial: true }`
+   - Nouvelle fonction : `syncToMiniSerres()` avec vérification inventaire
+   - Rendu spécial des croix dans `drawAllRows()`
+   - Champ nombre de plants dans la modale
+   - Section d'aide dépliable
+
+2. src/components/game/Jardin.tsx
+   - Changement du label : "Rangs" → "Marquage"
+
+3. CHANGELOG.md
+   - Nouvelle version v0.12.2 documentée
+
+═══════════════════════════════════════
+
+🧪 TESTER
+
+1. Ouvre l'app BotanIA
+2. Va dans l'onglet "Jardin"
+3. Clique sur "📸 Marquage"
+4. Clique sur ❓ pour voir l'aide
+5. Prends une photo de ta mini serre
+6. Sélectionne une couleur et trace des rangs
+7. Pour chaque rang :
+   - Donne un nom (ex: "Poivrons")
+   - Indique le nombre (ex: 4)
+8. Sélectionne ❌ et clique pour marquer une case vide
+9. Vérifie les stats en haut de la liste
+10. Clique sur "🌱 Envoyer vers les Mini Serres"
+
+═══════════════════════════════════════
+
+💡 PROCHAINES ÉTAPES SUGGÉRÉES
+
+Pour compléter l'intégration avec les mini serres :
+
+1. Dans game-store.ts :
+   - Ajouter une fonction `importPlantsFromPhoto(seedRows: SeedRow[], miniSerreId: string)`
+   - Placer automatiquement les plants dans les bonnes positions
+   - Respecter le compteur de plants par rang
+
+2. Gestion intelligente des positions :
+   - Utiliser les coordonnées (x, y) des traits pour placer les plants
+   - Mapper les rangs horizontaux/verticaux vers la grille 6×4
+   - Laisser vides les positions marquées avec ❌
+
+3. Validation :
+   - Vérifier que le nombre total de plants ≤ 24
+   - Alerter si trop de plants pour la mini serre
+
+Tu veux que je t'aide à implémenter la vraie logique de synchronisation avec game-store.ts ?

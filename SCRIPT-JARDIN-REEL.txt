@@ -1,0 +1,46 @@
+// ═══════════════════════════════════════════════════════════════
+// INSTRUCTIONS: Créer sauvegarde "Mon Jardin Réel"
+// ═══════════════════════════════════════════════════════════════
+//
+// 1. Ouvre http://localhost:3000
+// 2. Va sur l'onglet "💾 Sauvegardes"
+// 3. Ouvre la console (F12)
+// 4. Copie-colle le code ci-dessous et appuie sur Entrée
+//
+// ═══════════════════════════════════════════════════════════════
+
+(async function() {
+  console.log('🌱 Création sauvegarde "Mon Jardin Réel"...');
+  
+  // Récupérer l'état actuel
+  const store = useGameStore.getState();
+  
+  // Créer état jardin réel
+  const jardinReel = {
+    ...store,
+    gardenWidthCm: 1400,
+    gardenHeightCm: 3900,
+    gardenHedges: [
+      { id: 'haie-nord', x: 0, y: 0, width: 1400, height: 80, type: 'hedge' },
+      { id: 'haie-sud', x: 0, y: 3820, width: 1400, height: 80, type: 'hedge' },
+    ],
+    gardenTanks: [
+      { id: 'cuve-1', x: 200, y: 200, width: 120, height: 100, capacity: 1000 },
+      { id: 'cuve-2', x: 500, y: 200, width: 120, height: 100, capacity: 1000 },
+      { id: 'cuve-3', x: 800, y: 200, width: 120, height: 100, capacity: 1000 },
+    ],
+    gardenPlants: [],
+    pepiniere: [],
+    miniSerres: [],
+    coins: 1000,
+    day: 80,
+    season: 'spring',
+  };
+  
+  // Importer save-manager dynamiquement
+  const { saveToSlot } = await import('/src/lib/save-manager.ts');
+  await saveToSlot('slot-1', jardinReel, 'Mon jardin réel', true);
+  
+  console.log('✅ Sauvegarde créée dans Slot 1 !');
+  console.log('👉 Clique "📂 Charger" sur Slot 1 pour l\'activer');
+})();

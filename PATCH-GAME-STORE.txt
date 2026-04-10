@@ -1,0 +1,88 @@
+// ═══════════════════════════════════════════════════════════════
+// PATCH GAME-STORE.TS - Système de sauvegarde multi-slots
+// ═══════════════════════════════════════════════════════════════
+
+// À AJOUTER dans l'interface GameStore (ligne ~1127) :
+// Après la ligne: pendingTransplant: { ... } | null;
+// Ajouter:
+
+  // ── Save System ──
+  activeSlot: string | null;
+  autoSaveEnabled: boolean;
+
+// À AJOUTER dans les actions de l'interface (ligne ~1187 après addEcoPoints) :
+  
+  // ── Save Actions ──
+  setActiveSlot: (slotId: string | null) => void;
+  setAutoSaveEnabled: (enabled: boolean) => void;
+  loadGameState: (state: any) => void;
+
+// À AJOUTER dans la fonction loadDay() (après ligne ~1225, avant export const useGameStore) :
+
+function loadActiveSlot(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem("jardin-culture-active-slot");
+  } catch {
+    return null;
+  }
+}
+
+function saveActiveSlot(slotId: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (slotId) {
+      localStorage.setItem("jardin-culture-active-slot", slotId);
+    } else {
+      localStorage.removeItem("jardin-culture-active-slot");
+    }
+  } catch { /* ignore */ }
+}
+
+function loadAutoSaveEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const stored = localStorage.getItem("jardin-culture-auto-save");
+    return stored === null ? true : stored === "true";
+  } catch {
+    return true;
+  }
+}
+
+function saveAutoSaveEnabled(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("jardin-culture-auto-save", String(enabled));
+  } catch { /* ignore */ }
+}
+
+// Dans export const useGameStore = create<GameStore>()
+// À AJOUTER dans l'état initial (ligne ~1600, après pendingTransplant: null,) :
+
+  activeSlot: loadActiveSlot(),
+  autoSaveEnabled: loadAutoSaveEnabled(),
+
+// À AJOUTER à la fin du store, avant la fermeture finale "}));" (ligne ~3030) :
+
+  // ── Save Actions ──
+  setActiveSlot: (slotId) => {
+    saveActiveSlot(slotId);
+    set({ activeSlot: slotId });
+  },
+
+  setAutoSaveEnabled: (enabled) => {
+    saveAutoSaveEnabled(enabled);
+    set({ autoSaveEnabled: enabled });
+  },
+
+  loadGameState: (state) => {
+    // Restaurer l'état complet depuis une sauvegarde JSON
+    set({
+      ...state,
+      // Ne pas écraser ces champs système
+      isPaused: get().isPaused,
+      speed: get().speed,
+      consoleOpen: get().consoleOpen,
+      adminOpen: get().adminOpen,
+    });
+  },
