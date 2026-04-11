@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   reactStrictMode: true,
+  outputFileTracingExcludes: {
+    '/api/**': ['node_modules/**', '.next/**', '.cache/**'],
+  },
 };
 
 export default nextConfig;

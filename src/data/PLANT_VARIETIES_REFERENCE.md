@@ -9,7 +9,7 @@ Ces données `CARD_DATA` servent de **référence statique** pour :
 - Documenter les propriétés des variétés spécifiques
 - Être importées manuellement lors de l'ajout au catalogue runtime
 
-> ⚠️ **Important** : Ces fichiers `CARD_DATA` ne sont **pas importés automatiquement** dans le runtime. Ils doivent être intégrés manuellement dans `HologramEvolution.tsx` via une PlantCard.
+> ✅ **Statut** : **Toutes les variétés sont maintenant intégrées** dans `HologramEvolution.tsx` (`PLANT_CARDS` pour les graines/bushes, `TREE_CARDS` pour les arbres).
 
 ---
 
@@ -168,37 +168,59 @@ Ces données `CARD_DATA` servent de **référence statique** pour :
 
 ---
 
-## plantDefId Non Couverts par PLANT_CARDS
+## ✅ plantDefId Intégrés dans HologramEvolution.tsx
 
-Ces `plantDefId` ont des `CARD_DATA` mais **n'ont pas de PlantCard** dans `HologramEvolution.tsx` :
+**Toutes les variétés sont intégrées.** Voici le récapitulatif :
 
-- [ ] `cucumber`
-- [ ] `zucchini`
-- [ ] `squash`
-- [ ] `eggplant`
-- [ ] `bean`
-- [ ] `cabbage`
-- [ ] `spinach`
-- [ ] `radish`
-- [ ] `pea`
-- [ ] `apple` (arbre)
-- [ ] `pear` (arbre)
-- [ ] `cherry` (arbre)
-- [ ] `lemon` (arbre)
-- [ ] `orange` (arbre)
-- [ ] `walnut` (arbre)
-- [ ] `oak` (arbre)
-- [ ] `birch` (arbre)
-- [ ] `magnolia` (arbre)
-- [ ] `maple` (arbre)
-- [ ] `pine` (arbre)
+### PLANT_CARDS (graines + arbustes)
+| plantDefId | Fichier CARD_DATA |
+|---|---|
+| tomato | kokopelli, lebiau, vilmorin (8 variétés) |
+| carrot | clause, lebiau (3 variétés) |
+| lettuce | clause, lebiau (3 variétés) |
+| basil | saintemarthe (2 variétés) |
+| strawberry | saintemarthe (1 variété) |
+| pepper | clause, saintemarthe (2 variétés) |
+| cucumber | clause (1 variété) |
+| zucchini | clause (1 variété) |
+| bean | lebiau (1 variété) |
+| pea | saintemarthe (1 variété) |
+| spinach | lebiau (1 variété) |
+| radish | clause (1 variété) |
+| cabbage | lebiau (1 variété) |
+| eggplant | kokopelli (1 variété) |
+| squash | kokopelli (1 variété) |
+| goji | - |
+| lycium | - |
+| mirabellier | - |
+| photinia | - |
+| eleagnus | - |
+| laurus | - |
+| cornus | - |
+| casseille | - |
+
+### TREE_CARDS (arbres fruitiers + forestiers)
+| plantDefId | Fichier CARD_DATA |
+|---|---|
+| apple | guignard, arbres-tissot, fruitiers-forest (5 variétés) |
+| pear | guignard, arbres-tissot, fruitiers-forest (4 variétés) |
+| cherry | inrae, fruitiers-forest (2 variétés) |
+| hazelnut | - |
+| walnut | inrae (1 variété) |
+| orange | fruitiers-forest (1 variété, réserve) |
+| lemon | fruitiers-forest (1 variété, réserve) |
+| oak | inrae (1 variété) |
+| birch | pepinieres-bordas (1 variété) |
+| maple | pepinieres-bordas (1 variété) |
+| pine | pepinieres-bordas (1 variété) |
+| magnolia | pepinieres-bordas (1 variété) |
 
 ---
 
-## Comment Ajouter une Variété au Catalogue Runtime
+## Comment Ajouter une Nouvelle Variété au Catalogue Runtime
 
 1. Ouvrir le fichier `CARD_DATA` correspondant dans `src/data/graines/` ou `src/data/arbres/`
-2. Créer une `PlantCard` dans `HologramEvolution.tsx` → `BOTANY_CATALOG`
+2. Créer une entrée dans `HologramEvolution.tsx` → `PLANT_CARDS` (graines) ou `TREE_CARDS` (arbres)
 3. Mapper les données :
    - `CARD_DATA.conditions.temperature.base` → `PlantCard.tBase`
    - `CARD_DATA.gameData.waterNeed` → `PlantCard.waterNeedMmPerDay`
@@ -209,4 +231,4 @@ Ces `plantDefId` ont des `CARD_DATA` mais **n'ont pas de PlantCard** dans `Holog
 
 ---
 
-*Document généré le 2026-04-07*
+*Document mis à jour le 2026-04-11*

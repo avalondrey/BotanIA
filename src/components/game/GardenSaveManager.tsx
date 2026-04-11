@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/game-store';
+import { getTodayDayOfYear, getSeason } from '@/lib/ai-engine';
 import {
   saveToSlot,
   loadFromSlot,
@@ -236,8 +237,8 @@ export function GardenSaveManager() {
         seedCollection: {},
         plantuleCollection: {},
         seedVarieties: {},
-        day: 1,
-        season: 'spring',
+        day: getTodayDayOfYear(),
+        season: getSeason(getTodayDayOfYear()),
         coins: 500,
         ecoPoints: 0,
         ecoLevel: 0,

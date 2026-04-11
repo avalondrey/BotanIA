@@ -9,14 +9,16 @@
 
 import { useRef, useState } from 'react';
 import { useAgent } from '@/lib/hooks/useAgent';
+import { useAgentStore } from '@/store/agent-store';
 import { useMissingSprites } from '@/hooks/useMissingSprites';
 import { LiaStatusIndicator } from './LiaStatusIndicator';
+import { LiaValidationModal } from './LiaValidationModal';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
-type LiaTab = 'chat' | 'suggestions' | 'tasks';
+type LiaTab = 'chat' | 'suggestions' | 'tasks' | 'validation';
 
 interface LiaInterfaceProps {
   initialOpen?: boolean;
@@ -30,6 +32,8 @@ export function LiaInterface({ initialOpen = true, className = '' }: LiaInterfac
   const [input, setInput] = useState('');
   const [activeTab, setActiveTab] = useState<LiaTab>('chat');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [validationOpen, setValidationOpen] = useState(false);
+  const [previewJobs, setPreviewJobs] = useState<any[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +179,30 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
           }`}
         >
           📋 Tâches
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('validation');
+            // Fetch previews when opening
+            fetch('/api/agent/asset-gaps')
+              .then((r) => r.json())
+              .then((data) => {
+                if (data.results) {
+                  setPreviewJobs(data.results.filter((r: any) => r.status === 'preview'));
+                }
+              })
+              .catch(() => {});
+          }}
+          className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors relative ${
+            activeTab === 'validation' ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
+          }`}
+        >
+          🎨 Validation
+          {previewJobs.length > 0 && (
+            <Badge variant="destructive" className="ml-1 text-[8px] px-1 py-0">
+              {previewJobs.length}
+            </Badge>
+          )}
         </button>
       </div>
 
@@ -355,6 +383,92 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
           </div>
         </ScrollArea>
       )}
+
+      {/* Tab: Validation */}
+      {activeTab === 'validation' && (
+        <ScrollArea className="flex-1 max-h-96 p-3">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-purple-600 flex items-center gap-1">
+                🎨 Sprites en attente de validation
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-auto py-1 px-2"
+                onClick={() => {
+                  // Trigger scan
+                  fetch('/api/agent/asset-gaps?force=true')
+                    .then((r) => r.json())
+                    .then((data) => {
+                      if (data.gaps?.length > 0) {
+                        setPreviewJobs(data.results || []);
+                        useAgentStore.getState().addGaps(data.gaps.map((g: any) => ({ ...g, status: 'detected' as const })));
+                      }
+                    })
+                    .catch(() => {});
+                }}
+              >
+                🔍 Rescanner
+              </Button>
+            </div>
+
+            {previewJobs.length === 0 ? (
+              <div className="p-2 bg-green-50 border border-green-200 rounded text-xs">
+                <p className="font-medium">✅ Aucun sprite en attente</p>
+                <p className="text-muted-foreground mt-0.5">
+                  Les sprites générés apparaîtront ici pour validation
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {previewJobs.map((job: any, idx: number) => (
+                  <div key={idx} className="p-2 bg-purple-50 border border-purple-200 rounded text-xs">
+                    <div className="flex items-center gap-2 font-medium">
+                      <span>🍅 {job.plantDefId}</span>
+                      <span className="text-purple-600">Stage {job.stage}</span>
+                    </div>
+                    <p className="text-muted-foreground mt-0.5 text-[10px]">
+                      {job.outputPath}
+                    </p>
+                    {job.description && (
+                      <p className="text-muted-foreground mt-1 italic text-[10px] line-clamp-2">
+                        Prompt: {job.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() => setValidationOpen(true)}
+                >
+                  🎨 Ouvrir le validateur
+                </Button>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      )}
+
+      {/* Validation Modal */}
+      <LiaValidationModal
+        open={validationOpen}
+        onOpenChange={setValidationOpen}
+        previews={previewJobs}
+        onValidated={(job) => {
+          setPreviewJobs((prev: any[]) => prev.map((p) =>
+            p.gapId === job.gapId && p.stage === job.stage
+              ? { ...p, status: 'validated' }
+              : p
+          ));
+        }}
+        onRejected={(job) => {
+          setPreviewJobs((prev: any[]) => prev.filter((p) =>
+            !(p.gapId === job.gapId && p.stage === job.stage)
+          ));
+        }}
+      />
     </div>
   );
 }

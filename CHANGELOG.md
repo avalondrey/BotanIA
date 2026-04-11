@@ -1,5 +1,38 @@
 # BotanIA - Changelog
 
+## v0.18.0 - Refactoring Store & Corrections (2026-04-11)
+
+### 🏗️ Refactoring
+
+- **Découpage du store monolithique** : `game-store.ts` (4 374 lignes) → facade de 1 290 lignes + 5 stores modulaires avec persistance Zustand
+  - `shop-store.ts` (224 lignes) — Économie, graines, plantules, scores
+  - `nursery-store.ts` (513 lignes) — Pépinière, mini-serres, chambres de culture
+  - `garden-store.ts` (559 lignes) — Plantes jardin, zones serre, objets, cuves
+  - `simulation-store.ts` (324 lignes) — Cycle jour/météo/tick simulation
+  - `catalog.ts` (1 700 lignes) — Données statiques (catalogues graines, variétés, chambres)
+  - `garden-types.ts` (112 lignes) — Types et constantes partagés (brise le cycle circulaire)
+- **`game-store.ts`** agit maintenant comme facade : conserve l'interface `GameState`, délègue toutes les actions aux sous-stores
+- **Persistance Zustand `persist`** remplace ~30 appels manuels `localStorage` dans chaque sous-store
+- **Clés de persistance** : `botania-shop`, `botania-nursery`, `botania-garden`, `botania-simulation`
+
+### 🐛 Corrections
+
+- **Bug date bloquée au 1er janvier** : `GardenSaveManager.tsx` utilisait `day: 1` au lieu de `getTodayDayOfYear()`, et `loadGameState()` ne recalculait pas le jour avec la logique de rattrapage
+- **Erreur runtime `DEFAULT_GARDEN_WIDTH_CM`** : dépendance circulaire entre `game-store` et `garden-store` résolue via `garden-types.ts`
+- **`noImplicitAny: true`** activé dans `tsconfig.json` (hérité de `strict: true`), 2 erreurs de type corrigées
+
+### 🧹 Nettoyage
+
+- 19 fichiers `game-store.ts.backup-*` supprimés
+- Bloc mort `ZONE_MODIFIERS["serre_tile"]` retiré de `game-store.ts`
+- Import circulaire `isFrostRisk` retiré de `game-store.ts` (déjà dans `simulation-store`)
+
+### 📝 Configuration
+
+- Version uniformisée à `0.17.0` dans `package.json`, `save-manager.ts`, `README.md`
+- `tsconfig.json` : `noImplicitAny: false` retiré (hérité de `strict: true`)
+- IA séparée : pas de réactivation Ollama/Qdrant dans BotanIA (application indépendante)
+
 ## v0.17.0 - Super IA Locale (Ollama + Qdrant RAG) (2026-04-09)
 
 ### ✨ Nouveau

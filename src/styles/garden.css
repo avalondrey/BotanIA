@@ -106,11 +106,10 @@
    Le background-size suit DISPLAY_SCALE (50cm * 0.55 = 27.5px) */
 .garden-grid {
   position: relative;
-  /* width et height injectés inline depuis le composant */
+  /* width, height, background-size injectés inline depuis le composant */
   background-image:
     linear-gradient(rgba(255,255,255,0.25) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.25) 1px, transparent 1px);
-  background-size: 65px 65px; /* 1m * 0.65 scale */
   border-radius: 8px;
   background-color: rgba(139, 195, 74, 0.12);
 }

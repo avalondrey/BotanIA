@@ -1,22 +1,35 @@
 /**
  * POST /api/agent/scan
- * DISABLED for Vercel — requires local Ollama+Qdrant
+ * Proactive scan vers le microservice AI
  */
+import { NextRequest, NextResponse } from 'next/server';
+import { microScan } from '@/lib/agent/micro-client';
 
-import { NextResponse } from 'next/server';
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { gameContext, snapshot } = body;
 
-export async function POST() {
-  return NextResponse.json({
-    success: false,
-    error: 'Agent scan disabled for Vercel (requires local Ollama+Qdrant)',
-    timestamp: Date.now(),
-  }, { status: 503 });
+    if (!gameContext) {
+      return NextResponse.json({ error: 'gameContext manquant' }, { status: 400 });
+    }
+
+    const result = await microScan({ gameContext, snapshot });
+
+    return NextResponse.json(result);
+  } catch (err: any) {
+    console.error('[agent/scan] Error:', err);
+    return NextResponse.json(
+      { error: err?.message || 'Erreur serveur' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET() {
   return NextResponse.json({
-    disabled: true,
-    message: 'Agent scan requires local Ollama+Qdrant — disabled on Vercel',
+    disabled: false,
+    message: 'Scan utilise le microservice AI',
     timestamp: Date.now(),
   });
 }

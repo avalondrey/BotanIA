@@ -51,6 +51,26 @@ export interface AgentStatus {
   errorMessage?: string;
 }
 
+export type GapType = 'sprite' | 'card_data' | 'tsx_file' | 'documentation';
+export type GapSeverity = 'critical' | 'warning' | 'info';
+export type GapStatus = 'detected' | 'proposed' | 'approved' | 'rejected' | 'generating' | 'done' | 'failed';
+
+export interface AssetGap {
+  id: string;
+  type: GapType;
+  plantDefId: string;
+  severity: GapSeverity;
+  message: string;
+  proposedPrompt: string;
+  existingPaths: string[];
+  missingPaths: string[];
+  stageCount: number;
+  status: GapStatus;
+  generatedImageUrl?: string;
+  generationError?: string;
+  timestamp: number;
+}
+
 // ─── Store Interface ──────────────────────────────────────────────────────────
 
 interface AgentStore {
@@ -64,6 +84,9 @@ interface AgentStore {
 
   // Missing sprites (detected client-side via img onError)
   missingSprites: Set<string>;
+
+  // Asset gaps (detected automatically, awaiting user validation)
+  detectedGaps: AssetGap[];
 
   // Chat
   messages: LiaMessage[];
@@ -85,6 +108,12 @@ interface AgentStore {
 
   addMissingSprite(plantDefId: string): void;
   clearMissingSprite(plantDefId?: string): void;
+
+  addGaps(gaps: Omit<AssetGap, 'id' | 'timestamp'>[]): void;
+  approveGap(id: string): void;
+  rejectGap(id: string): void;
+  updateGapStatus(id: string, status: AssetGap['status'], extra?: { generatedImageUrl?: string; generationError?: string }): void;
+  clearGaps(): void;
 
   addMessage(m: Omit<LiaMessage, 'id' | 'timestamp'>): void;
   clearMessages(): void;
@@ -112,6 +141,8 @@ export const useAgentStore = create<AgentStore>()(
       dismissedSuggestions: new Set(),
 
       missingSprites: new Set<string>(),
+
+      detectedGaps: [],
 
       messages: [],
       isThinking: false,
@@ -205,6 +236,46 @@ export const useAgentStore = create<AgentStore>()(
           next.delete(plantDefId);
           return { missingSprites: next };
         }),
+
+      // ─── Asset Gap Actions ───────────────────────────────────────────────
+
+      addGaps: (gaps) =>
+        set((s) => ({
+          detectedGaps: [
+            ...gaps.map((g) => ({
+              ...g,
+              id: `gap-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              timestamp: Date.now(),
+            })),
+            ...s.detectedGaps,
+          ].slice(0, 100), // max 100 gaps
+        })),
+
+      approveGap: (id) =>
+        set((s) => ({
+          detectedGaps: s.detectedGaps.map((g) =>
+            g.id === id ? { ...g, status: 'approved' as const } : g
+          ),
+        })),
+
+      rejectGap: (id) =>
+        set((s) => ({
+          detectedGaps: s.detectedGaps.map((g) =>
+            g.id === id ? { ...g, status: 'rejected' as const } : g
+          ),
+        })),
+
+      updateGapStatus: (id, status, extra) =>
+        set((s) => ({
+          detectedGaps: s.detectedGaps.map((g) =>
+            g.id === id
+              ? { ...g, status, ...(extra || {}) }
+              : g
+          ),
+        })),
+
+      clearGaps: () =>
+        set({ detectedGaps: [] }),
 
       // ─── Chat Actions ──────────────────────────────────────────────────
 

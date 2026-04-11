@@ -35,7 +35,7 @@ interface SaveDB {
 //  APP VERSION
 // ═══════════════════════════════════════════════════════════════
 
-export const APP_VERSION = '0.13.0';
+export const APP_VERSION = '0.18.0';
 
 // ═══════════════════════════════════════════════════════════════
 //  DB CONNECTION

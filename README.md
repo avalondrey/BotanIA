@@ -2,7 +2,7 @@
 
 > Application de jardinage botanique **scientifique** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-0.13.0-green)
+![Version](https://img.shields.io/badge/version-0.18.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)

@@ -18,7 +18,7 @@ interface GardenPlanViewProps {
   onEditModeChange?: (mode: 'place' | 'select') => void;
 }
 
-const DISPLAY_SCALE = 0.65;
+const BASE_SCALE = 0.65; // fallback scale
 
 const TOOL_SIZES: Record<string, { w: number; h: number }> = {
   serre: { w: 600, h: 400 },
@@ -77,6 +77,26 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const agro             = useAgroData();
   const { reportMissing } = useMissingSprites();
 
+  // ── Dynamic zoom: scale grid to fit container width ──
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  // Auto-fit: fill container width at zoomLevel=1
+  const displayScale = containerWidth > 0
+    ? (containerWidth / gardenWidthCm) * zoomLevel
+    : BASE_SCALE;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // ── Drag state ──
   const dragRef = useRef<{
     type: 'serre' | 'plant' | 'hedge' | 'tank' | 'drum' | 'shed' | 'tree' | 'zone' | 'zone_hedge' | 'zone_water';
@@ -122,8 +142,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
     return () => { if (tooltipTimer.current) clearTimeout(tooltipTimer.current); };
   }, []);
 
-  const displayW = Math.round(gardenWidthCm  * DISPLAY_SCALE);
-  const displayH = Math.round(gardenHeightCm * DISPLAY_SCALE);
+  const displayW = Math.round(gardenWidthCm  * displayScale);
+  const displayH = Math.round(gardenHeightCm * displayScale);
 
   const getStageSprite = (plantDefId: string, stage: number) =>
     `/plants/${plantDefId}-stage-${Math.min(stage, 6)}.png`;
@@ -140,8 +160,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
     if (activeTool === 'none') return;
     if (dragRef.current?.active) return; // ignore click après un drag
     const rect = e.currentTarget.getBoundingClientRect();
-    const cmX = Math.round((e.clientX - rect.left) / DISPLAY_SCALE);
-    const cmY = Math.round((e.clientY - rect.top)  / DISPLAY_SCALE);
+    const cmX = Math.round((e.clientX - rect.left) / displayScale);
+    const cmY = Math.round((e.clientY - rect.top)  / displayScale);
 
     if (activeTool === 'serre') {
       const { w, h } = TOOL_SIZES.serre;
@@ -218,8 +238,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
       const dy = e.clientY - dragRef.current.startMouseY;
       if (!dragRef.current.active && Math.hypot(dx, dy) < 4) return;
       dragRef.current.active = true;
-      const newX = Math.max(0, dragRef.current.startObjX + dx / DISPLAY_SCALE);
-      const newY = Math.max(0, dragRef.current.startObjY + dy / DISPLAY_SCALE);
+      const newX = Math.max(0, dragRef.current.startObjX + dx / displayScale);
+      const newY = Math.max(0, dragRef.current.startObjY + dy / displayScale);
       setDragPos({ id: dragRef.current.id, x: newX, y: newY });
     };
     const onUp = () => {
@@ -304,12 +324,21 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const toolSize = activeTool !== 'none' ? TOOL_SIZES[activeTool] : null;
 
   return (
-    <div className="plan-view-container">
-      {/* Info dimensions + curseur actif */}
+    <div className="plan-view-container" ref={containerRef}>
+      {/* Info dimensions + zoom + curseur actif */}
       <div className="garden-dims-bar">
         <span>🗺️ {(gardenWidthCm/100).toFixed(0)}m × {(gardenHeightCm/100).toFixed(0)}m</span>
         <span>({(gardenWidthCm*gardenHeightCm/10000).toFixed(0)} m²)</span>
-        <span className="dims-scale">Échelle 1:{Math.round(1/DISPLAY_SCALE)}e</span>
+        <span className="dims-scale">Échelle 1:{Math.round(1/displayScale)}e</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+          <button onClick={() => setZoomLevel(z => Math.max(0.3, +(z - 0.1).toFixed(1)))}
+            style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>−</button>
+          <span style={{ fontSize: 12, fontWeight: 700, minWidth: 36, textAlign: 'center' }}>{Math.round(zoomLevel * 100)}%</span>
+          <button onClick={() => setZoomLevel(z => Math.min(3, +(z + 0.1).toFixed(1)))}
+            style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>+</button>
+          <button onClick={() => setZoomLevel(1)}
+            style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#e8f5e9', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Ajuster</button>
+        </div>
         {activeTool !== 'none' && (
           <span className="dims-tool-active">
             ✏️ Mode placement : {activeTool} — cliquez sur la grille
@@ -335,7 +364,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
         }}>
           {Array.from({ length: Math.ceil(gardenWidthCm / 100) + 1 }).map((_, i) => (
             <div key={`h-${i}`} style={{
-              flex: '1 0 ' + (100 * DISPLAY_SCALE) + 'px',
+              flex: '1 0 ' + (100 * displayScale) + 'px',
               borderLeft: i === 0 ? 'none' : '1px solid #999',
               fontSize: 10,
               color: '#666',
@@ -363,7 +392,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {Array.from({ length: Math.ceil(gardenHeightCm / 100) + 1 }).map((_, i) => (
             <div key={`v-${i}`} style={{
               position: 'absolute',
-              top: i * 100 * DISPLAY_SCALE,
+              top: i * 100 * displayScale,
               left: 0,
               width: 40,
               borderTop: i === 0 ? 'none' : '1px solid #999',
@@ -383,14 +412,15 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           style={{
             width: displayW,
             height: displayH,
+            backgroundSize: `${100 * displayScale}px ${100 * displayScale}px`,
             flexShrink: 0,
             cursor: activeTool !== 'none' ? 'crosshair' : 'default',
           }}
           onMouseDown={(e) => {
             if (activeTool === 'none') return;
             const rect = e.currentTarget.getBoundingClientRect();
-            const cmX = Math.round((e.clientX - rect.left) / DISPLAY_SCALE);
-            const cmY = Math.round((e.clientY - rect.top) / DISPLAY_SCALE);
+            const cmX = Math.round((e.clientX - rect.left) / displayScale);
+            const cmY = Math.round((e.clientY - rect.top) / displayScale);
             if (activeTool === 'zone' || activeTool === 'zone_hedge' || activeTool === 'zone_water' || activeTool === 'zone_grass' || activeTool === 'zone_fleur') {
               e.stopPropagation();
               setDrawingZone({
@@ -406,8 +436,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             if (!drawingZone) return;
             const rect = gridRef.current?.getBoundingClientRect();
             if (!rect) return;
-            const cmX = Math.round((e.clientX - rect.left) / DISPLAY_SCALE);
-            const cmY = Math.round((e.clientY - rect.top) / DISPLAY_SCALE);
+            const cmX = Math.round((e.clientX - rect.left) / displayScale);
+            const cmY = Math.round((e.clientY - rect.top) / displayScale);
             setDrawingZone(d => d ? { ...d, curX: cmX, curY: cmY } : null);
           }}
           onMouseUp={() => {
@@ -431,15 +461,15 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* SERRES — draggables */}
           {gardenSerreZones && gardenSerreZones.map((serre) => {
             const isDragging = dragPos?.id === serre.id;
-            const px = (isDragging ? dragPos!.x : serre.x) * DISPLAY_SCALE;
-            const py = (isDragging ? dragPos!.y : serre.y) * DISPLAY_SCALE;
+            const px = (isDragging ? dragPos!.x : serre.x) * displayScale;
+            const py = (isDragging ? dragPos!.y : serre.y) * displayScale;
             return (
               <div key={serre.id}
                 style={{
                   position: 'absolute',
                   left: px, top: py,
-                  width: serre.width * DISPLAY_SCALE,
-                  height: serre.height * DISPLAY_SCALE,
+                  width: serre.width * displayScale,
+                  height: serre.height * displayScale,
                   cursor: activeTool === 'none' ? 'grab' : 'default',
                   userSelect: 'none',
                   backgroundImage: 'url(/greenhouse-sprite.png)',
@@ -486,10 +516,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'zone', id: zone.id }); }}
               style={{
                 position: 'absolute',
-                left: zone.x * DISPLAY_SCALE,
-                top: zone.y * DISPLAY_SCALE,
-                width: zone.width * DISPLAY_SCALE,
-                height: zone.height * DISPLAY_SCALE,
+                left: zone.x * displayScale,
+                top: zone.y * displayScale,
+                width: zone.width * displayScale,
+                height: zone.height * displayScale,
                 background: zone.type === 'water_recovery'
                   ? 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(100,116,139,.08) 8px, rgba(100,116,139,.08) 16px)'
                   : zone.type === 'hedge'
@@ -528,8 +558,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                       const onMove = (me: MouseEvent) => {
                         const dx = me.clientX - startX;
                         const dy = me.clientY - startY;
-                        const newW = Math.max(30, Math.round(startW + dx / DISPLAY_SCALE));
-                        const newH = Math.max(30, Math.round(startH + dy / DISPLAY_SCALE));
+                        const newW = Math.max(30, Math.round(startW + dx / displayScale));
+                        const newH = Math.max(30, Math.round(startH + dy / displayScale));
                         const newX = startZx;
                         const newY = startZy;
                         resizeGardenZone?.(zone.id, newX, newY, newW, newH);
@@ -577,10 +607,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y); }}
               style={{
                 position: 'absolute',
-                left: hedge.x * DISPLAY_SCALE,
-                top: hedge.y * DISPLAY_SCALE,
-                width: hedge.width * DISPLAY_SCALE,
-                height: hedge.height * DISPLAY_SCALE,
+                left: hedge.x * displayScale,
+                top: hedge.y * displayScale,
+                width: hedge.width * displayScale,
+                height: hedge.height * displayScale,
                 background: 'linear-gradient(135deg, #2d5016 0%, #4a7c2c 50%, #2d5016 100%)',
                 border: selectedElement?.id === hedge.id && selectedElement?.type === 'hedge' ? '3px dashed #22c55e' : '2px solid #1a3a0f',
                 borderRadius: 4,
@@ -625,10 +655,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tank', tank.id, tank.x, tank.y); }}
               style={{
                 position: 'absolute',
-                left: tank.x * DISPLAY_SCALE,
-                top: tank.y * DISPLAY_SCALE,
-                width: tank.width * DISPLAY_SCALE,
-                height: tank.height * DISPLAY_SCALE,
+                left: tank.x * displayScale,
+                top: tank.y * displayScale,
+                width: tank.width * displayScale,
+                height: tank.height * displayScale,
                 background: 'linear-gradient(135deg, #374151 0%, #6b7280 50%, #374151 100%)',
                 border: selectedElement?.id === tank.id && selectedElement?.type === 'tank' ? '3px dashed #22c55e' : '3px solid #1f2937',
                 borderRadius: 8,
@@ -712,10 +742,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'shed', shed.id, shed.x, shed.y); }}
               style={{
                 position: 'absolute',
-                left: shed.x * DISPLAY_SCALE,
-                top: shed.y * DISPLAY_SCALE,
-                width: shed.width * DISPLAY_SCALE,
-                height: shed.height * DISPLAY_SCALE,
+                left: shed.x * displayScale,
+                top: shed.y * displayScale,
+                width: shed.width * displayScale,
+                height: shed.height * displayScale,
                 background: 'linear-gradient(135deg, #92400e 0%, #b45309 50%, #92400e 100%)',
                 border: selectedElement?.id === shed.id && selectedElement?.type === 'shed' ? '3px dashed #22c55e' : '3px solid #78350f',
                 borderRadius: 6,
@@ -764,10 +794,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'drum', drum.id, drum.x, drum.y); }}
               style={{
                 position: 'absolute',
-                left: drum.x * DISPLAY_SCALE,
-                top: drum.y * DISPLAY_SCALE,
-                width: drum.width * DISPLAY_SCALE,
-                height: drum.height * DISPLAY_SCALE,
+                left: drum.x * displayScale,
+                top: drum.y * displayScale,
+                width: drum.width * displayScale,
+                height: drum.height * displayScale,
                 background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e3a5f 100%)',
                 border: selectedElement?.id === drum.id && selectedElement?.type === 'drum' ? '3px dashed #22c55e' : '3px solid #1e40af',
                 borderRadius: 6,
@@ -812,10 +842,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tree', tree.id, tree.x, tree.y); }}
               style={{
                 position: 'absolute',
-                left: tree.x * DISPLAY_SCALE - (tree.diameter ?? 75) * 0.5 * DISPLAY_SCALE,
-                top: tree.y * DISPLAY_SCALE - (tree.diameter ?? 75) * 0.5 * DISPLAY_SCALE,
-                width: (tree.diameter ?? 75) * DISPLAY_SCALE,
-                height: (tree.diameter ?? 75) * DISPLAY_SCALE,
+                left: tree.x * displayScale - (tree.diameter ?? 75) * 0.5 * displayScale,
+                top: tree.y * displayScale - (tree.diameter ?? 75) * 0.5 * displayScale,
+                width: (tree.diameter ?? 75) * displayScale,
+                height: (tree.diameter ?? 75) * displayScale,
                 borderRadius: '50%',
                 background: 'radial-gradient(circle at 40% 35%, #4ade80 0%, #16a34a 60%, #14532d 100%)',
                 border: selectedElement?.id === tree.id && selectedElement?.type === 'tree' ? '3px dashed #22c55e' : '2px solid #166534',
@@ -870,9 +900,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             const isDragging = dragPos?.id === gp.id;
             const cx = isDragging ? dragPos!.x : gp.x;
             const cy = isDragging ? dragPos!.y : gp.y;
-            const px = cx * DISPLAY_SCALE;
-            const py = cy * DISPLAY_SCALE;
-            const sz = Math.max(40, 80 * DISPLAY_SCALE);
+            const px = cx * displayScale;
+            const py = cy * displayScale;
+            const sz = Math.max(40, 80 * displayScale);
 
             const ringColor = isDragging ? '#90caf9' :
               agroData?.waterUrgency === 'critique' ? '#ef4444' :
@@ -954,10 +984,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             return (
               <div style={{
                 position: 'absolute',
-                left: rect.x * DISPLAY_SCALE,
-                top: rect.y * DISPLAY_SCALE,
-                width: rect.w * DISPLAY_SCALE,
-                height: rect.h * DISPLAY_SCALE,
+                left: rect.x * displayScale,
+                top: rect.y * displayScale,
+                width: rect.w * displayScale,
+                height: rect.h * displayScale,
                 background: drawingZone.zoneType === 'water_recovery'
                   ? 'rgba(100,116,139,.15)'
                   : drawingZone.zoneType === 'hedge'

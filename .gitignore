@@ -69,6 +69,8 @@ prompt
 worklog.md
 worklog_test.txt
 _lia-b64.txt
+TEMP-*.tsx
+TEMP-*.txt
 
 # Editor
 .vscode/

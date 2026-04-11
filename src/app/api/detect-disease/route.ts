@@ -147,7 +147,7 @@ async function detectWithPlantId(imageBase64: string, _mediaType = 'image/jpeg')
     return okResult('Plante saine', 'low', 0.9, [], [], [], true, 'plantid');
   }
 
-  const disease = suggestion.probabilities?.find(p => p.name.includes('disease') || p.name.includes('virus') || p.name.includes('fungi'));
+  const disease = suggestion.probabilities?.find((p: { name: string; probability: number }) => p.name.includes('disease') || p.name.includes('virus') || p.name.includes('fungi'));
 
   if (!disease || disease.probability < 0.3) {
     return okResult('Plante saine', 'low', suggestion.probability || 0.8, [], [], [], true, 'plantid');

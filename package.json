@@ -1,6 +1,6 @@
 {
   "name": "botania",
-  "version": "0.12.1",
+  "version": "0.18.0",
   "private": true,
   "description": "Application de jardinage botanique scientifique — données agronomiques INRAE, FAO, GNIS",
   "scripts": {
@@ -8,10 +8,8 @@
     "build": "next build",
     "start": "set NODE_ENV=production && node .next/standalone/server.js > server.log 2>&1",
     "lint": "eslint .",
-    "db:push": "prisma db push",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset"
+    "generate-cards": "node generate-cards.js",
+    "create-demo-save": "node create-real-garden-save.js"
   },
   "dependencies": {
     "@builder.io/react": "^9.3.0",
@@ -21,7 +19,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.1.1",
     "@mdxeditor/editor": "^3.39.1",
-    "@prisma/client": "^6.11.1",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -68,7 +65,6 @@
     "next-intl": "^4.3.4",
     "next-themes": "^0.4.6",
     "picomatch": "^4.0.4",
-    "prisma": "^6.11.1",
     "react": "^19.0.0",
     "react-day-picker": "^9.8.0",
     "react-dom": "^19.0.0",

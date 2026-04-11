@@ -129,9 +129,9 @@ export function GameHUD() {
   const hasFrostRisk = realWeather ? isFrostRisk(realWeather) : false;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Top HUD bar */}
-      <div className="flex items-center gap-1.5 flex-wrap p-2.5 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000]">
+      <div className="flex items-center gap-1.5 flex-wrap p-2 bg-white border border-stone-200 rounded-xl shadow-sm">
         {/* Score */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-amber-300">
           <Trophy className="w-3.5 h-3.5 text-amber-500" />
