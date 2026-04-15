@@ -287,6 +287,7 @@
     <button class="btn btn-primary" id="btnScan" onclick="runScan()">🔍 Scanner 8 pts</button>
     <button class="btn btn-secondary" onclick="runProactive()">🔔 Analyse Proactive</button>
     <button class="btn btn-secondary" onclick="openSpriteEditor()">🖼️ Éditeur Sprites</button>
+    <button class="btn btn-secondary" onclick="toggleLiaPanel()">💬 Lia</button>
     <button class="btn btn-secondary" onclick="runRAG()">📚 RAG Query</button>
     <button class="btn btn-secondary" onclick="runStatus()">📡 Status</button>
     <button class="btn btn-danger" onclick="clearAll()" style="margin-left:auto">✕ Reset</button>
@@ -320,6 +321,47 @@
       <h2>Détail — Clique sur ❌ pour générer et valider</h2>
       <div id="plantsList"></div>
     </div>
+
+    <!-- Lia Chat Panel (hidden by default) -->
+    <div id="liaPanel" style="display:none; position:fixed; top:0; right:0; width:420px; height:100vh; background:#161b22; border-left:1px solid #30363d; z-index:200; flex-direction:column;">
+      <div style="padding:16px; border-bottom:1px solid #30363d; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,#16a34a,#0d9488);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:20px;">🤖</span>
+          <span style="font-weight:700; color:#fff;">Lia — Assistante IA</span>
+        </div>
+        <button onclick="toggleLiaPanel()" style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer; padding:4px 8px;">✕</button>
+      </div>
+
+      <!-- Context bar -->
+      <div id="liaContextBar" style="padding:8px 16px; background:#0d1117; border-bottom:1px solid #21262d; font-size:10px; color:#8b949e; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <span id="liaContextText">Appuie sur "Contexte" pour charger l'état du jeu</span>
+        <button onclick="loadLiaContext()" style="margin-left:auto; background:#16a34a; border:none; color:#fff; font-size:10px; padding:3px 8px; border-radius:4px; cursor:pointer;">🔄 Contexte</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="liaMessages" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; gap:8px; align-items:flex-start;">
+          <span style="font-size:20px; flex-shrink:0;">🤖</span>
+          <div style="background:#21262d; border-radius:8px; padding:10px 14px; max-width:85%; font-size:12px; line-height:1.5;">
+            Bonjour ! Je suis <strong>Lia</strong>, ton assistante IA BotanIA. Je connais ton jardin et peux t'aider à décider quoi planter,diagniquer des problèmes,ou optimiser tes cultures. Appuie sur <strong>"Contexte"</strong> pour me charger l'état actuel !
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div style="padding:8px 16px; border-top:1px solid #21262d; display:flex; gap:6px; flex-wrap:wrap;">
+        <button onclick="liaQuickAsk('Que dois-je planter ce mois-ci ?')" style="background:#21262d; border:1px solid #30363d; color:#8b949e; font-size:10px; padding:4px 8px; border-radius:4px; cursor:pointer;">🌱 Que planter ?</button>
+        <button onclick="liaQuickAsk('Analyse mon jardin et donne-moi 3 priorités.')" style="background:#21262d; border:1px solid #30363d; color:#8b949e; font-size:10px; padding:4px 8px; border-radius:4px; cursor:pointer;">🔔 3 priorités</button>
+        <button onclick="liaQuickAsk('Quel légume associer avec mes tomates ?')" style="background:#21262d; border:1px solid #30363d; color:#8b949e; font-size:10px; padding:4px 8px; border-radius:4px; cursor:pointer;">🌿 Compagnons</button>
+      </div>
+
+      <!-- Input -->
+      <div style="padding:12px 16px; border-top:1px solid #30363d; display:flex; gap:8px;">
+        <input id="liaInput" type="text" placeholder="Pose une question à Lia..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendLiaMessage()"
+          style="flex:1; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; font-size:12px; padding:8px 12px; border-radius:6px; outline:none;">
+        <button onclick="sendLiaMessage()" id="liaSendBtn" style="background:#16a34a; border:none; color:#fff; font-size:16px; padding:8px 14px; border-radius:6px; cursor:pointer;">➤</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal -->
@@ -348,11 +390,16 @@
 <script>
 // Use relative URLs on localhost; use port 3001 directly on Tailscale
 const isTailscale = window.location.hostname.includes('tail56d862');
-const ORIGIN = isTailscale ? '' : 'http://localhost:3000';
-const MICRO_API = ORIGIN + '/api';
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Local: direct to microservice at 3001. Tailscale: use public URL (all-in-one microservice on 3001).
+const MICRO_API = isLocalhost ? 'http://localhost:3001' : (isTailscale ? 'https://pc-avalondrey.tail56d862.ts.net' : '/api');
 
 // Only expose Botania proxied endpoints on localhost (these don't exist in microservice)
-const BOTANIA_API = ORIGIN + '/api/agent';
+const BOTANIA_API = isTailscale ? 'http://localhost:3001/api/agent' : '/api/agent';
+
+// ─── Lia Chat Panel State (must be declared before functions) ───
+let liaOpen = false;
+let liaContext = null;
 
 // Stage names & descriptions
 const STAGE_NAMES_VEG = ['Graine','Levée','Plantule','Croissance','Floraison','Récolte'];
@@ -390,17 +437,23 @@ let currentSpritePlant = null;
 
 // ─── Status ───────────────────────────────────────────────────────────────────
 async function checkStatus() {
+  // Test Microservice (3001)
   try {
-    const r = await fetch(`${MICRO_API}/health`);
+    const r = await fetch(`${MICRO_API}/health`, { signal: AbortSignal.timeout(2000) });
     const d = await r.json();
-    setDot('dotOllama', d.ollama?.available);
-    setDot('dotQdrant', d.qdrant?.available);
-    setDot('dotMicro', true);
-  } catch { setDot('dotMicro', false); }
+    setDot('dotMicro', d.status === 'ok');
+    setDot('dotOllama', d.ollama?.available === true);
+    setDot('dotQdrant', d.qdrant?.available === true);
+  } catch (e) {
+    setDot('dotMicro', false);
+    setDot('dotOllama', false);
+    setDot('dotQdrant', false);
+  }
 
+  // Test BotanIA (3000) - use current origin instead of localhost
   try {
-    await fetch(`${MICRO_API}/scan/plants`, {method:'HEAD'});
-    setDot('dotBotania', true);
+    const r = await fetch(window.location.origin, { signal: AbortSignal.timeout(2000) });
+    setDot('dotBotania', r.ok);
   } catch { setDot('dotBotania', false); }
 }
 
@@ -413,7 +466,11 @@ async function runScan() {
   showLoading('Lancement du scan 8 points...');
 
   try {
-    const r = await fetch(`${MICRO_API}/scan/plants`, { method: 'POST' });
+    const r = await fetch(`${MICRO_API}/scan/plants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: 50, offset: 0 })
+    });
     const responseText = await r.text();
     let d;
     try {
@@ -688,6 +745,112 @@ function clearAll() {
   document.getElementById('spriteEditorPanel').style.display = 'none';
 }
 
+// ─── Lia Chat Panel ──────────────────────────────────────────────────────────
+
+function toggleLiaPanel() {
+  liaOpen = !liaOpen;
+  const panel = document.getElementById('liaPanel');
+  panel.style.display = liaOpen ? 'flex' : 'none';
+  if (liaOpen && !liaContext) {
+    // Auto-load context on first open
+    loadLiaContext();
+  }
+  // Re-trigger scanData check on open
+  if (liaOpen && scanData) {
+    liaContext = scanData;
+  }
+}
+
+async function loadLiaContext() {
+  const ctxBar = document.getElementById('liaContextText');
+  ctxBar.textContent = '⏳ Chargement du contexte...';
+  try {
+    const r = await fetch(`${MICRO_API}/scan/plants`, { method: 'POST' });
+    let d = await r.json();
+    if (d.data) d = d.data;
+    const s = d.summary || {};
+    liaContext = d;
+    ctxBar.innerHTML = `📊 ${s.total || 0} plantes scannées | ${s.complete || 0} ✅ | ${s.partial || 0} ⚠️ | ${s.incomplete || 0} ❌`;
+  } catch(e) {
+    ctxBar.textContent = '❌ Impossible de charger le contexte';
+  }
+}
+
+function addLiaMessage(role, text) {
+  const msgs = document.getElementById('liaMessages');
+  const emoji = role === 'lia' ? '🤖' : '👤';
+  const bg = role === 'lia' ? '#21262d' : '#16a34a44';
+  const align = role === 'lia' ? 'flex-start' : 'flex-end';
+  const color = role === 'lia' ? '#c9d1d9' : '#fff';
+  const div = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.justifyContent = align;
+  div.style.gap = '8px';
+  div.style.alignItems = 'flex-start';
+  div.innerHTML = `
+    ${role === 'lia' ? '<span style="font-size:20px;flex-shrink:0;">🤖</span>' : ''}
+    <div style="background:${bg};border-radius:8px;padding:10px 14px;max-width:80%;font-size:12px;line-height:1.5;color:${color};${role==='lia'?'border:1px solid #30363d':''}">
+      ${escapeHtml(text)}
+    </div>
+    ${role === 'user' ? '<span style="font-size:20px;flex-shrink:0;">👤</span>' : ''}
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function sendLiaMessage() {
+  const input = document.getElementById('liaInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addLiaMessage('user', text);
+  const sendBtn = document.getElementById('liaSendBtn');
+  sendBtn.disabled = true;
+  sendBtn.textContent = '⏳';
+
+  // Build context for Lia
+  let contextStr = '';
+  if (liaContext) {
+    const s = liaContext.summary || {};
+    const incomplete = (liaContext.results || []).filter(r => r.overallStatus !== '✅ COMPLET').slice(0, 10);
+    contextStr = `\n\nContexte BotanIA:\n- ${s.total || 0} plantes dans le scan\n- ${s.complete || 0} complètes, ${s.partial || 0} partielles, ${s.incomplete || 0} incomplètes\n`
+      + (incomplete.length ? `- Plantes à traiter: ${incomplete.map(p => p.displayName || p.plantDefId).join(', ')}\n` : '');
+  }
+
+  try {
+    const r = await fetch(`${MICRO_API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text + contextStr,
+        stream: false,
+      }),
+    });
+    const d = await r.json();
+    addLiaMessage('lia', d.answer || 'Désolée, je n\'ai pas de réponse...');
+  } catch(e) {
+    addLiaMessage('lia', '❌ Erreur: ' + e.message);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = '➤';
+  }
+}
+
+function liaQuickAsk(question) {
+  document.getElementById('liaInput').value = question;
+  sendLiaMessage();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+    .replace(/\n/g, '<br>');
+}
+
 // ─── Sprite Editor Panel
 function openSpriteModal(plantDefId) {
   if (!scanData) return;
@@ -876,7 +1039,7 @@ function openPlantuleModal(plantDefId) {
   if (!scanData) return;
   const plant = scanData.results.find(p => p.plantDefId === plantDefId);
   if (!plant) return;
-  currentSpritePlant = plant;
+  currentSpritePlant = plant; // reuse for uploadSprite
 
   const displayName = plant.displayName || plantDefId;
   const stageAssets = plant.imageAssets.filter(a => a.type === 'plantule-stage' || a.type === 'plantule-mature');
@@ -886,6 +1049,7 @@ function openPlantuleModal(plantDefId) {
   document.getElementById('btnGenerate').style.display = 'none';
   document.getElementById('btnValidate').style.display = 'none';
 
+  // Stage names for plantules
   const STAGE_NAMES = ['Graine', 'Levée', 'Plantule', 'Croissance', 'Floraison'];
   const STAGE_DESCS = [
     'Tiny seedling, 2 cotyledon leaves, 5cm pot',
@@ -907,6 +1071,7 @@ function openPlantuleModal(plantDefId) {
   html += '</div>';
   html += '<div style="display:flex;flex-direction:column;gap:12px">';
 
+  // --- Section 1: Stages 1-5 (croissance serre) ---
   html += `<div style="font-size:11px;font-weight:700;color:#f0883e;margin-top:4px">🌱 STAGES 1-5 — Croissance en serre</div>`;
   for (let n = 1; n <= 5; n++) {
     const asset = stageAssets.find(a => a.type === 'plantule-stage' && a.stageNumber === n);
@@ -940,6 +1105,7 @@ function openPlantuleModal(plantDefId) {
     </div>`;
   }
 
+  // --- Section 2: Mature 1-5 (fruits/maturation) ---
   html += `<div style="font-size:11px;font-weight:700;color:#22c55e;margin-top:8px">🍅 MATURE 1-5 — Fruits &amp; Récolte</div>`;
   for (let n = 1; n <= 5; n++) {
     const asset = stageAssets.find(a => a.type === 'plantule-mature' && a.stageNumber === n);
@@ -1009,12 +1175,14 @@ async function uploadPlantuleImage(plantDefId, stageNumber, group) {
     if (d.success) {
       msg.textContent = `✅ ${group === 'stage' ? 'Stage' : 'Mature'} ${stageNumber} — Image enregistrée !`;
       msg.style.color = '#22c55e';
+      // Update local state
       if (scanData) {
         const plant = scanData.results.find(p => p.plantDefId === plantDefId);
         if (plant) {
           const assetType = group === 'stage' ? 'plantule-stage' : 'plantule-mature';
           const asset = plant.imageAssets.find(a => a.type === assetType && a.stageNumber === stageNumber);
           if (asset) { asset.foundPath = d.publicUrl; asset.status = '✅'; }
+          // Update plantule missing count
           const missing = plant.imageAssets.filter(a => (a.type === 'plantule-stage' || a.type === 'plantule-mature') && !a.foundPath).length;
           plant.checks.plantule.missingImages = missing;
         }
@@ -1106,7 +1274,7 @@ function escapeHtml(str) {
 
 // ─── Init ───────────────────────────────────────────────────────────────────
 checkStatus();
-setInterval(checkStatus, 30000);
+setInterval(checkStatus, 2000);
 </script>
 </body>
 </html>

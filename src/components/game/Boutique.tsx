@@ -8,18 +8,10 @@ import {
   SEED_VARIETIES,
   PLANTULE_CATALOG,
   PLANTULES_LOCALES,
-  MINI_SERRE_PRICE,
-  CHAMBRE_CATALOG,
-  MINI_SERRE_WIDTH_CM,
-  MINI_SERRE_DEPTH_CM,
-  MAX_GARDEN_WIDTH_CM,
-  MAX_GARDEN_HEIGHT_CM,
   loadCustomCards,
 } from "@/store/game-store";
-import { PLANTS } from "@/lib/ai-engine";
-import { ShoppingCart, Coins, Info, Store } from "lucide-react";
+import { ShoppingCart, Coins, Store } from "lucide-react";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 
 import { GrainesTab } from "./Boutique/GrainesTab";
 import { ArbresTab } from "./Boutique/ArbresTab";
@@ -31,10 +23,38 @@ import { AchatsLocauxTab } from "./Boutique/AchatsLocauxTab";
 import { DecouvertesTab } from "./Boutique/DecouvertesTab";
 import { MarcheTab } from "./Boutique/MarcheTab";
 import { QuestTracker } from "./QuestTracker";
+import { BoutiqueSearchBar } from "./Boutique/BoutiqueSearchBar";
+import { BoutiqueSearchResults } from "./Boutique/BoutiqueSearchResults";
+import { useBoutiqueSearch } from "./Boutique/useBoutiqueSearch";
 
-const MONTH_NAMES = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+type ShopCategory = "graines-plantes" | "arbres-local" | "infrastructure" | "marche" | "decouvertes";
+type SubTab = "graines" | "plantules" | "fruitiers" | "pepinieres" | "chambres" | "serres" | "equipement" | null;
 
-type ShopTab = "graines" | "plantules" | "chambres" | "mini-serres" | "equipement" | "arbres" | "achats-locaux" | "decouvertes-photo" | "marche";
+const CATEGORY_SUBTABS: Record<ShopCategory, { key: SubTab; label: string }[]> = {
+  "graines-plantes": [
+    { key: "graines", label: "🌱 Graines" },
+    { key: "plantules", label: "🌿 Plantules" },
+  ],
+  "arbres-local": [
+    { key: "fruitiers", label: "🌳 Fruitiers" },
+    { key: "pepinieres", label: "🏪 Pépinières" },
+  ],
+  "infrastructure": [
+    { key: "chambres", label: "🏠 Chambres" },
+    { key: "serres", label: "🏡 Mini-Serres" },
+    { key: "equipement", label: "🔧 Équipement" },
+  ],
+  "marche": [],
+  "decouvertes": [],
+};
+
+const CATEGORIES: { key: ShopCategory; label: string; desc: string }[] = [
+  { key: "graines-plantes", label: "🌱 Graines & Plantes", desc: "Semences & plants" },
+  { key: "arbres-local", label: "🌳 Arbres & Local", desc: "Fruitiers & pépinières" },
+  { key: "infrastructure", label: "🏠 Infrastructure", desc: "Serres & équipement" },
+  { key: "marche", label: "🌾 Marché", desc: "Vendre" },
+  { key: "decouvertes", label: "📸 Découvertes", desc: "Photo ID" },
+];
 
 export function Boutique() {
   const coins = useGameStore((s) => s.coins);
@@ -65,9 +85,13 @@ export function Boutique() {
   const buySeedVariety = useGameStore((s) => s.buySeedVariety);
   const discoveredPlants = useGameStore((s) => s.discoveredPlants);
 
-  const [activeTab, setActiveTab] = useState<ShopTab>("graines");
+  const [activeCategory, setActiveCategory] = useState<ShopCategory>("graines-plantes");
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>("graines");
   const [justBought, setJustBought] = useState<string | null>(null);
   const [selectedShopId, setSelectedShopId] = useState<string>(SEED_SHOPS[0]?.id || "vilmorin");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const isSearchMode = searchQuery.trim().length >= 2;
 
   // Custom cards from admin
   const [customShops, setCustomShops] = useState<any[]>([]);
@@ -82,21 +106,31 @@ export function Boutique() {
     });
   }, []);
 
-  // Reset shop when changing tabs
+  // Reset shop when changing sub-tabs
   useEffect(() => {
-    if (activeTab === "arbres") {
-      setSelectedShopId("guignard");
-    } else if (activeTab === "achats-locaux") {
-      setSelectedShopId("pepiniere-locale");
-    } else if (activeTab === "plantules") {
-      setSelectedShopId("jardiland");
-    }
-  }, [activeTab]);
+    if (activeSubTab === "fruitiers") setSelectedShopId("guignard");
+    else if (activeSubTab === "pepinieres") setSelectedShopId("pepiniere-locale");
+    else if (activeSubTab === "plantules") setSelectedShopId("jardiland");
+    else if (activeSubTab === "graines") setSelectedShopId(SEED_SHOPS[0]?.id || "vilmorin");
+  }, [activeSubTab]);
 
   // Merged lists
   const allShops = [...SEED_SHOPS, ...customShops];
   const allVarieties = [...SEED_VARIETIES, ...customVarieties];
   const allPlantules = [...PLANTULE_CATALOG, ...customPlantules];
+
+  // Search
+  const { results: searchResults } = useBoutiqueSearch(
+    searchQuery,
+    allVarieties,
+    PLANTULES_LOCALES,
+    SEED_CATALOG,
+    PLANTULE_CATALOG,
+    seedVarieties,
+    unlockedVarieties,
+    plantuleCollection,
+    seedCollection,
+  );
 
   const handleBuySeeds = (plantDefId: string) => {
     const success = buySeeds(plantDefId);
@@ -112,6 +146,24 @@ export function Boutique() {
       setJustBought(`plantule-${plantDefId}`);
       setTimeout(() => setJustBought(null), 1500);
     }
+  };
+
+  const handleSearchBuyVariety = (id: string) => {
+    const success = buySeedVariety(id);
+    if (success) setJustBought(`search-${id}`);
+    setTimeout(() => setJustBought(null), 1500);
+  };
+
+  const handleSearchBuySeeds = (plantDefId: string) => {
+    const success = buySeeds(plantDefId);
+    if (success) setJustBought(`search-seed-${plantDefId}`);
+    setTimeout(() => setJustBought(null), 1500);
+  };
+
+  const handleSearchBuyPlantule = (plantDefId: string) => {
+    const success = buyPlantule(plantDefId);
+    if (success) setJustBought(`search-plantule-${plantDefId}`);
+    setTimeout(() => setJustBought(null), 1500);
   };
 
   return (
@@ -153,144 +205,189 @@ export function Boutique() {
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-2">
-        {[
-          { key: "graines" as ShopTab, label: "🌱 Graines", desc: "Paquets" },
-          { key: "arbres" as ShopTab, label: "🌳 Arbres", desc: "Fruitiers" },
-          { key: "plantules" as ShopTab, label: "🌿 Plantules", desc: "Jeunes plants" },
-          { key: "marche" as ShopTab, label: "🌾 Marché", desc: "Vendre" },
-          { key: "chambres" as ShopTab, label: "🏠 Chambres", desc: "Grow tents" },
-          { key: "mini-serres" as ShopTab, label: "🏡 Mini Serres", desc: "Propagateurs" },
-          { key: "equipement" as ShopTab, label: "🔧 Equipement", desc: "Terrain & serre" },
-          { key: "achats-locaux" as ShopTab, label: "🏪 Local", desc: "Pépinières" },
-          { key: "decouvertes-photo" as ShopTab, label: "📸 Photo", desc: "Découvertes" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-2 px-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all flex flex-col items-center gap-0.5
-              ${activeTab === tab.key
-                ? "bg-black text-white border-black shadow-[2px_2px_0_0_#000]"
-                : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
-              }`}
-          >
-            <span>{tab.label}</span>
-            <span className={`text-[7px] font-bold ${activeTab === tab.key ? "text-stone-300" : "text-stone-400"}`}>
-              {tab.desc}
-            </span>
-          </button>
-        ))}
-      </div>
+      {/* Search Bar */}
+      <BoutiqueSearchBar
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+        resultCount={isSearchMode ? searchResults.length : undefined}
+      />
 
-      {/* Tab Content */}
-      {activeTab === "graines" && (
-        <GrainesTab
-          coins={coins}
-          seedCollection={seedCollection}
-          seedVarieties={seedVarieties}
-          unlockedVarieties={unlockedVarieties}
-          selectedShopId={selectedShopId}
-          justBought={justBought}
-          allShops={allShops}
-          allVarieties={allVarieties}
-          handleBuySeeds={handleBuySeeds}
-          buySeedVariety={buySeedVariety}
-          setSelectedShopId={setSelectedShopId}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {isSearchMode ? (
+          <motion.div key="search-results"
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            <BoutiqueSearchResults
+              results={searchResults}
+              query={searchQuery}
+              coins={coins}
+              justBought={justBought}
+              onBuyVariety={handleSearchBuyVariety}
+              onBuySeeds={handleSearchBuySeeds}
+              onBuyPlantule={handleSearchBuyPlantule}
+            />
+          </motion.div>
+        ) : (
+          <motion.div key="tab-content"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
 
-      {activeTab === "arbres" && (
-        <ArbresTab
-          coins={coins}
-          seedVarieties={seedVarieties}
-          allShops={allShops}
-          selectedShopId={selectedShopId}
-          justBought={justBought}
-          buySeedVariety={buySeedVariety}
-          setSelectedShopId={setSelectedShopId}
-        />
-      )}
+            {/* Category Tabs */}
+            <div className="flex gap-2">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => {
+                    setActiveCategory(cat.key);
+                    const subTabs = CATEGORY_SUBTABS[cat.key];
+                    if (subTabs.length > 0 && !subTabs.some(st => st.key === activeSubTab)) {
+                      setActiveSubTab(subTabs[0].key);
+                    }
+                  }}
+                  className={`flex-1 py-2 px-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all flex flex-col items-center gap-0.5
+                    ${activeCategory === cat.key
+                      ? "bg-black text-white border-black shadow-[2px_2px_0_0_#000]"
+                      : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
+                    }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`text-[7px] font-bold ${activeCategory === cat.key ? "text-stone-300" : "text-stone-400"}`}>
+                    {cat.desc}
+                  </span>
+                </button>
+              ))}
+            </div>
 
-      {activeTab === "marche" && (
-        <MarcheTab />
-      )}
+            {/* Sub-tabs */}
+            {CATEGORY_SUBTABS[activeCategory].length > 1 && (
+              <div className="flex gap-2">
+                {CATEGORY_SUBTABS[activeCategory].map((sub) => (
+                  <button
+                    key={sub.key}
+                    onClick={() => setActiveSubTab(sub.key)}
+                    className={`flex-1 py-1.5 px-3 text-[10px] font-black rounded-lg border-2 transition-all
+                      ${activeSubTab === sub.key
+                        ? "bg-indigo-500 text-white border-indigo-600 shadow-[2px_2px_0_0_#4338ca]"
+                        : "bg-white text-stone-500 border-stone-200 hover:border-stone-400"
+                      }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
-      {activeTab === "plantules" && (
-        <PlantulesTab
-          coins={coins}
-          plantuleCollection={plantuleCollection}
-          allShops={allShops}
-          allPlantules={allPlantules}
-          selectedShopId={selectedShopId}
-          justBought={justBought}
-          handleBuyPlantule={handleBuyPlantule}
-          setSelectedShopId={setSelectedShopId}
-        />
-      )}
+            {/* Tab Content */}
+            {activeSubTab === "graines" && (
+              <GrainesTab
+                coins={coins}
+                seedCollection={seedCollection}
+                seedVarieties={seedVarieties}
+                unlockedVarieties={unlockedVarieties}
+                selectedShopId={selectedShopId}
+                justBought={justBought}
+                allShops={allShops}
+                allVarieties={allVarieties}
+                handleBuySeeds={handleBuySeeds}
+                buySeedVariety={buySeedVariety}
+                setSelectedShopId={setSelectedShopId}
+              />
+            )}
 
-      {activeTab === "chambres" && (
-        <ChambresTab
-          coins={coins}
-          ownedChambres={ownedChambres}
-          activeChambreId={activeChambreId}
-          buyChambreDeCulture={buyChambreDeCulture}
-          setActiveChambre={setActiveChambre}
-          justBought={justBought}
-          setJustBought={setJustBought}
-        />
-      )}
+            {activeSubTab === "plantules" && (
+              <PlantulesTab
+                coins={coins}
+                plantuleCollection={plantuleCollection}
+                allShops={allShops}
+                allPlantules={allPlantules}
+                selectedShopId={selectedShopId}
+                justBought={justBought}
+                handleBuyPlantule={handleBuyPlantule}
+                setSelectedShopId={setSelectedShopId}
+              />
+            )}
 
-      {activeTab === "mini-serres" && (
-        <MiniSerresTab
-          coins={coins}
-          serreTiles={serreTiles}
-          miniSerres={miniSerres}
-          buyMiniSerre={buyMiniSerre}
-          buySerreTile={buySerreTile}
-          justBought={justBought}
-          setJustBought={setJustBought}
-        />
-      )}
+            {activeSubTab === "fruitiers" && (
+              <ArbresTab
+                coins={coins}
+                seedVarieties={seedVarieties}
+                allShops={allShops}
+                selectedShopId={selectedShopId}
+                justBought={justBought}
+                buySeedVariety={buySeedVariety}
+                setSelectedShopId={setSelectedShopId}
+              />
+            )}
 
-      {activeTab === "equipement" && (
-        <EquipementTab
-          coins={coins}
-          serreTiles={serreTiles}
-          gardenWidthCm={gardenWidthCm}
-          gardenHeightCm={gardenHeightCm}
-          gardenSheds={gardenSheds}
-          gardenTanks={gardenTanks}
-          gardenTrees={gardenTrees}
-          gardenHedges={gardenHedges}
-          gardenDrums={gardenDrums}
-          gardenSerreZones={gardenSerreZones}
-          expandGarden={expandGarden}
-          buySerreZone={buySerreZone}
-          buySerreTile={buySerreTile}
-          justBought={justBought}
-          setJustBought={setJustBought}
-        />
-      )}
+            {activeSubTab === "pepinieres" && (
+              <AchatsLocauxTab
+                coins={coins}
+                allShops={allShops}
+                allPlantules={allPlantules}
+                selectedShopId={selectedShopId}
+                justBought={justBought}
+                handleBuyPlantule={handleBuyPlantule}
+                handleBuySeeds={handleBuySeeds}
+                setSelectedShopId={setSelectedShopId}
+              />
+            )}
 
-      {activeTab === "achats-locaux" && (
-        <AchatsLocauxTab
-          coins={coins}
-          allShops={allShops}
-          allPlantules={allPlantules}
-          selectedShopId={selectedShopId}
-          justBought={justBought}
-          handleBuyPlantule={handleBuyPlantule}
-          handleBuySeeds={handleBuySeeds}
-          setSelectedShopId={setSelectedShopId}
-        />
-      )}
+            {activeSubTab === "chambres" && (
+              <ChambresTab
+                coins={coins}
+                ownedChambres={ownedChambres}
+                activeChambreId={activeChambreId}
+                buyChambreDeCulture={buyChambreDeCulture}
+                setActiveChambre={setActiveChambre}
+                justBought={justBought}
+                setJustBought={setJustBought}
+              />
+            )}
 
-      {activeTab === "decouvertes-photo" && (
-        <DecouvertesTab
-          discoveredPlants={discoveredPlants}
-        />
-      )}
+            {activeSubTab === "serres" && (
+              <MiniSerresTab
+                coins={coins}
+                serreTiles={serreTiles}
+                miniSerres={miniSerres}
+                buyMiniSerre={buyMiniSerre}
+                buySerreTile={buySerreTile}
+                justBought={justBought}
+                setJustBought={setJustBought}
+              />
+            )}
+
+            {activeSubTab === "equipement" && (
+              <EquipementTab
+                coins={coins}
+                serreTiles={serreTiles}
+                gardenWidthCm={gardenWidthCm}
+                gardenHeightCm={gardenHeightCm}
+                gardenSheds={gardenSheds}
+                gardenTanks={gardenTanks}
+                gardenTrees={gardenTrees}
+                gardenHedges={gardenHedges}
+                gardenDrums={gardenDrums}
+                gardenSerreZones={gardenSerreZones}
+                expandGarden={expandGarden}
+                buySerreZone={buySerreZone}
+                buySerreTile={buySerreTile}
+                justBought={justBought}
+                setJustBought={setJustBought}
+              />
+            )}
+
+            {activeCategory === "marche" && (
+              <MarcheTab />
+            )}
+
+            {activeCategory === "decouvertes" && (
+              <DecouvertesTab
+                discoveredPlants={discoveredPlants}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Real French Garden Centers */}
       <div className="p-4 bg-gradient-to-br from-stone-50 to-zinc-100 border-[3px] border-black rounded-2xl shadow-[6px_6px_0_0_#000] relative overflow-hidden">
