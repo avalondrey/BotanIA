@@ -11,7 +11,6 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PLANTS } from '@/lib/ai-engine';
 
 // ═══ Sell prices per plant (coins per unit) ═══
 const SELL_PRICES: Record<string, number> = {

@@ -170,7 +170,7 @@ export function calcPassiveInputs(atmo: AtmosphericInputs): {
  * Sources : INRAE 2020, Chakraborty et al. 2008
  * Réductions validées sur sol nu (Ke ≈ 1.0 non paillé)
  */
-const MULCH_REDUCTION: Record<MulchType, { factor: number; desc: string }> = {
+export const MULCH_REDUCTION: Record<MulchType, { factor: number; desc: string }> = {
   paille:    { factor: 0.60, desc: 'Paille 5-10cm : -60% évaporation sol (INRAE)' },
   brf:       { factor: 0.65, desc: 'BRF 10-15cm : -65% + améliore rétention long terme' },
   tontes:    { factor: 0.45, desc: 'Tontes 3-5cm : -45% (se tasse rapidement)' },
@@ -211,7 +211,7 @@ export function calcMulchSaving(
  *
  * Sources : FAO-56 Tab.11, Rao et al. 2018 (oyas), ICID 2020
  */
-const IRRIGATION_EFFICIENCY: Record<IrrigationTech, { factor: number; desc: string }> = {
+export const IRRIGATION_EFFICIENCY: Record<IrrigationTech, { factor: number; desc: string }> = {
   arrosoir:       { factor: 0.65, desc: 'Arrosoir surface : 65% efficience, 35% perte' },
   goutte_a_goutte:{ factor: 0.92, desc: 'Goutte-à-goutte : 92% — direct racines' },
   oya:            { factor: 0.95, desc: 'Oyas : 95% — diffusion lente, 70% eau en moins' },

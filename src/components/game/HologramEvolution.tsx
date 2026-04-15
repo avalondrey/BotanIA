@@ -2139,19 +2139,23 @@ export function getStageProgression(
   gddAccumulated: number,
   currentStageGDD: number
 ): GDDResult {
-  const card = PLANT_CARDS[plantDefId];
+  const card = PLANT_CARDS[plantDefId] ?? TREE_CARDS[plantDefId];
   if (!card) {
-    return { gddToday: 0, accumulatedGDD: 0, progressPct: 0, daysToNextStage: 99, nextStage: currentStage + 1 };
+    return { gddToday: 0, accumulatedGDD: 0, progressPct: 0, daysToNextStage: 0, nextStage: currentStage + 1 };
   }
 
   const nextStageIndex = Math.min(currentStage + 1, 5);
-  const stageGDD = card.stageGDD[Math.min(currentStage, card.stageGDD.length - 1)] ?? currentStageGDD;
+  const stageGDDTarget = card.stageGDD[Math.min(currentStage, card.stageGDD.length - 1)] ?? currentStageGDD;
 
-  const progressPct = stageGDD > 0 ? Math.min(100, (gddAccumulated / stageGDD) * 100) : 0;
-  const daysToNextStage = 99; // Sera calculé avec GDD/jour réel
+  const progressPct = stageGDDTarget > 0 ? Math.min(100, (gddAccumulated / stageGDDTarget) * 100) : 0;
+
+  // Estimation jours restants : GDD restants / GDD moyen par jour
+  const gddRemaining = Math.max(0, stageGDDTarget - gddAccumulated);
+  const avgGDDPerDay = card.tBase > 0 ? Math.max(1, (card.tCap - card.tBase) / 2) : 5; // approximation
+  const daysToNextStage = progressPct >= 100 ? 0 : Math.ceil(gddRemaining / avgGDDPerDay);
 
   return {
-    gddToday: calcDailyGDD(18, 15, 22, plantDefId), // Valeur par défaut
+    gddToday: calcDailyGDD(18, 15, 22, plantDefId),
     accumulatedGDD: gddAccumulated,
     progressPct,
     daysToNextStage,
@@ -2197,19 +2201,25 @@ export function getWaterNeed(
   et0MmPerDay: number,
   surfaceM2: number = 0.25
 ): WaterNeedResult {
-  const card = PLANT_CARDS[plantDefId];
+  const card = PLANT_CARDS[plantDefId] ?? TREE_CARDS[plantDefId];
   const defaultKc = 1.0;
   const kc = card?.kc ?? defaultKc;
 
   const etcMmPerDay = kc * et0MmPerDay;
   const needLPerDay = etcMmPerDay * surfaceM2;
 
+  // Estimation économie basique : paillage réduit ~30% en moyenne
+  const mulchSavingPct = 30;
+  const mulchSavingMm = etcMmPerDay * (mulchSavingPct / 100);
+
   return {
     etcMmPerDay,
     needLPerDay,
-    waterSavingPct: 0,
-    urgency: 'ok',
-    breakdown: [],
+    waterSavingPct: mulchSavingPct,
+    urgency: etcMmPerDay > 5 ? 'urgent' : 'ok',
+    breakdown: [
+      { source: 'Paillage estimé', emoji: '🌾', savingMm: mulchSavingMm },
+    ],
   };
 }
 

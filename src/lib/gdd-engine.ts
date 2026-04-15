@@ -6,7 +6,10 @@
 //  la chaleur accumulée. GDD = Σ max(0, (Tmax+Tmin)/2 - Tbase)
 //
 //  Pas de bonus fictifs — calcul agronomique exact.
+//  DONNÉES : issues de PLANT_CARDS (HologramEvolution.tsx)
 // ═══════════════════════════════════════════════════════════
+
+import { PLANT_CARDS, TREE_CARDS, type PlantCard } from '@/components/game/HologramEvolution';
 
 export interface GDDConfig {
   /** Température de base (°C) — en dessous, croissance nulle */
@@ -17,39 +20,15 @@ export interface GDDConfig {
   stageGDD: [number, number, number, number];
 }
 
-// Données GDD réelles par culture (sources INRAE, FAO, semenciers)
-export const PLANT_GDD: Record<string, GDDConfig> = {
-  tomato: {
-    tBase: 10,   // La tomate stoppe sous 10°C
-    tCap: 30,    // Au dessus de 30°C : stress, pas de gain
-    stageGDD: [50, 200, 400, 800], // Germination→Plantule→Végétatif→Floraison+Fruit
-  },
-  carrot: {
-    tBase: 4,    // Carotte très rustique
-    tCap: 27,
-    stageGDD: [80, 250, 500, 900],
-  },
-  lettuce: {
-    tBase: 4,
-    tCap: 24,    // Monte vite en graine au dessus
-    stageGDD: [40, 120, 220, 380],
-  },
-  strawberry: {
-    tBase: 5,
-    tCap: 28,
-    stageGDD: [100, 300, 550, 950],
-  },
-  basil: {
-    tBase: 12,   // Très sensible au froid
-    tCap: 32,
-    stageGDD: [60, 180, 350, 650],
-  },
-  pepper: {
-    tBase: 10,
-    tCap: 32,
-    stageGDD: [80, 300, 600, 1100],
-  },
-};
+// Source unique : PLANT_CARDS + TREE_CARDS → PLANT_GDD dérivé
+const ALL_CARDS: Record<string, PlantCard> = { ...PLANT_CARDS, ...TREE_CARDS };
+
+export const PLANT_GDD: Record<string, GDDConfig> = Object.fromEntries(
+  Object.entries(ALL_CARDS).map(([id, card]) => [
+    id,
+    { tBase: card.tBase, tCap: card.tCap, stageGDD: card.stageGDD },
+  ])
+);
 
 const DEFAULT_GDD: GDDConfig = {
   tBase: 8, tCap: 28,
