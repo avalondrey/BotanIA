@@ -76,6 +76,30 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* ── UI Customization Variables (Normal preset defaults) ── */
+  --ui-container-max: 1400px;
+  --ui-panel-width: 384px;
+  --ui-modal-width: 512px;
+  --ui-tab-font: 13px;
+  --ui-tab-padding-x: 12px;
+  --ui-tab-padding-y: 6px;
+  --ui-tab-icon: 14px;
+  --ui-tab-gap: 4px;
+  --ui-card-width: 240px;
+  --ui-card-image-height: 160px;
+  --ui-packet-image: 256px;
+  --ui-sprite-width: 120px;
+  --ui-sprite-height: 140px;
+  --ui-font-scale: 1;
+  --ui-hud-font: 8px;
+  --ui-hud-padding-x: 8px;
+  --ui-hud-padding-y: 4px;
+  --ui-border-width: 3px;
+  --ui-shadow-offset: 6px;
+  --ui-modal-shadow-offset: 8px;
+  --ui-button-shadow-offset: 2px;
+  --ui-modal-max-height: 90vh;
 }
 
 .dark {

@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore, DEFAULT_GARDEN_WIDTH_CM, DEFAULT_GARDEN_HEIGHT_CM } from '@/store/game-store';
 import { PLANTS } from '@/lib/ai-engine';
 import { useAgroData, type PlantAgroData } from '@/hooks/useAgroData';
@@ -16,6 +16,10 @@ interface GardenPlanViewProps {
   onToolUsed?: () => void;
   onSelectElement?: (type: string, id: string) => void;
   onEditModeChange?: (mode: 'place' | 'select') => void;
+  gridSnap?: 'off' | '25' | '50' | '100';
+  onGridSnapChange?: (snap: 'off' | '25' | '50' | '100') => void;
+  showGrid?: 'full' | 'major' | 'hidden';
+  onShowGridChange?: (show: 'full' | 'major' | 'hidden') => void;
 }
 
 const BASE_SCALE = 0.65; // fallback scale
@@ -37,6 +41,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   onToolUsed,
   onSelectElement,
   onEditModeChange,
+  gridSnap: gridSnapProp = 'off',
+  onGridSnapChange,
+  showGrid: showGridProp = 'full',
+  onShowGridChange,
 }) => {
   const gardenPlants     = useGameStore((s) => s.gardenPlants);
   const gardenSerreZones = useGameStore((s) => s.gardenSerreZones);
@@ -81,6 +89,20 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [showGridLocal, setShowGridLocal] = useState<'full' | 'major' | 'hidden'>('full');
+  const [gridSnapLocal, setGridSnapLocal] = useState<'off' | '25' | '50' | '100'>('off');
+  const showGrid = onShowGridChange ? showGridProp : showGridLocal;
+  const gridSnap = onGridSnapChange ? gridSnapProp : gridSnapLocal;
+  const setShowGrid = onShowGridChange ?? setShowGridLocal;
+  const setGridSnap = onGridSnapChange ?? setGridSnapLocal;
+  const [hoverCoords, setHoverCoords] = useState<{ x: number; y: number } | null>(null);
+
+  // Snap function
+  const snapCm = (cm: number): number => {
+    if (gridSnap === 'off') return cm;
+    const step = parseInt(gridSnap); // 25, 50, or 100
+    return Math.round(cm / step) * step;
+  };
 
   // Auto-fit: fill container width at zoomLevel=1
   const displayScale = containerWidth > 0
@@ -160,8 +182,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
     if (activeTool === 'none') return;
     if (dragRef.current?.active) return; // ignore click après un drag
     const rect = e.currentTarget.getBoundingClientRect();
-    const cmX = Math.round((e.clientX - rect.left) / displayScale);
-    const cmY = Math.round((e.clientY - rect.top)  / displayScale);
+    const cmX = snapCm(Math.round((e.clientX - rect.left) / displayScale));
+    const cmY = snapCm(Math.round((e.clientY - rect.top)  / displayScale));
 
     if (activeTool === 'serre') {
       const { w, h } = TOOL_SIZES.serre;
@@ -238,8 +260,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
       const dy = e.clientY - dragRef.current.startMouseY;
       if (!dragRef.current.active && Math.hypot(dx, dy) < 4) return;
       dragRef.current.active = true;
-      const newX = Math.max(0, dragRef.current.startObjX + dx / displayScale);
-      const newY = Math.max(0, dragRef.current.startObjY + dy / displayScale);
+      const newX = snapCm(Math.max(0, dragRef.current.startObjX + dx / displayScale));
+      const newY = snapCm(Math.max(0, dragRef.current.startObjY + dy / displayScale));
       setDragPos({ id: dragRef.current.id, x: newX, y: newY });
     };
     const onUp = () => {
@@ -325,19 +347,25 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
 
   return (
     <div className="plan-view-container" ref={containerRef}>
-      {/* Info dimensions + zoom + curseur actif */}
+      {/* Info dimensions + zoom + coordonnées */}
       <div className="garden-dims-bar">
         <span>🗺️ {(gardenWidthCm/100).toFixed(0)}m × {(gardenHeightCm/100).toFixed(0)}m</span>
         <span>({(gardenWidthCm*gardenHeightCm/10000).toFixed(0)} m²)</span>
-        <span className="dims-scale">Échelle 1:{Math.round(1/displayScale)}e</span>
+        <span className="dims-scale">1:{Math.round(1/displayScale)}</span>
+
+        {/* Coordonnées au survol */}
+        {hoverCoords && (
+          <span className="dims-coords">X:{hoverCoords.x} Y:{hoverCoords.y} cm</span>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-          <button onClick={() => setZoomLevel(z => Math.max(0.3, +(z - 0.1).toFixed(1)))}
+          <button onClick={() => setZoomLevel(z => Math.max(0.2, +(z - 0.1).toFixed(1)))}
             style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>−</button>
           <span style={{ fontSize: 12, fontWeight: 700, minWidth: 36, textAlign: 'center' }}>{Math.round(zoomLevel * 100)}%</span>
           <button onClick={() => setZoomLevel(z => Math.min(3, +(z + 0.1).toFixed(1)))}
             style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>+</button>
           <button onClick={() => setZoomLevel(1)}
-            style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#e8f5e9', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Ajuster</button>
+            style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ccc', background: '#f0fdf4', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Ajuster</button>
         </div>
         {activeTool !== 'none' && (
           <span className="dims-tool-active">
@@ -359,7 +387,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           display: 'flex',
           borderBottom: '1px solid #666',
           zIndex: 10,
-          background: 'rgba(232,245,233,0.95)',
+          background: 'rgba(250,248,244,0.95)',
           pointerEvents: 'none',
         }}>
           {Array.from({ length: Math.ceil(gardenWidthCm / 100) + 1 }).map((_, i) => (
@@ -384,7 +412,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           height: displayH,
           borderLeft: '1px solid #666',
           zIndex: 10,
-          background: 'rgba(232,245,233,0.95)',
+          background: 'rgba(250,248,244,0.95)',
           pointerEvents: 'none',
           paddingTop: 20,
           boxSizing: 'border-box',
@@ -408,19 +436,25 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
 
         <div
           ref={gridRef}
-          className="garden-grid"
+          className={`garden-grid${showGrid === 'hidden' ? ' grid-hidden' : showGrid === 'major' ? ' grid-minor-hidden' : ''}`}
           style={{
             width: displayW,
             height: displayH,
-            backgroundSize: `${100 * displayScale}px ${100 * displayScale}px`,
+            /* 4 couches : majeures H, majeures V, mineures H, mineures V */
+            backgroundSize: [
+              `${100 * displayScale}px ${100 * displayScale}px`,
+              `${100 * displayScale}px ${100 * displayScale}px`,
+              `${25 * displayScale}px ${25 * displayScale}px`,
+              `${25 * displayScale}px ${25 * displayScale}px`,
+            ].join(', '),
             flexShrink: 0,
             cursor: activeTool !== 'none' ? 'crosshair' : 'default',
           }}
           onMouseDown={(e) => {
             if (activeTool === 'none') return;
             const rect = e.currentTarget.getBoundingClientRect();
-            const cmX = Math.round((e.clientX - rect.left) / displayScale);
-            const cmY = Math.round((e.clientY - rect.top) / displayScale);
+            const cmX = snapCm(Math.round((e.clientX - rect.left) / displayScale));
+            const cmY = snapCm(Math.round((e.clientY - rect.top) / displayScale));
             if (activeTool === 'zone' || activeTool === 'zone_hedge' || activeTool === 'zone_water' || activeTool === 'zone_grass' || activeTool === 'zone_fleur') {
               e.stopPropagation();
               setDrawingZone({
@@ -433,13 +467,15 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             }
           }}
           onMouseMove={(e) => {
-            if (!drawingZone) return;
             const rect = gridRef.current?.getBoundingClientRect();
             if (!rect) return;
             const cmX = Math.round((e.clientX - rect.left) / displayScale);
             const cmY = Math.round((e.clientY - rect.top) / displayScale);
+            setHoverCoords({ x: cmX, y: cmY });
+            if (!drawingZone) return;
             setDrawingZone(d => d ? { ...d, curX: cmX, curY: cmY } : null);
           }}
+          onMouseLeave={() => setHoverCoords(null)}
           onMouseUp={() => {
             if (!drawingZone) return;
             const rect = getZoneRect(drawingZone);
@@ -455,6 +491,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             if (activeTool !== 'zone' && activeTool !== 'zone_hedge' && activeTool !== 'zone_water' && activeTool !== 'zone_grass' && activeTool !== 'zone_fleur') {
               handleGridClick(e as any);
             }
+          }}
+          onWheel={(e) => {
+            e.preventDefault();
+            setZoomLevel(z => Math.max(0.2, Math.min(3, +(z + (e.deltaY < 0 ? 0.08 : -0.08)).toFixed(2))));
           }}
         >
 
@@ -934,7 +974,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 <img src={`/plants/${gp.plantDefId}-stage-${Math.min(plant.stage, 6)}.png`}
                   alt={plantDef?.name || 'Plante'} className="plant-sprite-image"
                   draggable={false} style={{ width:'100%', height:'100%', objectFit:'contain' }}
-                  onError={() => reportMissing(gp.plantDefId)} />
+                  onError={(e) => {
+                    reportMissing(gp.plantDefId);
+                    (e.currentTarget as HTMLImageElement).src = `/plants/custom-plant-stage-${Math.min(plant.stage, 6)}.png`;
+                  }} />
                 <div className="day-badge-manga" style={{ fontSize:8, width:26, height:26 }}>J{plant.daysSincePlanting}</div>
                 <div className="water-bar-manga">
                   <div className="water-fill-manga" style={{
@@ -1012,6 +1055,58 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             );
           })()}
 
+          {/* ALIGNMENT GUIDES (pendant le drag) */}
+          {dragPos && (() => {
+            const SNAP_PX = 5;
+            const guides: Array<{ type: 'h' | 'v'; pos: number }> = [];
+            const draggedEl = dragPos;
+            // Collecter les boîtes de tous les éléments non-draggés
+            const boxes: Array<{ cx: number; cy: number; l: number; r: number; t: number; b: number }> = [];
+            gardenPlants.forEach(gp => { if (gp.id !== draggedEl.id) { const sz = 80; boxes.push({ cx: gp.x + sz/2, cy: gp.y + sz/2, l: gp.x, r: gp.x + sz, t: gp.y, b: gp.y + sz }); }});
+            gardenSerreZones?.forEach((s: any) => { if (s.id !== draggedEl.id) boxes.push({ cx: s.x + s.width/2, cy: s.y + s.height/2, l: s.x, r: s.x + s.width, t: s.y, b: s.y + s.height }); });
+            gardenZones?.forEach((z: any) => { if (z.id !== draggedEl.id) boxes.push({ cx: z.x + z.width/2, cy: z.y + z.height/2, l: z.x, r: z.x + z.width, t: z.y, b: z.y + z.height }); });
+
+            const dCx = draggedEl.x + 40;
+            const dCy = draggedEl.y + 40;
+            for (const b of boxes) {
+              if (Math.abs(dCx - b.cx) < SNAP_PX * 2) guides.push({ type: 'v', pos: b.cx });
+              if (Math.abs(dCy - b.cy) < SNAP_PX * 2) guides.push({ type: 'h', pos: b.cy });
+              if (Math.abs(draggedEl.x - b.l) < SNAP_PX * 2) guides.push({ type: 'v', pos: b.l });
+              if (Math.abs(draggedEl.x - b.r) < SNAP_PX * 2) guides.push({ type: 'v', pos: b.r });
+              if (Math.abs(draggedEl.y - b.t) < SNAP_PX * 2) guides.push({ type: 'h', pos: b.t });
+              if (Math.abs(draggedEl.y - b.b) < SNAP_PX * 2) guides.push({ type: 'h', pos: b.b });
+            }
+            if (guides.length === 0) return null;
+            return (
+              <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:9990 }}>
+                {guides.map((g, i) => g.type === 'h' ? (
+                  <div key={`gh-${i}`} style={{ position:'absolute', left:0, right:0, top: g.pos * displayScale, height:1, background:'#3b82f6', opacity:0.7 }} />
+                ) : (
+                  <div key={`gv-${i}`} style={{ position:'absolute', top:0, bottom:0, left: g.pos * displayScale, width:1, background:'#3b82f6', opacity:0.7 }} />
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* GHOST PREVIEW (outil actif) */}
+          {activeTool !== 'none' && hoverCoords && TOOL_SIZES[activeTool] && (() => {
+            const sz = TOOL_SIZES[activeTool];
+            return (
+              <div style={{
+                position: 'absolute',
+                left: (hoverCoords.x - sz.w/2) * displayScale,
+                top: (hoverCoords.y - sz.h/2) * displayScale,
+                width: sz.w * displayScale,
+                height: sz.h * displayScale,
+                border: '2px dashed rgba(99,102,241,0.5)',
+                borderRadius: 6,
+                background: 'rgba(99,102,241,0.08)',
+                pointerEvents: 'none',
+                zIndex: 9991,
+              }} />
+            );
+          })()}
+
           {/* EMPTY STATE */}
           {gardenPlants.length === 0 && (!gardenSerreZones || gardenSerreZones.length === 0) && seedRows.length === 0 && (
             <div className="empty-garden-message">
@@ -1023,6 +1118,98 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
 
         </div>
       </div>
+
+      {/* ── Properties Panel (sélection) ── */}
+      <AnimatePresence>
+        {selectedElement && (() => {
+          let obj: any = null;
+          let typeLabel = '';
+          let emoji = '';
+          let w = 0, h = 0;
+          if (selectedElement.type === 'serre') {
+            obj = gardenSerreZones?.find((s: any) => s.id === selectedElement.id);
+            typeLabel = 'Serre'; emoji = '🏡'; if (obj) { w = obj.width; h = obj.height; }
+          } else if (selectedElement.type === 'plant') {
+            obj = gardenPlants.find((gp: any) => gp.id === selectedElement.id);
+            typeLabel = 'Plante'; emoji = '🌱'; if (obj) { w = 80; h = 80; }
+          } else if (selectedElement.type === 'zone') {
+            obj = gardenZones?.find((z: any) => z.id === selectedElement.id);
+            typeLabel = 'Zone'; emoji = '🟢'; if (obj) { w = obj.width; h = obj.height; }
+          } else if (selectedElement.type === 'hedge') {
+            obj = gardenHedges?.find((h: any) => h.id === selectedElement.id);
+            typeLabel = 'Haie'; emoji = '🌿'; if (obj) { w = obj.width; h = obj.height; }
+          } else if (selectedElement.type === 'tree') {
+            obj = gardenTrees?.find((t: any) => t.id === selectedElement.id);
+            typeLabel = 'Arbre'; emoji = '🌳'; if (obj) { w = obj.diameter ?? 75; h = obj.diameter ?? 75; }
+          } else if (selectedElement.type === 'tank') {
+            obj = gardenTanks?.find((t: any) => t.id === selectedElement.id);
+            typeLabel = 'Cuve'; emoji = '💧'; if (obj) { w = obj.width; h = obj.height; }
+          } else if (selectedElement.type === 'drum') {
+            obj = gardenDrums?.find((d: any) => d.id === selectedElement.id);
+            typeLabel = 'Fût'; emoji = '🛢️'; if (obj) { w = obj.width; h = obj.height; }
+          } else if (selectedElement.type === 'shed') {
+            obj = gardenSheds?.find((s: any) => s.id === selectedElement.id);
+            typeLabel = 'Cabane'; emoji = '🏚️'; if (obj) { w = obj.width; h = obj.height; }
+          }
+          if (!obj) return null;
+          return (
+            <motion.div
+              key="props-panel"
+              className="props-panel"
+              initial={{ x: 260, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 260, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+            >
+              <div className="props-panel-header">
+                <span>{emoji} {typeLabel}</span>
+                <button onClick={() => setSelectedElement(null)} className="props-close">✕</button>
+              </div>
+              <div className="props-panel-body">
+                <div className="props-field">
+                  <label>X</label>
+                  <span className="props-value">{Math.round(obj.x)} cm</span>
+                </div>
+                <div className="props-field">
+                  <label>Y</label>
+                  <span className="props-value">{Math.round(obj.y)} cm</span>
+                </div>
+                {w > 0 && <div className="props-field">
+                  <label>L</label>
+                  <span className="props-value">{Math.round(w)} cm</span>
+                </div>}
+                {h > 0 && <div className="props-field">
+                  <label>H</label>
+                  <span className="props-value">{Math.round(h)} cm</span>
+                </div>}
+                {obj.capacity && <div className="props-field">
+                  <label>Capacité</label>
+                  <span className="props-value">{obj.capacity}L</span>
+                </div>}
+                {obj.type && <div className="props-field">
+                  <label>Type</label>
+                  <span className="props-value">{obj.type}</span>
+                </div>}
+              </div>
+              <div className="props-panel-actions">
+                <button className="props-btn props-btn-delete"
+                  onClick={() => {
+                    if (selectedElement.type === 'zone') removeGardenZone?.(selectedElement.id);
+                    else if (selectedElement.type === 'serre') removeSerreZone?.(selectedElement.id);
+                    else if (selectedElement.type === 'hedge') removeGardenHedge?.(selectedElement.id);
+                    else if (selectedElement.type === 'tank') removeGardenTank?.(selectedElement.id);
+                    else if (selectedElement.type === 'drum') removeGardenDrum?.(selectedElement.id);
+                    else if (selectedElement.type === 'shed') removeGardenShed?.(selectedElement.id);
+                    else if (selectedElement.type === 'tree') removeGardenTree?.(selectedElement.id);
+                    setSelectedElement(null);
+                  }}>
+                  Supprimer
+                </button>
+              </div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
 
 
       {/* ── Context menu (clic droit) ── */}
@@ -1098,8 +1285,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
 
 
       <style>{`
-        .garden-dims-bar{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:8px;padding:6px 12px;background:rgba(255,255,255,0.7);border-radius:8px;flex-wrap:wrap}
+        .garden-dims-bar{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:8px;padding:6px 12px;background:rgba(255,255,255,0.85);border-radius:8px;flex-wrap:wrap}
         .dims-scale{color:#9f7aea;font-weight:700}
+        .dims-coords{background:#eef2ff;color:#4338ca;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;font-variant-numeric:tabular-nums;letter-spacing:-0.3px}
         .dims-tool-active{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:2px 10px;border-radius:8px;font-weight:700;animation:pulse-tool 1.5s ease-in-out infinite}
         @keyframes pulse-tool{0%,100%{opacity:1}50%{opacity:.65}}
         .garden-scroll-wrapper{position:absolute;top:0;left:0;overflow:auto;max-width:100%;max-height:100%;padding-top:20px;padding-right:40px;box-sizing:border-box;width:100%;height:100%}
@@ -1161,6 +1349,20 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
           border:6px solid transparent;border-top-color:rgba(144,202,249,.4);
         }
+
+        /* ── Properties Panel ── */
+        .props-panel{position:absolute;top:0;right:0;width:220px;height:100%;background:#fff;border-left:1px solid #e2e8f0;box-shadow:-4px 0 12px rgba(0,0,0,0.06);z-index:100;display:flex;flex-direction:column;border-radius:0 20px 20px 0;overflow:hidden}
+        .props-panel-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:13px;font-weight:800;color:#1e293b}
+        .props-close{background:none;border:none;cursor:pointer;font-size:14px;color:#94a3b8;padding:2px 6px;border-radius:4px}
+        .props-close:hover{background:#fee2e2;color:#dc2626}
+        .props-panel-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto}
+        .props-field{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+        .props-field label{color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.5px}
+        .props-value{color:#1e293b;font-weight:600;font-variant-numeric:tabular-nums}
+        .props-panel-actions{padding:10px 14px;border-top:1px solid #e2e8f0}
+        .props-btn{width:100%;padding:8px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+        .props-btn-delete{background:#fee2e2;color:#dc2626}
+        .props-btn-delete:hover{background:#dc2626;color:#fff}
       `}</style>
     </div>
   );

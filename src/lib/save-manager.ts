@@ -171,3 +171,63 @@ export function getSlotDisplayName(slot: SaveSlot): string {
   const date = formatDate(slot.savedAt);
   return `${slot.slotName} (${date})`;
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  FILE EXPORT / IMPORT (download & upload JSON files)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Export a save slot as a downloadable JSON file.
+ * Returns the filename used for the download.
+ */
+export async function exportSlotToFile(slotId: string): Promise<string | null> {
+  const json = await exportSlotToJSON(slotId);
+  if (!json) return null;
+
+  const slot = await loadFromSlot(slotId);
+  const safeName = (slot?.slotName || slotId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const filename = `botania_${safeName}_${dateStr}.json`;
+
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  return filename;
+}
+
+/**
+ * Import a save slot from a JSON file selected by the user.
+ * Returns the result of the import operation.
+ */
+export function importSlotFromFile(): Promise<{ success: boolean; error?: string; slotName?: string }> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) {
+        resolve({ success: false, error: 'Aucun fichier sélectionné' });
+        return;
+      }
+      try {
+        const text = await file.text();
+        const result = await importJSONToSlot(text);
+        if (result.success) {
+          const data = JSON.parse(text) as SaveSlot;
+          resolve({ success: true, slotName: data.slotName });
+        } else {
+          resolve(result);
+        }
+      } catch (err) {
+        resolve({ success: false, error: err instanceof Error ? err.message : 'Erreur de lecture' });
+      }
+    };
+    input.click();
+  });
+}

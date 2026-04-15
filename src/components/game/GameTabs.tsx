@@ -16,6 +16,8 @@ import { GardenSaveManager } from "@/components/game/GardenSaveManager";
 import WaterBudget from "@/components/game/WaterBudget";
 import { HologramEvolution } from "@/components/game/HologramEvolutionCard";
 import { GameConsole } from "@/components/game/GameConsole";
+import { DailyBonusPopup } from "@/components/game/DailyBonusPopup";
+import { QuestTracker } from "@/components/game/QuestTracker";
 import {
   TreePine, ShoppingBag, Sprout,
   Warehouse, Home, ScanSearch, BookOpen, Scale, Bug, Save, Droplets, Leaf,
@@ -25,93 +27,106 @@ export function GameTabs() {
   const activeTab = useGameStore((s) => s.activeTab);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
 
+  const tabStyle = {
+    fontSize: 'var(--ui-tab-font)',
+    paddingTop: 'var(--ui-tab-padding-y)',
+    paddingBottom: 'var(--ui-tab-padding-y)',
+    paddingLeft: 'var(--ui-tab-padding-x)',
+    paddingRight: 'var(--ui-tab-padding-x)',
+    borderWidth: '2px',
+  } as React.CSSProperties;
+
+  const tabIconStyle = { width: 'var(--ui-tab-icon)', height: 'var(--ui-tab-icon)' } as React.CSSProperties;
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
-      <TabsList className="bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000] p-1 h-auto flex-wrap">
+    <>
+      <DailyBonusPopup />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
+      <TabsList className="bg-white border-black rounded-xl p-1 h-auto flex-wrap" style={{ borderWidth: 'var(--ui-border-width)', boxShadow: `var(--ui-shadow-offset) var(--ui-shadow-offset) 0 0 #000`, gap: 'var(--ui-tab-gap)' }}>
         {/* Ligne 1 : principaux */}
         <TabsTrigger
-          value="jardin"
-          className="data-[state=active]:bg-green-100 data-[state=active]:border-green-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="jardin" style={tabStyle}
+          className="data-[state=active]:bg-green-100 data-[state=active]:border-green-300 border-transparent rounded-lg font-black uppercase"
         >
-          <TreePine className="w-3.5 h-3.5" />
+          <TreePine style={tabIconStyle} />
           🌿 Jardin
         </TabsTrigger>
         <TabsTrigger
-          value="serre"
-          className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="serre" style={tabStyle}
+          className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Home className="w-3.5 h-3.5" />
+          <Home style={tabIconStyle} />
           🏡 Serre
         </TabsTrigger>
         <TabsTrigger
-          value="pepiniere"
-          className="data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="pepiniere" style={tabStyle}
+          className="data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Warehouse className="w-3.5 h-3.5" />
+          <Warehouse style={tabIconStyle} />
           🏠 Culture
         </TabsTrigger>
         <TabsTrigger
-          value="boutique"
-          className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="boutique" style={tabStyle}
+          className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-transparent rounded-lg font-black uppercase"
         >
-          <ShoppingBag className="w-3.5 h-3.5" />
+          <ShoppingBag style={tabIconStyle} />
           🏪 Boutique
         </TabsTrigger>
         <TabsTrigger
-          value="graines"
-          className="data-[state=active]:bg-emerald-100 data-[state=active]:border-emerald-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="graines" style={tabStyle}
+          className="data-[state=active]:bg-emerald-100 data-[state=active]:border-emerald-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Sprout className="w-3.5 h-3.5" />
-          🌱 Graines
+          <Sprout style={tabIconStyle} />
+          🌱 Inventaire
         </TabsTrigger>
         <TabsTrigger
-          value="identificateur"
-          className="data-[state=active]:bg-violet-100 data-[state=active]:border-violet-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="identificateur" style={tabStyle}
+          className="data-[state=active]:bg-violet-100 data-[state=active]:border-violet-300 border-transparent rounded-lg font-black uppercase"
         >
-          <ScanSearch className="w-3.5 h-3.5" />
+          <ScanSearch style={tabIconStyle} />
           🔍 ID
         </TabsTrigger>
         {/* Ligne 2 : outils */}
         <TabsTrigger
-          value="journal"
-          className="data-[state=active]:bg-indigo-100 data-[state=active]:border-indigo-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="journal" style={tabStyle}
+          className="data-[state=active]:bg-indigo-100 data-[state=active]:border-indigo-300 border-transparent rounded-lg font-black uppercase"
         >
-          <BookOpen className="w-3.5 h-3.5" />
+          <BookOpen style={tabIconStyle} />
           📔 Journal
         </TabsTrigger>
         <TabsTrigger
-          value="recoltes"
-          className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="recoltes" style={tabStyle}
+          className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Scale className="w-3.5 h-3.5" />
+          <Scale style={tabIconStyle} />
           ⚖️ Récoltes
         </TabsTrigger>
         <TabsTrigger
-          value="maladies"
-          className="data-[state=active]:bg-red-100 data-[state=active]:border-red-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="maladies" style={tabStyle}
+          className="data-[state=active]:bg-red-100 data-[state=active]:border-red-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Bug className="w-3.5 h-3.5" />
+          <Bug style={tabIconStyle} />
           🦠 Maladies
         </TabsTrigger>
         <TabsTrigger
-          value="sauvegardes"
-          className="data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="sauvegardes" style={tabStyle}
+          className="data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Save className="w-3.5 h-3.5" />
+          <Save style={tabIconStyle} />
           💾 Save
         </TabsTrigger>
         <TabsTrigger
-          value="eau"
-          className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="eau" style={tabStyle}
+          className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Droplets className="w-3.5 h-3.5" />
+          <Droplets style={tabIconStyle} />
           💧 Eau
         </TabsTrigger>
         <TabsTrigger
-          value="croissance"
-          className="data-[state=active]:bg-lime-100 data-[state=active]:border-lime-300 border-2 border-transparent rounded-lg px-3 py-1.5 text-[13px] font-black uppercase gap-1"
+          value="croissance" style={tabStyle}
+          className="data-[state=active]:bg-lime-100 data-[state=active]:border-lime-300 border-transparent rounded-lg font-black uppercase"
         >
-          <Leaf className="w-3.5 h-3.5" />
+          <Leaf style={tabIconStyle} />
           🌱 Croissance
         </TabsTrigger>
       </TabsList>
@@ -172,5 +187,6 @@ export function GameTabs() {
         <HologramEvolution />
       </TabsContent>
     </Tabs>
+    </>
   );
 }

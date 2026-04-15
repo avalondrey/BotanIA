@@ -68,7 +68,8 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
                 title={`${def?.name ?? gp.plantDefId} — J${gp.plant.daysSincePlanting}`}
               >
                 <img src={`/plants/${gp.plantDefId}-stage-${Math.min(gp.plant.stage, 6)}.png`}
-                  alt={def?.name ?? ''} style={{ width:28, height:28, objectFit:'contain' }} />
+                  alt={def?.name ?? ''} style={{ width:28, height:28, objectFit:'contain' }}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = `/plants/custom-plant-stage-${Math.min(gp.plant.stage, 6)}.png`; }} />
                 {a && a.waterUrgency !== 'ok' && (
                   <span className="holo-sel-badge">{a.waterUrgency === 'critique' ? '🔴' : '⚠️'}</span>
                 )}

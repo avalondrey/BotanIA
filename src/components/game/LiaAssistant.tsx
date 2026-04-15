@@ -165,37 +165,34 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
     setChatInput('');
     setIsTyping(true);
 
-    // ── Appel Groq (llama-3.3-70b) via ia-jardinier ──
+    // ── Appel Groq via proxy server-side ──
     try {
-      const key = process.env.NEXT_PUBLIC_GROQ_API_KEY;
-      if (key) {
-        const memCtx = memories.length > 0
-          ? `\n\nMémoire jardin : ${memories.slice(0, 3).map(m => `${m.name}: ${m.averages.avgDaysToMaturity}j maturité, ${m.harvests.length} saisons`).join(' | ')}`
-          : '';
-        const plantCtx = plants.length > 0
-          ? `\n\nPlantes actuelles : ${plants.slice(0, 5).map((p: any) => `${p.plantDefId || p.name || '?'} (J${p.daysSincePlanting || 0}, eau ${p.waterLevel || 0}%)`).join(', ')}`
-          : '';
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            max_tokens: 200,
-            temperature: 0.4,
-            messages: [
-              { role: 'system', content: `Tu es Lia, assistante de jardinage bio française. Réponds en 2-3 phrases max, pratique et bienveillant. Tu connais la permaculture et le maraîchage.${memCtx}${plantCtx}` },
-              { role: 'user', content: q }
-            ]
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const reply = data.choices?.[0]?.message?.content?.trim() || '';
-          if (reply) {
-            setMessages(p => [...p, { id: 'lia-' + Date.now(), type: 'general', priority: 'medium', title: '🌱 Lia', message: reply, icon: '🌱' }]);
-            setIsTyping(false);
-            return;
-          }
+      const memCtx = memories.length > 0
+        ? `\n\nMémoire jardin : ${memories.slice(0, 3).map(m => `${m.name}: ${m.averages.avgDaysToMaturity}j maturité, ${m.harvests.length} saisons`).join(' | ')}`
+        : '';
+      const plantCtx = plants.length > 0
+        ? `\n\nPlantes actuelles : ${plants.slice(0, 5).map((p: any) => `${p.plantDefId || p.name || '?'} (J${p.daysSincePlanting || 0}, eau ${p.waterLevel || 0}%)`).join(', ')}`
+        : '';
+      const res = await fetch('/api/agent/groq-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: `Tu es Lia, assistante de jardinage bio française. Réponds en 2-3 phrases max, pratique et bienveillant. Tu connais la permaculture et le maraîchage.${memCtx}${plantCtx}` },
+            { role: 'user', content: q }
+          ],
+          max_tokens: 200,
+          temperature: 0.4,
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.content?.trim() || '';
+        if (reply) {
+          setMessages(p => [...p, { id: 'lia-' + Date.now(), type: 'general', priority: 'medium', title: '🌱 Lia', message: reply, icon: '🌱' }]);
+          setIsTyping(false);
+          return;
         }
       }
     } catch { /* fallback local */ }

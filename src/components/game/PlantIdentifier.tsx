@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoStore, type GardenPhoto } from '@/store/photo-store';
 import { getBestGPS } from '@/lib/gps-extractor';
@@ -9,10 +9,11 @@ import { Camera, Loader2, CheckCircle, XCircle, AlertTriangle, Leaf, Globe, Trop
 
 // ─── Moteurs d'identification disponibles ─────────────────────────────────────
 const ENGINES = [
-  { id: 'groq',    label: 'Groq IA',     emoji: '⚡', color: '#f97316', desc: 'llama-3.2-vision · Gratuit · Cloud · Rapide', free: true },
+  { id: 'multi',   label: 'Tous les moteurs', emoji: '🔍', color: '#3b82f6', desc: 'Essaie tous les moteurs · Choisir le meilleur', free: true },
+  { id: 'groq',    label: 'Groq IA',     emoji: '⚡', color: '#f97316', desc: 'Llama 4 Scout · Gratuit · Cloud · Rapide', free: true },
+  { id: 'gemini',  label: 'Google Gemini', emoji: '✨', color: '#4285f4', desc: 'Gemini Flash · Gratuit · 15 req/min',          free: true },
   { id: 'ollama',  label: 'Ollama Local', emoji: '🏠', color: '#30D158', desc: 'llama3.2 · 100% local · Privé · Gratuit',      free: true },
   { id: 'plantid', label: 'Plant.id',     emoji: '🌿', color: '#22c55e', desc: 'API spécialisée plantes · 100/jour gratuit',    free: true },
-  { id: 'claude',  label: 'Claude Vision',emoji: '🤖', color: '#8b5cf6', desc: 'Claude Opus · Précis · Clé API requise',        free: false },
 ];
 
 // ─── Helper: Mapper nom de plante → plantDefId ────────────────────────────────
@@ -27,9 +28,29 @@ function mapPlantNameToDefId(name: string): string | null {
   return null;
 }
 
+// Redimensionner l'image côté client avant envoi (max 768px, qualité 0.7)
+function resizeDataUrl(dataUrl: string, maxDim = 768, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w <= maxDim && h <= maxDim) { resolve(dataUrl); return; }
+      if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+      else { w = Math.round(w * maxDim / h); h = maxDim; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d')?.drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 async function identifyPlant(dataUrl: string, engine: string) {
-  const base64 = dataUrl.split(',')[1];
-  const mediaType = dataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+  const resized = await resizeDataUrl(dataUrl);
+  const base64 = resized.split(',')[1];
+  const mediaType = resized.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
   const res = await fetch('/api/identify-plant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -47,11 +68,17 @@ export default function PlantIdentifier() {
 
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<GardenPhoto | null>(null);
-  const [activeEngine, setActiveEngine] = useState('groq');
+  const [activeEngine, setActiveEngine] = useState('multi');
   const [gpsStatus, setGpsStatus] = useState<'idle'|'loading'|'found'|'none'>('idle');
   const [liveGps, setLiveGps] = useState<{lat:number;lon:number;source:string}|null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [engineError, setEngineError] = useState<string|null>(null);
+  const [multiResults, setMultiResults] = useState<Array<{
+    engine: string; label: string; emoji: string; success: boolean;
+    plantName?: string; confidence?: number; description?: string;
+    careAdvice?: string[]; healthStatus?: any; error?: string;
+    alternatives?: Array<{ plantName: string; confidence: number }>;
+  }>|null>(null);
   const [ecoScanning, setEcoScanning] = useState(false);
   const [ecoResult, setEcoResult] = useState<{verified:boolean;type:string;confidence:number;ecoPoints:number;message:string;description:string}|null>(null);
   const [ecoError, setEcoError] = useState<string|null>(null);
@@ -106,16 +133,93 @@ export default function PlantIdentifier() {
 
   const analyze = async (photo: GardenPhoto) => {
     if (!photo.dataUrl || analyzing) return;
-    setAnalyzing(photo.id); setEngineError(null);
+    setAnalyzing(photo.id); setEngineError(null); setMultiResults(null);
     try {
       const result = await identifyPlant(photo.dataUrl, activeEngine);
-      updatePhoto(photo.id, { identificationResult: { ...result, analyzedAt: Date.now() } });
-      if (selectedPhoto?.id === photo.id)
-        setSelectedPhoto(prev => prev ? { ...prev, identificationResult: { ...result, analyzedAt: Date.now() } } : prev);
+
+      if (result.multi && result.results) {
+        // Mode multi-moteurs : afficher TOUS les résultats pour sélection par l'utilisateur
+        setMultiResults(result.results);
+        // Ne pas auto-sélectionner — l'utilisateur choisit lui-même
+        // Mettre un résultat temporaire pour afficher le panneau
+        const anySuccess = result.results.find((r: any) => r.success);
+        if (anySuccess) {
+          const tempResult = { plantName: 'Choisissez la bonne plante ci-dessous 👇', confidence: 0, description: '', careAdvice: [], analyzedAt: Date.now(), engine: 'multi' };
+          updatePhoto(photo.id, { identificationResult: tempResult });
+          if (selectedPhoto?.id === photo.id)
+            setSelectedPhoto(prev => prev ? { ...prev, identificationResult: tempResult } : prev);
+        } else {
+          setEngineError('Aucun moteur n\'a pu analyser l\'image');
+        }
+      } else {
+        // Moteur unique
+        updatePhoto(photo.id, { identificationResult: { ...result, analyzedAt: Date.now() } });
+        if (selectedPhoto?.id === photo.id)
+          setSelectedPhoto(prev => prev ? { ...prev, identificationResult: { ...result, analyzedAt: Date.now() } } : prev);
+      }
     } catch (err: any) {
       setEngineError(err.message || 'Erreur analyse');
     } finally { setAnalyzing(null); }
   };
+
+  // Sélectionner un résultat multi-moteur
+  const selectMultiResult = (result: any, photo: GardenPhoto) => {
+    if (!result) return;
+    // Construire la liste des alternatives depuis les résultats multi-moteurs
+    const allNames = new Map<string, number>();
+    if (multiResults) {
+      for (const r of multiResults) {
+        if (r.success && r.plantName && r.plantName !== 'Non identifié' && r.plantName !== 'Plante non identifiée') {
+          if (!allNames.has(r.plantName) || (r.confidence ?? 0) > (allNames.get(r.plantName) ?? 0))
+            allNames.set(r.plantName, r.confidence ?? 0);
+        }
+        if (r.alternatives) {
+          for (const alt of r.alternatives) {
+            if (!allNames.has(alt.plantName) || alt.confidence > (allNames.get(alt.plantName) ?? 0))
+              allNames.set(alt.plantName, alt.confidence);
+          }
+        }
+      }
+    }
+    // Enlever le nom sélectionné des alternatives
+    allNames.delete(result.plantName);
+    const alternatives = Array.from(allNames.entries()).map(([plantName, confidence]) => ({ plantName, confidence }));
+
+    const selected = {
+      ...result,
+      analyzedAt: Date.now(),
+      alternatives,
+      engine: result.engine || 'multi',
+      validatedBy: 'user',
+    };
+    updatePhoto(photo.id, { identificationResult: selected });
+    if (selectedPhoto?.id === photo.id)
+      setSelectedPhoto(prev => prev ? { ...prev, identificationResult: selected } : prev);
+    setMultiResults(null);
+  };
+
+  // Vérifier la connexion des moteurs IA
+  const [engineStatus, setEngineStatus] = useState<Record<string, 'checking'|'online'|'offline'>>({});
+
+  const checkEngines = useCallback(async () => {
+    setEngineStatus({ groq: 'checking', gemini: 'checking', plantid: 'checking', ollama: 'checking' });
+    try {
+      const res = await fetch('/api/identify-plant/status');
+      if (!res.ok) throw new Error('status unavailable');
+      const data: Record<string, { online: boolean; detail?: string }> = await res.json();
+      setEngineStatus({
+        groq: data.groq?.online ? 'online' : 'offline',
+        gemini: data.gemini?.online ? 'online' : 'offline',
+        plantid: data.plantid?.online ? 'online' : 'offline',
+        ollama: data.ollama?.online ? 'online' : 'offline',
+      });
+    } catch {
+      setEngineStatus({ groq: 'offline', gemini: 'offline', ollama: 'offline', plantid: 'offline' });
+    }
+  }, []);
+
+  // Vérifier la connexion des moteurs au montage
+  useEffect(() => { checkEngines(); }, [checkEngines]);
 
   // ─── Eco Gesture Scan ──────────────────────────────────────────────────────
   const scanEcoGesture = useCallback(async (dataUrl: string) => {
@@ -166,44 +270,30 @@ export default function PlantIdentifier() {
       alert('⚠️ Aucune identification disponible.\n\nAnalysez d\'abord la photo avec un moteur IA.');
       return;
     }
-    
-    const plantDefId = mapPlantNameToDefId(photo.identificationResult.plantName);
-    
-    if (!plantDefId) {
-      alert(`❌ "${photo.identificationResult.plantName}" n'est pas dans le catalogue.
 
-Plantes disponibles :
-🍅 Tomate
-🫑 Poivron
-🥬 Laitue
-🥕 Carotte
-🌿 Basilic
-🍓 Fraise
+    // Essaie le catalogue d'abord, sinon utilise le nom directement (création générique)
+    const plantDefId = mapPlantNameToDefId(photo.identificationResult.plantName)
+      || photo.identificationResult.plantName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-💡 Astuce : Prenez une photo de l'une de ces plantes.`);
-      return;
-    }
-    
-    // Position par défaut dans le jardin (on pourrait demander à l'utilisateur)
     const x = 100 + Math.random() * 200;
     const y = 100 + Math.random() * 200;
-    
+
     const createFunc = (useGameStore.getState() as any).createDigitalTwinInGarden;
     if (!createFunc) {
       alert('❌ Fonction createDigitalTwinInGarden non disponible.\n\nVeuillez mettre à jour game-store.ts.');
       return;
     }
-    
+
     const result = createFunc(plantDefId, x, y, {
       plantName: photo.identificationResult.plantName,
       confidence: photo.identificationResult.confidence,
       growthStage: photo.identificationResult.growthStage,
       healthStatus: photo.identificationResult.healthStatus,
     });
-    
+
     alert(result.message);
     if (result.success) {
-      setSelectedPhoto(null); // Fermer la modale
+      setSelectedPhoto(null);
     }
   };
 
@@ -233,6 +323,11 @@ Plantes disponibles :
             >
               <span className="pi-engine-emoji">{eng.emoji}</span>
               <span className="pi-engine-name">{eng.label}</span>
+              {eng.id !== 'multi' && engineStatus[eng.id] && (
+                <span className={`pi-status-dot pi-status-${engineStatus[eng.id]}`}>
+                  {engineStatus[eng.id] === 'checking' ? '⏳' : engineStatus[eng.id] === 'online' ? '🟢' : '🔴'}
+                </span>
+              )}
               {eng.free && <span className="pi-engine-free">GRATUIT</span>}
             </button>
           ))}
@@ -530,10 +625,43 @@ Plantes disponibles :
                       <ul>{selectedPhoto.identificationResult.careAdvice.map((a, i) => <li key={i}>{a}</li>)}</ul>
                     </div>
                   )}
-                  
-                  {/* Bouton Jumeau Numérique */}
-                  {selectedPhoto.identificationResult.growthStage && (
+
+                  {/* Alternatives proposées par l'IA */}
+                  {(selectedPhoto.identificationResult as any).alternatives?.length > 0 && (
+                    <div className="pi-alternatives">
+                      <div className="pi-alternatives-header">🌿 Autres possibilités :</div>
+                      {(selectedPhoto.identificationResult as any).alternatives.map((alt: any, i: number) => (
+                        <button
+                          key={i}
+                          className="pi-alt-btn"
+                          onClick={() => {
+                            const ir = selectedPhoto.identificationResult!;
+                            const updated = {
+                              ...ir,
+                              plantName: alt.plantName || ir.plantName,
+                              confidence: alt.confidence ?? ir.confidence,
+                              description: ir.description || '',
+                              careAdvice: ir.careAdvice || [],
+                              analyzedAt: Date.now(),
+                            };
+                            updatePhoto(selectedPhoto.id, { identificationResult: updated });
+                            setSelectedPhoto(prev => prev ? { ...prev, identificationResult: updated } : prev);
+                          }}
+                        >
+                          <span className="pi-alt-name">{alt.plantName}</span>
+                          <span className="pi-alt-conf">{Math.round((alt.confidence || 0) * 100)}%</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Bouton Jumeau Numérique — accessible dès que la plante est identifiée */}
+                  {selectedPhoto.identificationResult.plantName && selectedPhoto.identificationResult.plantName !== 'Choisissez la bonne plante ci-dessous 👇' && (
                     <div style={{ marginTop: 14, padding: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 12, border: '2px solid rgba(255,255,255,0.2)' }}>
+                      <div style={{ textAlign: 'center', marginBottom: 8 }}>
+                        <span style={{ background: 'rgba(48,209,88,0.3)', color: '#30D158', padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>
+                          ✅ {selectedPhoto.identificationResult.plantName} identifiée
+                        </span>
+                      </div>
                       <button
                         onClick={() => createTwin(selectedPhoto)}
                         style={{
@@ -563,9 +691,142 @@ Plantes disponibles :
                     </div>
                   )}
                   
-                  <button className="pi-reanalyze" onClick={() => { updatePhoto(selectedPhoto.id, { identificationResult: undefined }); setSelectedPhoto(prev => prev ? { ...prev, identificationResult: undefined } : prev); }}>
+                  <button className="pi-reanalyze" onClick={() => { updatePhoto(selectedPhoto.id, { identificationResult: undefined }); setSelectedPhoto(prev => prev ? { ...prev, identificationResult: undefined } : prev); setMultiResults(null); }}>
                     🔄 Ré-analyser avec un autre moteur
                   </button>
+
+                  {/* Panneau de sélection multi-moteurs */}
+                  {multiResults && multiResults.length > 0 && (
+                    <div className="pi-multi-results">
+                      <div className="pi-multi-header">🔍 Résultats de tous les moteurs — cliquez pour valider la bonne plante :</div>
+                      {/* Résumé fusionné des noms trouvés */}
+                      {(() => {
+                        const nameMap = new Map<string, { engines: string[]; maxConf: number }>();
+                        for (const r of multiResults) {
+                          if (!r.success || !r.plantName || r.plantName === 'Non identifié' || r.plantName === 'Plante non identifiée') continue;
+                          const existing = nameMap.get(r.plantName);
+                          if (existing) { existing.engines.push(r.emoji); if ((r.confidence ?? 0) > existing.maxConf) existing.maxConf = r.confidence ?? 0; }
+                          else nameMap.set(r.plantName, { engines: [r.emoji], maxConf: r.confidence ?? 0 });
+                          if (r.alternatives) {
+                            for (const alt of r.alternatives) {
+                              const altExisting = nameMap.get(alt.plantName);
+                              if (altExisting) { if (!altExisting.engines.includes('🔄')) altExisting.engines.push('🔄'); if (alt.confidence > altExisting.maxConf) altExisting.maxConf = alt.confidence; }
+                              else nameMap.set(alt.plantName, { engines: ['🔄'], maxConf: alt.confidence });
+                            }
+                          }
+                        }
+                        const sortedNames = Array.from(nameMap.entries()).sort((a, b) => b[1].maxConf - a[1].maxConf);
+                        if (sortedNames.length > 0) return (
+                          <div style={{ marginBottom: 10 }}>
+                            <div style={{ fontSize: 11, color: '#a5b4fc', fontWeight: 700, marginBottom: 6 }}>📋 Plantes identifiées (cliquez pour valider) :</div>
+                            {sortedNames.map(([name, data]) => (
+                              <button key={name} className={`pi-multi-card ${data.maxConf > 0.3 ? 'pi-multi-viable' : 'pi-multi-weak'}`}
+                                onClick={() => {
+                                  // Trouver le résultat qui a ce nom pour utiliser ses données complètes
+                                  const matchingResult = multiResults.find((r: any) => r.success && r.plantName === name);
+                                  if (matchingResult) selectMultiResult(matchingResult, selectedPhoto);
+                                  else selectMultiResult({ plantName: name, confidence: data.maxConf, description: '', careAdvice: [], engine: 'multi', success: true, emoji: data.engines[0] }, selectedPhoto);
+                                }}
+                              >
+                                <div className="pi-multi-card-header">
+                                  <span>{data.engines.join(' ')}</span>
+                                  <strong style={{ flex: 1, marginLeft: 6 }}>{name}</strong>
+                                  <span className={`pi-multi-conf ${data.maxConf < 0.2 ? 'pi-conf-low' : data.maxConf < 0.5 ? 'pi-conf-med' : ''}`}>
+                                    {Math.round(data.maxConf * 100)}%
+                                  </span>
+                                  <span className="pi-multi-select">✅ Valider</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        );
+                        return null;
+                      })()}
+                      {/* Détails par moteur */}
+                      <div style={{ fontSize: 10, color: '#888', fontWeight: 700, marginBottom: 6 }}>Détail par moteur :</div>
+                      {multiResults.map((r, i) => (
+                        <div
+                          key={i}
+                          className={`pi-multi-card ${r.success ? (r.confidence && r.confidence > 0.3 ? 'pi-multi-viable' : 'pi-multi-weak') : 'pi-multi-error'}`}
+                          style={{ cursor: r.success ? 'pointer' : 'default' }}
+                          onClick={() => r.success && r.plantName ? selectMultiResult(r, selectedPhoto) : undefined}
+                        >
+                          <div className="pi-multi-card-header">
+                            <span className="pi-multi-emoji">{r.emoji}</span>
+                            <span className="pi-multi-label">{r.label}</span>
+                            {r.success && r.confidence !== undefined && (
+                              <span className={`pi-multi-conf ${r.confidence < 0.2 ? 'pi-conf-low' : r.confidence < 0.5 ? 'pi-conf-med' : ''}`}>
+                                {Math.round(r.confidence * 100)}%
+                              </span>
+                            )}
+                            {r.success && (
+                              <span className="pi-multi-select">✅ Valider</span>
+                            )}
+                          </div>
+                          {r.success && r.plantName ? (
+                            <div className="pi-multi-card-body">
+                              <strong>{r.plantName}</strong>
+                              {r.description && <p>{r.description.slice(0, 120)}{r.description.length > 120 ? '…' : ''}</p>}
+                              {r.healthStatus && !r.healthStatus.isHealthy && (
+                                <p className="pi-multi-disease">🦠 {r.healthStatus.diseaseName}</p>
+                              )}
+                              {r.alternatives && r.alternatives.length > 0 && (
+                                <div style={{ marginTop: 4 }}>
+                                  <span style={{ fontSize: 10, color: '#888' }}>Autres possibilités :</span>
+                                  {r.alternatives.map((alt: any, j: number) => (
+                                    <button key={j} className="pi-alt-btn"
+                                      onClick={(e) => { e.stopPropagation(); selectMultiResult({ ...r, plantName: alt.plantName, confidence: alt.confidence, alternatives: [], engine: r.engine || 'multi' }, selectedPhoto); }}
+                                    >
+                                      <span className="pi-alt-name">{alt.plantName}</span>
+                                      <span className="pi-alt-conf">{Math.round((alt.confidence || 0) * 100)}%</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="pi-multi-card-error">❌ {r.error || 'Indisponible'}</div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Saisie manuelle si aucun résultat satisfaisant */}
+                      <div className="pi-manual-entry">
+                        <div className="pi-manual-label">✏️ Vous connaissez cette plante ? Entrez son nom :</div>
+                        <div className="pi-manual-row">
+                          <input
+                            type="text"
+                            className="pi-manual-input"
+                            placeholder="Ex : Tomate, Basilic, Rosier…"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const val = (e.target as HTMLInputElement).value.trim();
+                                if (val && selectedPhoto) {
+                                  const manualResult = { plantName: val, confidence: 1.0, description: `Plante identifiée manuellement : ${val}`, careAdvice: ['Vérifiez les conseils de culture pour cette espèce.'], analyzedAt: Date.now(), engine: 'manual' };
+                                  updatePhoto(selectedPhoto.id, { identificationResult: manualResult });
+                                  setSelectedPhoto(prev => prev ? { ...prev, identificationResult: manualResult } : prev);
+                                  setMultiResults(null);
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            className="pi-manual-btn"
+                            onClick={() => {
+                              const input = document.querySelector('.pi-manual-input') as HTMLInputElement;
+                              const val = input?.value?.trim();
+                              if (val && selectedPhoto) {
+                                const manualResult = { plantName: val, confidence: 1.0, description: `Plante identifiée manuellement : ${val}`, careAdvice: ['Vérifiez les conseils de culture pour cette espèce.'], analyzedAt: Date.now(), engine: 'manual' };
+                                updatePhoto(selectedPhoto.id, { identificationResult: manualResult });
+                                setSelectedPhoto(prev => prev ? { ...prev, identificationResult: manualResult } : prev);
+                                setMultiResults(null);
+                              }
+                            }}
+                          >✅</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button className={`pi-analyze-btn pi-analyze-lg ${analyzing === selectedPhoto.id ? 'pi-analyzing' : ''}`}
@@ -671,6 +932,40 @@ Plantes disponibles :
         .pi-modal-care ul{margin:6px 0 10px 0;padding-left:18px;font-size:12px;color:#aaa;line-height:1.8}
         .pi-reanalyze{width:100%;padding:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#ccc;border-radius:9px;font-size:12px;cursor:pointer;margin-top:4px;transition:background .2s}
         .pi-reanalyze:hover{background:rgba(255,255,255,.14)}
+        .pi-status-dot{font-size:10px;margin-left:4px}
+        .pi-status-checking{animation:pi-spin 1s linear infinite}
+        @keyframes pi-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .pi-multi-results{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px}
+        .pi-multi-header{font-size:11px;font-weight:700;color:#a5b4fc;margin-bottom:8px}
+        .pi-multi-card{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:8px;margin-bottom:6px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;transition:all .15s;color:#fff}
+        .pi-multi-card:hover:not(:disabled){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+        .pi-multi-card:disabled{opacity:.45;cursor:not-allowed}
+        .pi-multi-viable{border-color:rgba(48,209,88,.3)}
+        .pi-multi-weak{border-color:rgba(255,214,10,.2)}
+        .pi-multi-card-header{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+        .pi-multi-emoji{font-size:14px}
+        .pi-multi-label{flex:1}
+        .pi-multi-conf{background:rgba(48,209,88,.15);color:#30D158;padding:2px 6px;border-radius:6px;font-size:10px}
+        .pi-multi-card-body{margin-top:4px;font-size:12px;color:#ccc}
+        .pi-multi-card-body p{margin:2px 0 0;font-size:11px;color:#888}
+        .pi-multi-card-error{font-size:11px;color:#FF6B6B;margin-top:2px}
+        .pi-multi-select{font-size:10px;background:rgba(48,209,88,.2);color:#30D158;padding:2px 6px;border-radius:4px;margin-left:auto}
+        .pi-conf-low{background:rgba(255,69,58,.2)!important;color:#FF6B6B!important}
+        .pi-conf-med{background:rgba(255,214,10,.2)!important;color:#FFD60A!important}
+        .pi-multi-disease{font-size:11px;color:#FF6B6B;margin-top:2px}
+        .pi-alternatives{margin-top:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px}
+        .pi-alternatives-header{font-size:11px;font-weight:700;color:#a5b4fc;margin-bottom:6px}
+        .pi-alt-btn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:6px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;cursor:pointer;transition:all .15s;margin-bottom:4px;font-size:12px}
+        .pi-alt-btn:hover{background:rgba(48,209,88,.12);border-color:rgba(48,209,88,.3)}
+        .pi-alt-name{font-weight:600}
+        .pi-alt-conf{font-size:10px;color:#888}
+        .pi-manual-entry{margin-top:12px;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px}
+        .pi-manual-label{font-size:11px;color:#a5b4fc;margin-bottom:6px;font-weight:600}
+        .pi-manual-row{display:flex;gap:6px}
+        .pi-manual-input{flex:1;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none}
+        .pi-manual-input:focus{border-color:rgba(48,209,88,.5);background:rgba(255,255,255,.08)}
+        .pi-manual-btn{padding:6px 12px;border-radius:8px;border:none;background:#30D158;color:#fff;font-weight:700;font-size:12px;cursor:pointer;transition:background .15s}
+        .pi-manual-btn:hover{background:#28a745}
         /* Eco Gesture */
         .pi-eco-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
         .pi-eco-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;font-weight:700;font-size:12px;border:none;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#059669,#10b981);color:#fff}

@@ -4,6 +4,8 @@
  * Aucune donnée individuelle — seulement des moyennes pondérées
  */
 
+import path from 'path';
+
 export interface PlantStats {
   avgDaysToMaturity: number;
   harvestCount: number;
@@ -24,7 +26,7 @@ export interface CollectiveSubmission {
   region: string;
 }
 
-const COLLECTIVE_DIR = 'C:/Users/Administrateur/Desktop/BotanIA/data/collective';
+const COLLECTIVE_DIR = path.join(process.cwd(), 'data/collective');
 
 /**
  * Charge les stats agrégées depuis le fichier local

@@ -88,7 +88,10 @@ export default function GardenCardsView() {
                 {/* ── Image ── */}
                 <div className="card-image-container">
                   <img src={`/cards/card-${gp.plantDefId}.png`} alt={def?.name || 'Plante'}
-                    className="card-plant-image" />
+                    className="card-plant-image"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/cards/card-custom-plant.png';
+                    }} />
                   {/* Badge maladie sur l'image */}
                   {a && a.diseaseAlert !== 'none' && (
                     <div className="card-disease-badge"

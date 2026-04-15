@@ -18,6 +18,7 @@ import {
 } from "@/lib/weather-service";
 import { useNightMode, useAutoSave } from "@/lib/use-effects";
 import { useSlotAutoSave } from "@/hooks/useSlotAutoSave";
+import { useUISync } from "@/hooks/useUISync";
 import { loadAutoSave, hasAutoSave, getAllSlots } from "@/lib/save-manager";
 
 export default function GamePage() {
@@ -38,6 +39,7 @@ export default function GamePage() {
   useNightMode();
   useAutoSave();
   useSlotAutoSave();
+  useUISync();
 
   const [weatherStatus, setWeatherStatus] = useState<"loading" | "ready" | "error">("loading");
   const [statusMessage, setStatusMessage] = useState("Chargement...");
@@ -233,7 +235,7 @@ export default function GamePage() {
       )}
 
       {/* MAIN */}
-      <div className="max-w-[1400px] mx-auto px-3 py-3 md:py-4">
+      <div className="mx-auto px-3 py-3 md:py-4" style={{ maxWidth: 'var(--ui-container-max)' }}>
         <GameHUD />
         <VisualEffectManager />
         <EnhancedHUD />

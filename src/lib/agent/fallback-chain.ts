@@ -105,6 +105,8 @@ export async function getAgentResponse(
           fertilizerLevel: 0,
           fruitSetRate: 1,
           diseasePressureHours: 0,
+          growthRoute: 'jardin' as const,
+          containerType: 'sol-jardin' as const,
         },
         daysSincePlanting: 0,
       })),

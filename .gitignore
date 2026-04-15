@@ -71,6 +71,14 @@ worklog_test.txt
 _lia-b64.txt
 TEMP-*.tsx
 TEMP-*.txt
+SESSION-*.md
+*.backup
+*.backup-*
+test_write.txt
+
+# Microservice
+ai-microservice/start.log
+ai-microservice/start2.ps1
 
 # Editor
 .vscode/

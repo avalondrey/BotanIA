@@ -6,6 +6,42 @@ import { usePhotoStore } from '@/store/photo-store';
 import { getBestGPS } from '@/lib/gps-extractor';
 import { useGameStore } from '@/store/game-store';
 
+// ─── Redimensionner image pour API identification ────────────────────────────────
+function resizeDataUrl(dataUrl: string, maxDim = 768, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w <= maxDim && h <= maxDim) { resolve(dataUrl); return; }
+      if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+      else { w = Math.round(w * maxDim / h); h = maxDim; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d')?.drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+const IDENTIFY_PROMPT = `Tu es un botaniste expert. Identifie la plante centrale de cette photo. Réponds UNIQUEMENT avec ce JSON (pas de texte avant/après, pas de backticks) :
+{
+  "plantName": "Nom commun français (Nom latin)",
+  "confidence": 0.85,
+  "description": "Description courte",
+  "careAdvice": ["Conseil 1", "Conseil 2"],
+  "alternatives": [
+    {"plantName": "Espèce proche 1 (Nom latin)", "confidence": 0.3},
+    {"plantName": "Espèce proche 2 (Nom latin)", "confidence": 0.15},
+    {"plantName": "Espèce proche 3 (Nom latin)", "confidence": 0.08},
+    {"plantName": "Espèce proche 4 (Nom latin)", "confidence": 0.04},
+    {"plantName": "Espèce proche 5 (Nom latin)", "confidence": 0.02},
+    {"plantName": "Espèce proche 6 (Nom latin)", "confidence": 0.01}
+  ]
+}
+Concentre-toi sur la plante avec le plus de feuilles. Ignore le sol et les herbes autour. Donne 6 alternatives réelles avec noms latins, jamais de textes génériques.`;
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface SeedRow {
   id: string;
@@ -23,6 +59,35 @@ interface SeedRowPainterProps {
 interface DrawingPoint {
   x: number;
   y: number;
+}
+
+// ─── Douglas-Peucker path simplification ────────────────────────────────────────
+function perpendicularDist(point: DrawingPoint, lineStart: DrawingPoint, lineEnd: DrawingPoint): number {
+  const dx = lineEnd.x - lineStart.x;
+  const dy = lineEnd.y - lineStart.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(point.x - lineStart.x, point.y - lineStart.y);
+  let t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(point.x - (lineStart.x + t * dx), point.y - (lineStart.y + t * dy));
+}
+
+function simplifyPath(points: DrawingPoint[], epsilon: number): DrawingPoint[] {
+  if (points.length <= 2) return points;
+  let maxDist = 0;
+  let maxIdx = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = perpendicularDist(points[i], first, last);
+    if (d > maxDist) { maxDist = d; maxIdx = i; }
+  }
+  if (maxDist > epsilon) {
+    const left = simplifyPath(points.slice(0, maxIdx + 1), epsilon);
+    const right = simplifyPath(points.slice(maxIdx), epsilon);
+    return left.slice(0, -1).concat(right);
+  }
+  return [first, last];
 }
 
 // ─── Palette de couleurs ───────────────────────────────────────────────────────
@@ -72,11 +137,91 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncConfig, setSyncConfig] = useState<Record<string, { plantDefId: string; plantCount: number }>>({});
 
+  // States pour identification plante
+  const [identifying, setIdentifying] = useState(false);
+  const [identifyResult, setIdentifyResult] = useState<any>(null);
+  const [identifyError, setIdentifyError] = useState<string | null>(null);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // ─── Identifier la plante sur la photo ──────────────────────────────────────────
+  const identifyPlant = async () => {
+    if (!photoUrl) return;
+    setIdentifying(true);
+    setIdentifyError(null);
+    try {
+      const resized = await resizeDataUrl(photoUrl);
+      const base64 = resized.split(',')[1];
+      const mediaType = resized.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+      const res = await fetch('/api/identify-plant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType, engine: 'multi' }),
+      });
+      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+      const data = await res.json();
+
+      if (data.multi && data.results) {
+        const viable = data.results.filter((r: any) => r.success && r.plantName && r.plantName !== 'Non identifié' && r.plantName !== 'Plante non identifiée');
+        // Fusionner tous les noms trouvés
+        const nameMap = new Map<string, { engines: string[]; maxConf: number }>();
+        for (const r of data.results) {
+          if (!r.success || !r.plantName || r.plantName === 'Non identifié' || r.plantName === 'Plante non identifiée') continue;
+          const existing = nameMap.get(r.plantName);
+          if (existing) { existing.engines.push(r.emoji); if ((r.confidence ?? 0) > existing.maxConf) existing.maxConf = r.confidence ?? 0; }
+          else nameMap.set(r.plantName, { engines: [r.emoji], maxConf: r.confidence ?? 0 });
+          if (r.alternatives) for (const alt of r.alternatives) {
+            const ae = nameMap.get(alt.plantName);
+            if (ae) { if (alt.confidence > ae.maxConf) ae.maxConf = alt.confidence; }
+            else nameMap.set(alt.plantName, { engines: ['🔄'], maxConf: alt.confidence });
+          }
+        }
+        const sortedNames = Array.from(nameMap.entries()).sort((a, b) => b[1].maxConf - a[1].maxConf);
+        setIdentifyResult({ sortedNames, rawResults: data.results });
+      } else {
+        setIdentifyResult({ single: data });
+      }
+    } catch (err: any) {
+      setIdentifyError(err.message || 'Erreur identification');
+    } finally { setIdentifying(false); }
+  };
+
+  const selectPlant = (name: string) => {
+    // Sauvegarder l'identification sur la photo
+    if (photoId) {
+      updatePhoto(photoId, { identificationResult: { plantName: name, confidence: 1.0, description: `Plante validée : ${name}`, careAdvice: [], analyzedAt: Date.now() } });
+    }
+    setIdentifyResult(null);
+    // Afficher le panneau d'ajout au jardin
+    setValidatedPlant(name);
+  };
+
+  // Plante validée — prête à ajouter au jardin
+  const [validatedPlant, setValidatedPlant] = useState<string | null>(null);
+
+  const addToGarden = (plantDefId: string) => {
+    const createTwin = (useGameStore.getState() as any).createDigitalTwinInGarden;
+    if (!createTwin) return;
+    // Trouver une position libre dans le jardin
+    const plants = useGameStore.getState().gardenPlants;
+    const x = 100 + (plants.length % 6) * 80;
+    const y = 100 + Math.floor(plants.length / 6) * 60;
+    const result = createTwin(plantDefId, x, y, {
+      plantName: validatedPlant || plantDefId,
+      confidence: 1.0,
+      growthStage: { stage: 2, estimatedAge: 15 },
+      healthStatus: { isHealthy: true, diseaseName: 'Sain' }
+    });
+    if (result.success) {
+      setValidatedPlant(null);
+    } else {
+      alert(result.message || 'Erreur ajout jardin');
+    }
+  };
 
   // ─── Éteindre la caméra au unmount ──────────────────────────────────────────────
   useEffect(() => {
@@ -202,16 +347,13 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
     if (!isDrawing) return;
     setIsDrawing(false);
     if (currentPoints.length > 1) {
+      const simplified = simplifyPath(currentPoints, 2);
       const newRow: SeedRow = {
         id: Math.random().toString(36).slice(2, 9),
         color: currentColor,
-        points: currentPoints,
+        points: simplified,
       };
-      setRows(prev => {
-        const updated = [...prev, newRow];
-        onRowsChange?.(updated);
-        return updated;
-      });
+      setRows(prev => [...prev, newRow]);
     }
     setCurrentPoints([]);
   };
@@ -249,16 +391,13 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
     if (!isDrawing) return;
     setIsDrawing(false);
     if (currentPoints.length > 1) {
+      const simplified = simplifyPath(currentPoints, 3);
       const newRow: SeedRow = {
         id: Math.random().toString(36).slice(2, 9),
         color: currentColor,
-        points: currentPoints,
+        points: simplified,
       };
-      setRows(prev => {
-        const updated = [...prev, newRow];
-        onRowsChange?.(updated);
-        return updated;
-      });
+      setRows(prev => [...prev, newRow]);
     }
     setCurrentPoints([]);
   };
@@ -268,12 +407,15 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
     if (canvasRef.current && imgRef.current) redrawCanvas();
   }, [rows, photoUrl]);
 
+  // Notifier le parent quand les rows changent (hors du render)
+  useEffect(() => {
+    onRowsChange?.(rows);
+  }, [rows]);
+
   const clearAll = () => {
     if (!confirm('Effacer la photo et tous les rangs ?')) return;
     setPhotoUrl(null);
-    const emptyRows: SeedRow[] = [];
-    setRows(emptyRows);
-    onRowsChange?.(emptyRows);
+    setRows([]);
     setGps(null);
     setGpsStatus('idle');
     setCurrentPoints([]);
@@ -290,9 +432,7 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
   };
 
   const deleteRow = (id: string) => {
-    const updated = rows.filter(r => r.id !== id);
-    setRows(updated);
-    onRowsChange?.(updated);
+    setRows(rows.filter(r => r.id !== id));
   };
 
   const openRowEditor = (rowId: string) => {
@@ -304,9 +444,7 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
 
   const saveRowLabel = () => {
     if (!editingRow) return;
-    const updated = rows.map(r => r.id === editingRow ? { ...r, label: rowLabel } : r);
-    setRows(updated);
-    onRowsChange?.(updated);
+    setRows(rows.map(r => r.id === editingRow ? { ...r, label: rowLabel } : r));
     setEditingRow(null);
     setRowLabel('');
   };
@@ -422,6 +560,16 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
         <button className="sp-btn sp-secondary" onClick={startCamera}>
           📷 Caméra
         </button>
+        {photoUrl && !identifying && (
+          <button className="sp-btn sp-identify-btn" onClick={identifyPlant}>
+            🔍 Identifier
+          </button>
+        )}
+        {identifying && (
+          <button className="sp-btn sp-identify-btn" disabled>
+            ⏳ Analyse…
+          </button>
+        )}
         {photoUrl && (
           <button className="sp-btn sp-danger" onClick={clearAll}>
             🗑️ Effacer
@@ -469,6 +617,78 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
             streamRef.current?.getTracks().forEach(t => t.stop());
             setMode('photo');
           }}>✕</button>
+        </div>
+      )}
+
+      {/* Plante validée — ajouter au jardin */}
+      {validatedPlant && (
+        <div className="sp-validated-panel">
+          <div className="sp-validated-header">
+            ✅ <strong>{validatedPlant}</strong> identifiée
+          </div>
+          <div className="sp-validated-sub">Choisissez le type pour l'ajouter au jardin :</div>
+          <div className="sp-validated-plants">
+            {AVAILABLE_PLANTS.map(p => (
+              <button key={p.id} className="sp-validated-plant-btn" onClick={() => addToGarden(p.id)}>
+                <span style={{ fontSize: 20 }}>{p.emoji}</span>
+                <span style={{ fontWeight: 600 }}>{p.name}</span>
+                <span style={{ color: '#30D158', marginLeft: 'auto' }}>+ Jardin</span>
+              </button>
+            ))}
+            {/* Bouton "Ajouter tel quel" pour plantes non-cataloguées */}
+            <button className="sp-validated-plant-btn" style={{ background: '#ecfdf5', borderColor: '#6ee7b7' }}
+              onClick={() => {
+                const defId = validatedPlant.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                addToGarden(defId);
+              }}>
+              <span style={{ fontSize: 20 }}>🌱</span>
+              <span style={{ fontWeight: 600 }}>{validatedPlant}</span>
+              <span style={{ color: '#059669', marginLeft: 'auto' }}>📸 + Jardin</span>
+            </button>
+          </div>
+          <button className="sp-identify-close" onClick={() => setValidatedPlant(null)}>✕ Pas maintenant</button>
+        </div>
+      )}
+
+      {/* Résultat identification plante */}
+      {identifyResult && (
+        <div className="sp-identify-panel">
+          <div className="sp-identify-header">🔍 Plantes identifiées — cliquez pour valider :</div>
+          {identifyResult.sortedNames && identifyResult.sortedNames.map(([name, data]: [string, any]) => (
+            <button key={name} className="sp-identify-card"
+              onClick={() => selectPlant(name)}>
+              <span>{data.engines.join(' ')}</span>
+              <strong style={{ flex: 1, marginLeft: 6 }}>{name}</strong>
+              <span className="sp-identify-conf">{Math.round(data.maxConf * 100)}%</span>
+              <span style={{ marginLeft: 8, color: '#30D158', fontWeight: 700 }}>✅</span>
+            </button>
+          ))}
+          {identifyResult.single && (
+            <div className="sp-identify-card" onClick={() => selectPlant(identifyResult.single.plantName)}>
+              <strong>{identifyResult.single.plantName}</strong>
+              <span className="sp-identify-conf">{Math.round((identifyResult.single.confidence || 0) * 100)}%</span>
+              <span style={{ marginLeft: 8, color: '#30D158', fontWeight: 700 }}>✅</span>
+            </div>
+          )}
+          <div className="sp-identify-manual">
+            <span style={{ fontSize: 11, color: '#a5b4fc' }}>✏️ Ou entrez le nom :</span>
+            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+              <input type="text" className="sp-identify-input" placeholder="Ex : Tomate, Basilic…"
+                onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.target as HTMLInputElement).value.trim(); if (v) selectPlant(v); } }} />
+              <button className="sp-identify-validate" onClick={() => {
+                const input = document.querySelector('.sp-identify-input') as HTMLInputElement;
+                const v = input?.value?.trim();
+                if (v) selectPlant(v);
+              }}>✅</button>
+            </div>
+          </div>
+          <button className="sp-identify-close" onClick={() => setIdentifyResult(null)}>✕ Fermer</button>
+        </div>
+      )}
+      {identifyError && (
+        <div className="sp-identify-error">
+          ❌ {identifyError}
+          <button onClick={() => setIdentifyError(null)} style={{ marginLeft: 10, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>✕</button>
         </div>
       )}
 
@@ -525,6 +745,9 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="sp-sync-btn" onClick={openSyncModal} title="Synchroniser avec le jardin virtuel">
                 🌱 Sync Jardin
+              </button>
+              <button className="sp-undo-btn" onClick={() => setRows(prev => prev.slice(0, -1))} disabled={rows.length === 0} title="Annuler le dernier trait">
+                ↩️ Annuler
               </button>
               <button className="sp-save-btn" onClick={() => setShowModal(true)}>
                 💾 Sauvegarder
@@ -702,6 +925,25 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
 
       {/* Styles */}
       <style>{`
+        .sp-identify-btn{background:linear-gradient(135deg,#667eea,#764ba2)!important;color:#fff!important}
+        .sp-identify-btn:disabled{opacity:.6;cursor:wait}
+        .sp-identify-panel{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px}
+        .sp-identify-header{font-size:12px;font-weight:700;color:#a5b4fc;margin-bottom:8px}
+        .sp-identify-card{display:flex;align-items:center;width:100%;padding:8px 10px;border-radius:8px;margin-bottom:4px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;transition:all .15s;color:#fff;text-align:left;font-size:12px}
+        .sp-identify-card:hover{background:rgba(48,209,88,.1);border-color:rgba(48,209,88,.3)}
+        .sp-identify-conf{background:rgba(48,209,88,.15);color:#30D158;padding:2px 6px;border-radius:6px;font-size:10px;margin-left:auto}
+        .sp-identify-manual{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
+        .sp-identify-input{flex:1;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none}
+        .sp-identify-input:focus{border-color:rgba(48,209,88,.5)}
+        .sp-identify-validate{padding:6px 12px;border-radius:8px;border:none;background:#30D158;color:#fff;font-weight:700;font-size:12px;cursor:pointer}
+        .sp-identify-close{width:100%;margin-top:8px;padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#888;font-size:11px;cursor:pointer}
+        .sp-identify-error{margin-top:8px;padding:8px 12px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:9px;font-size:12px;color:#fca5a5;display:flex;align-items:center}
+        .sp-validated-panel{margin-top:12px;padding:14px;background:linear-gradient(135deg,rgba(48,209,88,.12),rgba(102,126,234,.12));border:2px solid rgba(48,209,88,.3);border-radius:14px}
+        .sp-validated-header{font-size:15px;font-weight:700;color:#30D158;margin-bottom:6px}
+        .sp-validated-sub{font-size:11px;color:#888;margin-bottom:10px}
+        .sp-validated-plants{display:flex;flex-direction:column;gap:4px}
+        .sp-validated-plant-btn{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;transition:all .15s;font-size:13px}
+        .sp-validated-plant-btn:hover{background:rgba(48,209,88,.15);border-color:rgba(48,209,88,.4)}
         .sp-wrap{min-height:60vh;background:linear-gradient(135deg,#0d1117,#111827,#1a1a2e);color:#fff;padding:20px;font-family:system-ui,sans-serif;border-radius:16px}
         .sp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
         .sp-title{font-size:22px;font-weight:800;margin:0 0 3px}
@@ -744,6 +986,8 @@ export default function SeedRowPainter({ onRowsChange }: SeedRowPainterProps) {
         .sp-rows-list{background:rgba(255,255,255,.04);border-radius:12px;padding:12px}
         .sp-rows-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;font-weight:700;color:#ccc}
         .sp-save-btn{background:#30D158;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer}
+        .sp-undo-btn{background:#eef2ff;color:#6366f1;border:1px solid #c7d2fe;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer}
+        .sp-undo-btn:disabled{opacity:.4;cursor:default}
         .sp-row-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:9px;padding:9px;margin-bottom:6px}
         .sp-row-color{width:20px;height:20px;border-radius:4px;flex-shrink:0}
         .sp-row-info{flex:1;min-width:0}

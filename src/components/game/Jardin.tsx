@@ -1,18 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/game-store';
 import GardenPlanView from './GardenPlanView';
 import GardenCardsView from './GardenCardsView';
-import JardinPlacementControls from './JardinPlacementControls';
+import JardinPlacementControls, { type ActiveTool, type EditMode, type GridSnapMode, type GridShowMode } from './JardinPlacementControls';
 import SeedRowPainter, { type SeedRow } from './SeedRowPainter';
 import { usePhotoStore } from '@/store/photo-store';
+import { useUndoHistory } from '@/hooks/useUndoHistory';
 import '@/styles/garden.css';
 
 type GardenView = 'plan' | 'cards' | 'rangs';
-export type ActiveTool = 'none' | 'zone' | 'zone_hedge' | 'zone_water' | 'zone_grass' | 'zone_fleur';
-export type EditMode = 'place' | 'select';
 
 export const Jardin: React.FC = () => {
   const [view, setView] = useState<GardenView>('plan');
@@ -20,12 +19,33 @@ export const Jardin: React.FC = () => {
   const [editMode, setEditMode] = useState<EditMode>('place');
   const [selectedInfo, setSelectedInfo] = useState<{ type: string; id: string } | null>(null);
   const [seedRows, setSeedRows] = useState<SeedRow[]>([]);
+  const [gridSnap, setGridSnap] = useState<GridSnapMode>('off');
+  const [showGrid, setShowGrid] = useState<GridShowMode>('full');
   const gardenPlants = useGameStore((s) => s.gardenPlants);
   const photoCount = usePhotoStore((s) => s.photos.filter(p => p.source === 'jardin').length);
+
+  const { push: pushUndo, undo, redo, canUndo, canRedo } = useUndoHistory();
 
   const plants = gardenPlants.map((gp: any) => gp.plant);
   const aArroser = plants.filter((p: any) => p.waterLevel < 30).length;
   const pretes = plants.filter((p: any) => p.stage >= 6).length;
+
+  // Ctrl+Z / Ctrl+Shift+Z
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
 
   return (
     <div className="garden-page-container">
@@ -71,6 +91,14 @@ export const Jardin: React.FC = () => {
           onToolChange={setActiveTool}
           editMode={editMode}
           onEditModeChange={setEditMode}
+          gridSnap={gridSnap}
+          onGridSnapChange={setGridSnap}
+          showGrid={showGrid}
+          onShowGridChange={setShowGrid}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={undo}
+          onRedo={redo}
         />
       )}
 
@@ -88,6 +116,10 @@ export const Jardin: React.FC = () => {
               onToolUsed={() => setActiveTool('none')}
               onSelectElement={(type, id) => setSelectedInfo({ type, id })}
               onEditModeChange={setEditMode}
+              gridSnap={gridSnap}
+              onGridSnapChange={setGridSnap}
+              showGrid={showGrid}
+              onShowGridChange={setShowGrid}
             />
           </motion.div>
         )}

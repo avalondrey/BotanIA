@@ -19,6 +19,9 @@ export interface ShopState {
   plantuleCollection: Record<string, number>;
   seedVarieties: Record<string, number>;
 
+  // Unlocked varieties (track separately from static catalog)
+  unlockedVarieties: Record<string, boolean>;
+
   // Economy
   coins: number;
   ecoPoints: number;
@@ -28,10 +31,14 @@ export interface ShopState {
   score: number;
   bestScore: number;
 
+  // Discovered plants (from photo identification)
+  discoveredPlants: Array<{ id: string; name: string; emoji: string; discoveredAt: number; source: 'photo' | 'manual' }>;
+
   // Actions
   buySeeds: (itemIdOrPlantDefId: string) => boolean;
   buyPlantule: (plantDefId: string) => boolean;
   buySeedVariety: (varietyId: string) => boolean;
+  openSeedPacket: (varietyId: string) => boolean;
   unlockSeedVariety: (varietyId: string) => boolean;
   addEcoPoints: (points: number) => void;
   addScore: (points: number) => void;
@@ -65,6 +72,10 @@ export const useShopStore = create<ShopState>()(
       seedCollection: { ...DEFAULT_SEEDS },
       plantuleCollection: {},
       seedVarieties: {},
+      // Auto-unlock all varieties marked as unlocked in catalog
+      unlockedVarieties: Object.fromEntries(
+        SEED_VARIETIES.filter(v => v.unlocked).map(v => [v.id, true])
+      ),
 
       coins: 200,
       ecoPoints: 0,
@@ -72,6 +83,8 @@ export const useShopStore = create<ShopState>()(
 
       score: 0,
       bestScore: 0,
+
+      discoveredPlants: [],
 
       // ── Shop Actions ──
 
@@ -110,28 +123,43 @@ export const useShopStore = create<ShopState>()(
         if (!variety) return false;
         if (state.coins < variety.price) return false;
 
-        // Unlock the variety card on first purchase
-        if (!variety.unlocked) {
-          variety.unlocked = true;
-        }
-
         const newVarieties = { ...state.seedVarieties };
         newVarieties[varietyId] = (newVarieties[varietyId] || 0) + 1;
         const newCoins = state.coins - variety.price;
 
-        // Also add to seedCollection so the seed is usable
+        // Track unlocked variety in store (no catalog mutation)
+        const newUnlocked = { ...state.unlockedVarieties, [varietyId]: true };
+
+        // Seeds stay in seedVarieties as "closed packet" — must be opened via openSeedPacket
+        set({ coins: newCoins, seedVarieties: newVarieties, unlockedVarieties: newUnlocked });
+        return true;
+      },
+
+      openSeedPacket: (varietyId: string) => {
+        const state = get();
+        const variety = SEED_VARIETIES.find((v) => v.id === varietyId);
+        if (!variety) return false;
+        if ((state.seedVarieties[varietyId] || 0) <= 0) return false;
+
+        // Remove one packet from seedVarieties
+        const newVarieties = { ...state.seedVarieties };
+        newVarieties[varietyId] = (newVarieties[varietyId] || 0) - 1;
+        if (newVarieties[varietyId] <= 0) delete newVarieties[varietyId];
+
+        // Add seeds to seedCollection so they're plantable
         const newCollection = { ...state.seedCollection };
         newCollection[variety.plantDefId] = (newCollection[variety.plantDefId] || 0) + (variety.seedCount || 1);
 
-        set({ coins: newCoins, seedVarieties: newVarieties, seedCollection: newCollection });
+        set({ seedVarieties: newVarieties, seedCollection: newCollection });
         return true;
       },
 
       unlockSeedVariety: (varietyId: string) => {
         const variety = SEED_VARIETIES.find((v) => v.id === varietyId);
         if (!variety) return false;
-        if (variety.unlocked) return true;
-        variety.unlocked = true;
+        const state = get();
+        if (state.unlockedVarieties[varietyId]) return true;
+        set({ unlockedVarieties: { ...state.unlockedVarieties, [varietyId]: true } });
         return true;
       },
 
@@ -214,6 +242,8 @@ export const useShopStore = create<ShopState>()(
         seedCollection: state.seedCollection,
         plantuleCollection: state.plantuleCollection,
         seedVarieties: state.seedVarieties,
+        unlockedVarieties: state.unlockedVarieties,
+        discoveredPlants: state.discoveredPlants,
         coins: state.coins,
         ecoPoints: state.ecoPoints,
         ecoLevel: state.ecoLevel,

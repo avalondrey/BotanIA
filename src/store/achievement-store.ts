@@ -8,6 +8,7 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
+  coinReward: number;
 }
 
 export const ACHIEVEMENTS_DEF: Record<string, Achievement> = {
@@ -16,18 +17,21 @@ export const ACHIEVEMENTS_DEF: Record<string, Achievement> = {
     title: 'Main Verte',
     description: 'Récolter 50 plantes',
     icon: '🌱',
+    coinReward: 30,
   },
   weather_master: {
     id: 'weather_master',
     title: 'Maître Météo',
     description: 'Jouer sous la pluie 5 fois',
     icon: '🌧️',
+    coinReward: 15,
   },
   night_owl: {
     id: 'night_owl',
     title: 'Hibou',
     description: 'Jouer après 22h',
     icon: '🦉',
+    coinReward: 15,
   },
 };
 
@@ -49,11 +53,19 @@ export const useAchievementStore = create<AchievementState>()(
 
         set({ unlocked: [...unlocked, id] });
 
+        // Award coin reward for achievement
+        if (achievement.coinReward > 0) {
+          try {
+            const { useShopStore } = require('@/store/shop-store');
+            useShopStore.getState().addCoins(achievement.coinReward);
+          } catch {}
+        }
+
         triggerVisualEffect("success-pop");
 
         toast({
           title: `Succès débloqué ! 🏆`,
-          description: `${achievement.icon} ${achievement.title} : ${achievement.description}`,
+          description: `${achievement.icon} ${achievement.title} : ${achievement.description}${achievement.coinReward > 0 ? ` (+${achievement.coinReward} 🪙)` : ''}`,
         });
       },
     }),

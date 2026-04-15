@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore, SEED_CATALOG, MINI_SERRE_WIDTH_CM, MINI_SERRE_DEPTH_CM } from "@/store/game-store";
-import { X, Coins, Gauge, Zap, Trash2, Shield, Plus, Copy, Wand2, Code, Image as ImageIcon } from "lucide-react";
+import { X, Coins, Gauge, Zap, Trash2, Shield, Plus, Copy, Wand2, Code, Image as ImageIcon, LayoutDashboard, RotateCcw } from "lucide-react";
 import { PLANTS, PLANT_SPACING } from "@/lib/ai-engine";
+import { useUISettingsStore, UI_PRESETS, UI_SLIDER_GROUPS, type UIPreset, type UIDimensions } from "@/store/ui-settings-store";
 
 // ── Admin button (rendered in place, in the header) ──
 
@@ -105,6 +106,7 @@ export function AdminPanel() {
   const [customSpeed, setCustomSpeed] = useState(speed);
   const [mounted, setMounted] = useState(false);
   const [showCardEngine, setShowCardEngine] = useState(false);
+  const [showInterface, setShowInterface] = useState(false);
 
   // Card Engine form state
   const [ceType, setCeType] = useState<"plant" | "chambre" | "mini-serre">("plant");
@@ -355,7 +357,8 @@ ${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.p
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border-[3px] border-black rounded-2xl shadow-[8px_8px_0_0_#000] w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            className="bg-white border-black rounded-2xl w-full overflow-y-auto"
+            style={{ borderWidth: 'var(--ui-border-width)', maxWidth: 'var(--ui-modal-width)', maxHeight: 'var(--ui-modal-max-height)', boxShadow: `var(--ui-modal-shadow-offset) var(--ui-modal-shadow-offset) 0 0 #000` }}
           >
             {/* Header */}
             <div className="sticky top-0 z-10 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-b-[3px] border-black flex items-center justify-between">
@@ -452,6 +455,62 @@ ${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.p
                     <li>🔧 Reset et debug <strong>complets</strong></li>
                   </ul>
                 </div>
+              </div>
+
+              {/* ═══ INTERFACE ═══ */}
+              <div>
+                <button
+                  onClick={() => setShowInterface(!showInterface)}
+                  className="w-full flex items-center justify-between mb-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4 text-indigo-600" />
+                    <h3 className="text-xs font-black uppercase text-indigo-800">Interface</h3>
+                    <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[8px] font-black rounded border border-indigo-300">
+                      {useUISettingsStore.getState().preset.toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-indigo-500">{showInterface ? "▼" : "▶"}</span>
+                </button>
+
+                <AnimatePresence>
+                  {showInterface && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden space-y-3"
+                    >
+                      {/* Preset buttons */}
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {(["compact", "normal", "grand", "ultra"] as UIPreset[]).map((p) => {
+                          const ui = useUISettingsStore.getState();
+                          const isActive = ui.preset === p;
+                          const icons: Record<UIPreset, string> = { compact: "📱", normal: "📐", grand: "🖥️", ultra: "🏯" };
+                          return (
+                            <motion.button
+                              key={p}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => useUISettingsStore.getState().setPreset(p)}
+                              className={`py-2 px-1 text-center rounded-xl border-2 transition-all ${
+                                isActive
+                                  ? "bg-indigo-500 text-white border-indigo-700 shadow-[2px_2px_0_0_#000]"
+                                  : "bg-white text-stone-600 border-stone-200 hover:border-indigo-300"
+                              }`}
+                            >
+                              <p className="text-[12px]">{icons[p]}</p>
+                              <p className="text-[8px] font-bold">{p.charAt(0).toUpperCase() + p.slice(1)}</p>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Advanced sliders */}
+                      <UIAdvancedSliders />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* ═══ VITESSE DE CULTURE ═══ */}
@@ -623,6 +682,28 @@ ${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.p
                     <p className="text-[7px] text-orange-500 font-bold">Reset graines + reload</p>
                   </motion.button>
                 </div>
+              </div>
+
+              {/* ═══ SCAN PLANTES ═══ */}
+              <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/agent/scan-plants', { method: 'POST' });
+                      const data = await res.json();
+                      if (data.success) {
+                        const r = data.data;
+                        alert(`Scan termine!\n\n✅ Complet: ${r.summary.complete}\n⚠️ Partiel: ${r.summary.partial}\n❌ Incomplet: ${r.summary.incomplete}\n\nPlantes scannees: ${r.scannedCount}`);
+                      }
+                    } catch (e) {
+                      alert('Erreur scan: ' + e);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded transition-colors"
+                >
+                  🔍 Scanner les Plantes (8 points)
+                </button>
+                <p className="text-[8px] text-green-600 mt-1 text-center">Detecte les PlantCards, sprites et entrees manquants</p>
               </div>
 
               {/* ═══ MOTEUR DE CARTES ═══ */}
@@ -964,4 +1045,60 @@ ${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.p
   // Render via portal to body — guaranteed highest z-index
   if (!mounted) return null;
   return createPortal(panel, document.body);
+}
+
+// ── UI Advanced Sliders Component ──
+
+function UISlider({ label, value, onChange, min, max, step = 1, unit = "px" }: {
+  label: string; value: number; onChange: (v: number) => void;
+  min: number; max: number; step?: number; unit?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <label className="text-[8px] font-bold text-stone-500 w-20 shrink-0">{label}</label>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="flex-1 h-1.5 accent-indigo-500 cursor-pointer"
+      />
+      <span className="text-[9px] font-black text-stone-700 w-14 text-right">{value}{unit === "px" ? "px" : unit === "vh" ? "vh" : unit}</span>
+    </div>
+  );
+}
+
+function UIAdvancedSliders() {
+  const settings = useUISettingsStore();
+
+  return (
+    <div className="space-y-2">
+      {UI_SLIDER_GROUPS.map((group) => (
+        <div key={group.label} className="bg-stone-50 rounded-xl p-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[9px] font-black text-stone-600">{group.icon} {group.label}</span>
+            <button
+              onClick={() => useUISettingsStore.getState().resetGroup(group.keys.map((k) => k.key))}
+              className="flex items-center gap-1 text-[7px] font-bold text-stone-400 hover:text-indigo-600 transition-colors"
+            >
+              <RotateCcw className="w-2.5 h-2.5" />
+              Réinitialiser
+            </button>
+          </div>
+          <div className="space-y-1">
+            {group.keys.map((k) => (
+              <UISlider
+                key={k.key}
+                label={k.label}
+                value={settings[k.key] as number}
+                onChange={(v) => useUISettingsStore.getState().setSetting(k.key, v)}
+                min={k.min}
+                max={k.max}
+                step={k.step}
+                unit={k.unit}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }

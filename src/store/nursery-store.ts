@@ -7,18 +7,27 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
   type PlantState,
+  type GrowthRoute,
   PLANTS,
   createInitialPlantState,
+  createPlantuleState,
+  createMiniserreRouteState,
   applyWatering,
   applyTreatment,
   applyFertilizer,
 } from '@/lib/ai-engine';
+import { getExpectedContainer, needsRepotting, ROUTE_CONTAINER_TRANSITIONS } from '@/lib/growth-routes';
 import {
   type MiniSerre,
+  type Etagere,
   createEmptyMiniSerre,
+  createEmptyEtagere,
   MINI_SERRE_ROWS,
   MINI_SERRE_COLS,
   MINI_SERRE_PRICE,
+  ETAGERE_PRICE,
+  ETAGERE_MAX_PLATEAUX,
+  PLATEAU_ADD_PRICE,
   CHAMBRE_CATALOG,
   SEED_VARIETIES,
 } from './catalog';
@@ -38,6 +47,9 @@ export interface NurseryState {
   // Mini Serres
   miniSerres: MiniSerre[];
 
+  // Étagères & Plateaux
+  etageres: Etagere[];
+
   // Chambre de Culture
   ownedChambres: Record<string, number>;
   activeChambreId: string | null;
@@ -53,7 +65,7 @@ export interface NurseryState {
   serreTiles: number;
 
   // Actions — Pépinière
-  placeSeedInPepiniere: (plantDefId: string) => boolean;
+  placeSeedInPepiniere: (plantDefId: string, growthRoute?: GrowthRoute) => boolean;
   placePlantuleInPepiniere: (plantDefId: string) => boolean;
   waterPlantPepiniere: (index: number) => void;
   treatPlantPepiniere: (index: number) => void;
@@ -61,8 +73,9 @@ export interface NurseryState {
   removePlantPepiniere: (index: number) => void;
 
   // Actions — Mini Serres
-  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => boolean;
+  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string, growthRoute?: GrowthRoute) => boolean;
   placePlantuleInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => boolean;
+  rempoterMiniSerre: (serreId: string, row: number, col: number) => boolean;
   waterMiniSerrePlant: (serreId: string, row: number, col: number) => void;
   treatMiniSerrePlant: (serreId: string, row: number, col: number) => void;
   fertilizeMiniSerrePlant: (serreId: string, row: number, col: number) => void;
@@ -78,6 +91,14 @@ export interface NurseryState {
   setActiveChambre: (modelId: string | null) => void;
   buySerreTile: () => boolean;
 
+  // Actions — Étagères & Plateaux
+  buyEtagere: () => boolean;
+  addPlateauToEtagere: (etagereId: string) => boolean;
+  removeEtagere: (etagereId: string) => void;
+  placePlantuleOnPlateau: (etagereId: string, plateauIdx: number, row: number, col: number, plantDefId: string) => boolean;
+  removeFromPlateau: (etagereId: string, plateauIdx: number, row: number, col: number) => void;
+  waterAllPlateau: (etagereId: string, plateauIdx: number) => void;
+
   // Actions — Selection & Settings
   setSelectedSlot: (serreId: string, slot: { row: number; col: number } | null) => void;
   updateHologramSettings: (settings: Partial<HologramSettings>) => void;
@@ -90,6 +111,7 @@ export const useNurseryStore = create<NurseryState>()(
     (set, get) => ({
       pepiniere: [],
       miniSerres: [],
+      etageres: [],
       ownedChambres: {},
       activeChambreId: null,
       selectedMiniSerreId: null,
@@ -104,7 +126,7 @@ export const useNurseryStore = create<NurseryState>()(
 
       // ── Pépinière Actions ──
 
-      placeSeedInPepiniere: (plantDefId: string) => {
+      placeSeedInPepiniere: (plantDefId: string, growthRoute?: GrowthRoute) => {
         const state = get();
         if (state.pepiniere.length >= MAX_PEPINIERE_SLOTS) return false;
 
@@ -118,7 +140,10 @@ export const useNurseryStore = create<NurseryState>()(
         if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
         useShopStore.setState({ seedCollection: newCollection });
 
-        const newPlant: PlantState = createInitialPlantState(plantDefId);
+        const route: GrowthRoute = growthRoute || 'jardin';
+        const newPlant: PlantState = route === 'miniserre'
+          ? createMiniserreRouteState(plantDefId)
+          : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
         const newPepiniere = [...state.pepiniere, newPlant];
 
         set({ pepiniere: newPepiniere });
@@ -138,13 +163,7 @@ export const useNurseryStore = create<NurseryState>()(
         if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
         useShopStore.setState({ plantuleCollection: newCollection });
 
-        const newPlant: PlantState = {
-          ...createInitialPlantState(plantDefId),
-          stage: 1,
-          growthProgress: 60,
-          daysSincePlanting: 20,
-          daysInCurrentStage: 10,
-        };
+        const newPlant: PlantState = createPlantuleState(plantDefId);
         const newPepiniere = [...state.pepiniere, newPlant];
 
         set({ pepiniere: newPepiniere });
@@ -190,7 +209,7 @@ export const useNurseryStore = create<NurseryState>()(
 
       // ── Mini Serre Actions ──
 
-      placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => {
+      placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string, growthRoute?: GrowthRoute) => {
         const state = get();
         const serreIdx = state.miniSerres.findIndex((s) => s.id === serreId);
         if (serreIdx < 0) return false;
@@ -201,7 +220,10 @@ export const useNurseryStore = create<NurseryState>()(
         const consumed = useShopStore.getState()._consumeSeed(plantDefId);
         if (!consumed) return false;
 
-        const newPlant: PlantState = createInitialPlantState(plantDefId);
+        const route: GrowthRoute = growthRoute || 'jardin';
+        const newPlant: PlantState = route === 'miniserre'
+          ? createMiniserreRouteState(plantDefId)
+          : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
         const newMiniSerres = state.miniSerres.map((s, i) => {
           if (i !== serreIdx) return s;
           const newSlots = s.slots.map((r) => r.map((c) => c));
@@ -229,13 +251,7 @@ export const useNurseryStore = create<NurseryState>()(
         if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
         useShopStore.setState({ plantuleCollection: newCollection });
 
-        const newPlant: PlantState = {
-          ...createInitialPlantState(plantDefId),
-          stage: 1,
-          growthProgress: 60,
-          daysSincePlanting: 20,
-          daysInCurrentStage: 10,
-        };
+        const newPlant: PlantState = createPlantuleState(plantDefId);
 
         const newMiniSerres = state.miniSerres.map((s, i) => {
           if (i !== serreIdx) return s;
@@ -315,6 +331,24 @@ export const useNurseryStore = create<NurseryState>()(
           });
           return { miniSerres: newMiniSerres };
         });
+      },
+
+      rempoterMiniSerre: (serreId: string, row: number, col: number) => {
+        set((s) => {
+          const newMiniSerres = s.miniSerres.map((serre) => {
+            if (serre.id !== serreId) return serre;
+            const plant = serre.slots[row]?.[col];
+            if (!plant) return serre;
+            if (!needsRepotting(plant)) return serre;
+
+            const expectedContainer = getExpectedContainer(plant);
+            const newSlots = serre.slots.map((r) => r.map((c) => c));
+            newSlots[row][col] = { ...plant, containerType: expectedContainer };
+            return { ...serre, slots: newSlots };
+          });
+          return { miniSerres: newMiniSerres };
+        });
+        return true;
       },
 
       removeMiniSerre: (serreId: string) => {
@@ -487,6 +521,117 @@ export const useNurseryStore = create<NurseryState>()(
         return true;
       },
 
+      // ── Étagères & Plateaux Actions ──
+
+      buyEtagere: () => {
+        const shop = useShopStore.getState();
+        if (shop.coins < ETAGERE_PRICE) return false;
+
+        const etagere = createEmptyEtagere();
+        useShopStore.setState({ coins: shop.coins - ETAGERE_PRICE });
+        set({ etageres: [...get().etageres, etagere] });
+        return true;
+      },
+
+      addPlateauToEtagere: (etagereId: string) => {
+        const state = get();
+        const etagere = state.etageres.find(e => e.id === etagereId);
+        if (!etagere || etagere.plateaux.length >= ETAGERE_MAX_PLATEAUX) return false;
+
+        const shop = useShopStore.getState();
+        if (shop.coins < PLATEAU_ADD_PRICE) return false;
+
+        const newPlateau = { id: Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4), slots: Array.from({ length: 5 }, () => Array.from({ length: 4 }, () => null)) };
+        useShopStore.setState({ coins: shop.coins - PLATEAU_ADD_PRICE });
+        set({
+          etageres: state.etageres.map(e =>
+            e.id === etagereId
+              ? { ...e, plateaux: [...e.plateaux, newPlateau] }
+              : e
+          ),
+        });
+        return true;
+      },
+
+      removeEtagere: (etagereId: string) => {
+        set({ etageres: get().etageres.filter(e => e.id !== etagereId) });
+      },
+
+      placePlantuleOnPlateau: (etagereId: string, plateauIdx: number, row: number, col: number, plantDefId: string) => {
+        const state = get();
+        const etagere = state.etageres.find(e => e.id === etagereId);
+        if (!etagere) return false;
+        if (plateauIdx < 0 || plateauIdx >= etagere.plateaux.length) return false;
+        const plateau = etagere.plateaux[plateauIdx];
+        if (row < 0 || row >= plateau.slots.length || col < 0 || col >= plateau.slots[0].length) return false;
+        if (plateau.slots[row][col] !== null) return false;
+
+        // Consume plantule from shop
+        const shop = useShopStore.getState();
+        const count = shop.plantuleCollection?.[plantDefId] || 0;
+        if (count <= 0) return false;
+
+        const newPlant = createPlantuleState(plantDefId);
+        const updatedPlateaux = etagere.plateaux.map((p, idx) => {
+          if (idx !== plateauIdx) return p;
+          const newSlots = p.slots.map(r => [...r]);
+          newSlots[row][col] = newPlant;
+          return { ...p, slots: newSlots };
+        });
+
+        // Decrement plantule
+        const newCollection = { ...shop.plantuleCollection };
+        newCollection[plantDefId] = count - 1;
+        if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
+        useShopStore.setState({ plantuleCollection: newCollection });
+
+        set({
+          etageres: state.etageres.map(e =>
+            e.id === etagereId ? { ...e, plateaux: updatedPlateaux } : e
+          ),
+        });
+        return true;
+      },
+
+      removeFromPlateau: (etagereId: string, plateauIdx: number, row: number, col: number) => {
+        const state = get();
+        const etagere = state.etageres.find(e => e.id === etagereId);
+        if (!etagere || plateauIdx >= etagere.plateaux.length) return;
+
+        const updatedPlateaux = etagere.plateaux.map((p, idx) => {
+          if (idx !== plateauIdx) return p;
+          const newSlots = p.slots.map(r => [...r]);
+          newSlots[row][col] = null;
+          return { ...p, slots: newSlots };
+        });
+
+        set({
+          etageres: state.etageres.map(e =>
+            e.id === etagereId ? { ...e, plateaux: updatedPlateaux } : e
+          ),
+        });
+      },
+
+      waterAllPlateau: (etagereId: string, plateauIdx: number) => {
+        const state = get();
+        const etagere = state.etageres.find(e => e.id === etagereId);
+        if (!etagere || plateauIdx >= etagere.plateaux.length) return;
+
+        const updatedPlateaux = etagere.plateaux.map((p, idx) => {
+          if (idx !== plateauIdx) return p;
+          const newSlots = p.slots.map(row =>
+            row.map(plant => plant ? applyWatering(plant) : null)
+          );
+          return { ...p, slots: newSlots };
+        });
+
+        set({
+          etageres: state.etageres.map(e =>
+            e.id === etagereId ? { ...e, plateaux: updatedPlateaux } : e
+          ),
+        });
+      },
+
       // ── Selection & Settings ──
 
       setSelectedSlot: (serreId: string, slot: { row: number; col: number } | null) => {
@@ -499,9 +644,44 @@ export const useNurseryStore = create<NurseryState>()(
     }),
     {
       name: 'botania-nursery',
+      version: 3,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          const state = persistedState as NurseryState;
+          // Migrate pepiniere plants
+          if (state.pepiniere) {
+            state.pepiniere = state.pepiniere.map((p: any) => ({
+              ...p,
+              growthRoute: p.growthRoute || 'jardin',
+              containerType: p.containerType || 'pepiniere-slot',
+            }));
+          }
+          // Migrate mini-serre plants
+          if (state.miniSerres) {
+            state.miniSerres = state.miniSerres.map((s: any) => ({
+              ...s,
+              slots: (s.slots || []).map((row: any[]) =>
+                row.map((plant: any) =>
+                  plant ? {
+                    ...plant,
+                    growthRoute: plant.growthRoute || 'jardin',
+                    containerType: plant.containerType || 'miniserre-slot',
+                  } : null
+                )
+              ),
+            }));
+          }
+        }
+        if (version < 3) {
+          const state = persistedState as NurseryState;
+          (state as any).etageres = (state as any).etageres || [];
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         pepiniere: state.pepiniere,
         miniSerres: state.miniSerres,
+        etageres: state.etageres,
         ownedChambres: state.ownedChambres,
         activeChambreId: state.activeChambreId,
         selectedMiniSerreId: state.selectedMiniSerreId,

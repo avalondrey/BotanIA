@@ -107,33 +107,34 @@ export async function simpleChat(
     console.warn('[Ollama] indisponible, fallback Groq:', ollamaErr);
   }
 
-  // ── Fallback Groq (cloud) ──
-  const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
-  if (groqKey) {
-    try {
-      const sysContent = contextPrompt
-        ? `${systemPrompt}\n\n=== CONTEXTE ===\n${contextPrompt}\n=== FIN ===`
-        : systemPrompt;
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: options.numPredict ?? 600,
-          temperature: options.temperature ?? 0.35,
-          messages: [
-            { role: 'system', content: sysContent },
-            { role: 'user', content: userMessage },
-          ],
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content?.trim() || '';
-      }
-    } catch (groqErr) {
-      console.warn('[Groq] fallback échoué:', groqErr);
+  // ── Fallback Groq (cloud) via proxy server-side ──
+  try {
+    const sysContent = contextPrompt
+      ? `${systemPrompt}\n\n=== CONTEXTE ===\n${contextPrompt}\n=== FIN ===`
+      : systemPrompt;
+
+    const res = await fetch('/api/agent/groq-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: sysContent },
+          { role: 'user', content: userMessage },
+        ],
+        max_tokens: options.numPredict ?? 600,
+        temperature: options.temperature ?? 0.35,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.content || '';
+    } else {
+      console.warn('[Groq proxy] échoué:', res.status);
     }
+  } catch (groqErr) {
+    console.warn('[Groq] fallback échoué:', groqErr);
   }
 
   throw new Error('Ollama et Groq indisponibles');

@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameStore, getPepiniereStage, PEPINIERE_STAGE_NAMES, getStageImage, type MiniSerre } from "@/store/game-store";
+import { useGameStore, getVisualStage, canTransplantToGarden, getStageImage, ROUTE_STAGE_LABELS, type MiniSerre, type Etagere } from "@/store/game-store";
+import type { GrowthRoute } from "@/lib/ai-engine";
 import { PLANTS } from "@/lib/ai-engine";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,7 +12,7 @@ import {
 import {
   Thermometer, Sun, Droplets, Snowflake, Flower2, Leaf, Shrub,
   Plus, Trash2, X, ArrowRight, Home, ChevronDown, ChevronRight,
-  Move, GripVertical, Eye, AlertTriangle, CloudSun,
+  Move, GripVertical, Eye, AlertTriangle, CloudSun, Grid3X3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,7 +20,7 @@ import {
 // Types
 // ═══════════════════════════════════════════════════════════════
 
-type ZoneId = "hiver" | "arbustes" | "fragiles" | "mini-serres";
+type ZoneId = "hiver" | "arbustes" | "fragiles" | "mini-serres" | "etageres";
 
 interface SerrePlant {
   id: string;
@@ -124,6 +125,17 @@ const ZONES: ZoneDef[] = [
     icon: Home,
     slotCount: 0,
   },
+  {
+    id: "etageres",
+    name: "Étagères",
+    description: "Plateaux de 20 plantules en pots sur étagères métalliques",
+    color: "text-emerald-700",
+    borderColor: "border-emerald-400",
+    bgColor: "bg-emerald-50/40",
+    headerGradient: "from-emerald-50 to-green-50",
+    icon: Grid3X3,
+    slotCount: 0,
+  },
 ];
 
 const SHELF_LABELS = [
@@ -168,7 +180,7 @@ export function SerreJardinView() {
   const [activeZone, setActiveZone] = useState<ZoneId | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ zone: ZoneId; shelfIdx: number; slotIdx: number } | null>(null);
   const [selectedMiniSerreSlot, setSelectedMiniSerreSlot] = useState<{ serreId: string; row: number; col: number } | null>(null);
-  const [detailPlant, setDetailPlant] = useState<{ name: string; plantDefId: string; days: number; stage: number; serreId?: string; row?: number; col?: number } | null>(null);
+  const [detailPlant, setDetailPlant] = useState<{ name: string; plantDefId: string; days: number; stage: number; growthRoute?: GrowthRoute; serreId?: string; row?: number; col?: number } | null>(null);
 
   // Derived state
   const outsideTemp = realWeather?.current?.temperature ?? 12;
@@ -187,13 +199,35 @@ export function SerreJardinView() {
         row.forEach((plant) => {
           if (plant) {
             total++;
-            if (getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5) ready++;
+            if (canTransplantToGarden(plant)) ready++;
           }
         });
       });
     });
     return { total, ready, count: miniSerres.length };
   }, [miniSerres]);
+
+  // Etagere stats
+  const etageres = useGameStore((s) => s.etageres);
+  const etagereStats = useMemo(() => {
+    let total = 0;
+    let ready = 0;
+    let totalSlots = 0;
+    etageres.forEach((etagere) => {
+      etagere.plateaux.forEach((plateau) => {
+        plateau.slots.forEach((row) => {
+          row.forEach((plant) => {
+            totalSlots++;
+            if (plant) {
+              total++;
+              if (canTransplantToGarden(plant)) ready++;
+            }
+          });
+        });
+      });
+    });
+    return { total, ready, totalSlots, count: etageres.length };
+  }, [etageres]);
 
   // Build shelf data for a zone
   const buildShelves = useCallback((zoneId: "hiver" | "arbustes" | "fragiles"): ShelfLevel[] => {
@@ -432,6 +466,7 @@ export function SerreJardinView() {
               zone.id === "hiver" ? DEFAULT_HIVER_PLANTS.length :
               zone.id === "arbustes" ? DEFAULT_ARBUSTES_PLANTS.length :
               zone.id === "fragiles" ? DEFAULT_FRAGILES_PLANTS.length :
+              zone.id === "etageres" ? etagereStats.total :
               miniSerreStats.total;
 
             return (
@@ -458,11 +493,16 @@ export function SerreJardinView() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Badge variant="outline" className="text-[8px] font-bold border-black/10">
-                        {zone.id === "mini-serres" ? `${miniSerreStats.count} serre(s)` : `${plantCount} plantes`}
+                        {zone.id === "mini-serres" ? `${miniSerreStats.count} serre(s)` : zone.id === "etageres" ? `${etagereStats.count} étagère(s)` : `${plantCount} plantes`}
                       </Badge>
                       {zone.id === "mini-serres" && miniSerreStats.ready > 0 && (
                         <Badge className="text-[8px] font-bold bg-green-100 text-green-700 border-green-300">
                           {miniSerreStats.ready} pret(s)
+                        </Badge>
+                      )}
+                      {zone.id === "etageres" && etagereStats.ready > 0 && (
+                        <Badge className="text-[8px] font-bold bg-green-100 text-green-700 border-green-300">
+                          {etagereStats.ready} pret(s)
                         </Badge>
                       )}
                     </div>
@@ -483,7 +523,7 @@ export function SerreJardinView() {
                                   key={i}
                                   className={`aspect-square rounded-[2px] ${
                                     plant
-                                      ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5
+                                      ? canTransplantToGarden(plant)
                                         ? "bg-green-200"
                                         : "bg-green-100"
                                       : "bg-stone-100"
@@ -498,8 +538,34 @@ export function SerreJardinView() {
                     </div>
                   )}
 
+                  {/* Mini preview for etageres */}
+                  {zone.id === "etageres" && etageres.length > 0 && (
+                    <div className="mt-3 flex gap-1.5">
+                      {etageres.slice(0, 4).map((etagere) => {
+                        const filled = etagere.plateaux.flatMap(p => p.slots.flat()).filter(p => p).length;
+                        const totalSlots = etagere.plateaux.reduce((sum, p) => sum + p.slots.flat().length, 0);
+                        return (
+                          <div key={etagere.id} className="flex-1 p-1.5 border border-emerald-200 rounded-lg bg-emerald-50">
+                            <div className="text-[8px] text-center mb-1">🪴</div>
+                            <div className="grid grid-cols-4 gap-[1px]">
+                              {etagere.plateaux[0].slots.flat().slice(0, 8).map((plant, i) => (
+                                <div
+                                  key={i}
+                                  className={`aspect-square rounded-[2px] ${
+                                    plant ? "bg-emerald-200" : "bg-emerald-100"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-[7px] text-stone-400 mt-1 text-center font-bold">{filled}/{totalSlots}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   {/* Mini preview for plant zones */}
-                  {zone.id !== "mini-serres" && (
+                  {zone.id !== "mini-serres" && zone.id !== "etageres" && (
                     <div className="mt-3 flex gap-1">
                       {Array.from({ length: Math.min(plantCount, 6) }).map((_, i) => {
                         const PIcon = zone.id === "arbustes" ? Shrub : zone.id === "fragiles" ? Flower2 : Leaf;
@@ -600,6 +666,10 @@ export function SerreJardinView() {
               onSlotClick={handleMiniSerreSlotClick}
               onViewDetail={setDetailPlant}
             />
+          ) : activeZone === "etageres" ? (
+            <EtagereDetail
+              onViewDetail={setDetailPlant}
+            />
           ) : (
             <PlantZoneShelves
               zoneId={activeZone as "hiver" | "arbustes" | "fragiles"}
@@ -627,7 +697,7 @@ export function SerreJardinView() {
                           return (
                             <img
                               src={getStageImage(detailPlant.plantDefId, stageIdx)}
-                              alt={PEPINIERE_STAGE_NAMES[stageIdx]}
+                              alt={ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'][stageIdx]}
                               className="w-6 h-6 object-contain"
                             />
                           );
@@ -653,11 +723,11 @@ export function SerreJardinView() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[9px] font-bold text-stone-500 uppercase">Stade de croissance</span>
                     <span className="text-[9px] font-black text-green-700">
-                      {PEPINIERE_STAGE_NAMES[detailPlant.stage] || "Inconnu"}
+                      {ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'][detailPlant.stage] || "Inconnu"}
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    {PEPINIERE_STAGE_NAMES.map((name, idx) => (
+                    {ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'].map((name, idx) => (
                       <div
                         key={idx}
                         className={`flex-1 h-2 rounded-full transition-all ${
@@ -676,10 +746,10 @@ export function SerreJardinView() {
                   <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-center">
                     <img
                       src={getStageImage(detailPlant.plantDefId, detailPlant.stage)}
-                      alt={PEPINIERE_STAGE_NAMES[detailPlant.stage]}
+                      alt={ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'][detailPlant.stage]}
                       className="w-20 h-20 object-contain mx-auto"
                     />
-                    <p className="text-[9px] font-bold text-stone-500 mt-2">{PEPINIERE_STAGE_NAMES[detailPlant.stage]}</p>
+                    <p className="text-[9px] font-bold text-stone-500 mt-2">{ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'][detailPlant.stage]}</p>
                   </div>
                 )}
 
@@ -886,7 +956,7 @@ function MiniSerresDetail({
   selectedSlot: { serreId: string; row: number; col: number } | null;
   onSelectSlot: (slot: { serreId: string; row: number; col: number } | null) => void;
   onSlotClick: (serreId: string, row: number, col: number, plant: import("@/lib/ai-engine").PlantState | null) => void;
-  onViewDetail: (plant: { name: string; plantDefId: string; days: number; stage: number; serreId?: string; row?: number; col?: number } | null) => void;
+  onViewDetail: (plant: { name: string; plantDefId: string; days: number; stage: number; growthRoute?: GrowthRoute; serreId?: string; row?: number; col?: number } | null) => void;
 }) {
   const miniSerres = useGameStore((s) => s.miniSerres);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
@@ -922,7 +992,7 @@ function MiniSerresDetail({
       {miniSerres.map((serre, serreIdx) => {
         const allPlants = serre.slots.flat().filter((p) => p !== null);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const readyPlants = (allPlants as any[]).filter((p: any) => getPepiniereStage(p.daysSincePlanting, p.plantDefId) >= 5);
+        const readyPlants = (allPlants as any[]).filter((p: any) => canTransplantToGarden(p));
 
         return (
           <div
@@ -987,8 +1057,8 @@ function MiniSerresDetail({
                         row.map((plant, col) => {
                           const rowIdx = startRow + rowRelIdx;
                           const isSelected = selectedSlot?.serreId === serre.id && selectedSlot?.row === rowIdx && selectedSlot?.col === col;
-                          const isReady = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5 : false;
-                          const stage = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) : -1;
+                          const isReady = plant ? canTransplantToGarden(plant) : false;
+                          const stage = plant ? getVisualStage(plant) : -1;
 
                           if (!plant) {
                             return (
@@ -1098,7 +1168,7 @@ function MiniSerresDetail({
                   const readySlots: { row: number; col: number; plant: NonNullable<typeof readyPlants[0]> }[] = [];
                   serre.slots.forEach((row, ri) => {
                     row.forEach((plant, ci) => {
-                      if (plant && getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 5) {
+                      if (plant && canTransplantToGarden(plant)) {
                         readySlots.push({ row: ri, col: ci, plant });
                       }
                     });
@@ -1112,7 +1182,8 @@ function MiniSerresDetail({
                         name: getPlantName(plant.plantDefId),
                         plantDefId: plant.plantDefId,
                         days: plant.daysSincePlanting,
-                        stage: getPepiniereStage(plant.daysSincePlanting, plant.plantDefId),
+                        stage: getVisualStage(plant),
+                        growthRoute: plant.growthRoute,
                         serreId: serre.id,
                         row,
                         col,
@@ -1144,6 +1215,343 @@ function MiniSerresDetail({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Étagères & Plateaux Detail Component
+// ═══════════════════════════════════════════════════════════════
+
+function EtagereDetail({
+  onViewDetail,
+}: {
+  onViewDetail: (plant: { name: string; plantDefId: string; days: number; stage: number; growthRoute?: GrowthRoute; serreId?: string; row?: number; col?: number } | null) => void;
+}) {
+  const etageres = useGameStore((s) => s.etageres);
+  const coins = useGameStore((s) => s.coins);
+  const plantuleCollection = useGameStore((s) => s.plantuleCollection);
+  const buyEtagere = useGameStore((s) => s.buyEtagere);
+  const addPlateauToEtagere = useGameStore((s) => s.addPlateauToEtagere);
+  const removeEtagere = useGameStore((s) => s.removeEtagere);
+  const placePlantuleOnPlateau = useGameStore((s) => s.placePlantuleOnPlateau);
+  const removeFromPlateau = useGameStore((s) => s.removeFromPlateau);
+  const waterAllPlateau = useGameStore((s) => s.waterAllPlateau);
+
+  // Plantule placement state
+  const [pendingSlot, setPendingSlot] = useState<{ etagereId: string; plateauIdx: number; row: number; col: number } | null>(null);
+
+  // Available plantules from inventory
+  const availablePlantules = useMemo(() => {
+    return Object.entries(plantuleCollection || {})
+      .filter(([_, count]) => count > 0)
+      .map(([plantDefId, count]) => ({
+        plantDefId,
+        name: getPlantName(plantDefId),
+        emoji: '🪴',
+        count,
+      }));
+  }, [plantuleCollection]);
+
+  if (etageres.length === 0) {
+    return (
+      <div className="p-8 border-[3px] border-dashed border-emerald-300 rounded-2xl text-center bg-white">
+        <div className="w-14 h-14 mx-auto mb-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 flex items-center justify-center">
+          <Grid3X3 className="w-7 h-7 text-emerald-300" />
+        </div>
+        <p className="text-sm font-black text-stone-400 uppercase">Aucune étagère</p>
+        <p className="text-[9px] text-stone-300 mt-1 mb-4">
+          Achetez une étagère pour ranger vos plantules en pots sur des plateaux de 20.
+        </p>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => buyEtagere()}
+          disabled={coins < 150}
+          className={`px-4 py-2 text-[10px] font-black uppercase rounded-xl border-2 shadow-[2px_2px_0_0_#000] flex items-center gap-1.5 mx-auto ${
+            coins >= 150
+              ? "bg-gradient-to-b from-emerald-500 to-green-600 text-white border-emerald-700 hover:from-emerald-400 hover:to-green-500"
+              : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+          }`}
+        >
+          Acheter une étagère — 150 🪙
+        </motion.button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {etageres.map((etagere, etagereIdx) => {
+        const allPlants = etagere.plateaux.flatMap(p => p.slots.flat().filter(p => p !== null));
+        const readyPlants = allPlants.filter(p => canTransplantToGarden(p as any));
+        const totalSlots = etagere.plateaux.reduce((sum, p) => sum + p.slots.flat().length, 0);
+
+        return (
+          <div
+            key={etagere.id}
+            className="border-[3px] border-black rounded-2xl shadow-[4px_4px_0_0_#000] overflow-hidden"
+          >
+            {/* Etagere header */}
+            <div className="px-4 py-2.5 bg-gradient-to-r from-emerald-50 to-green-50 border-b-2 border-black/10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl border-2 border-emerald-300 bg-white flex items-center justify-center shadow-sm">
+                  <Grid3X3 className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-black uppercase">Étagère #{etagereIdx + 1}</p>
+                  <p className="text-[8px] text-stone-400">
+                    {allPlants.length}/{totalSlots} plantes · {etagere.plateaux.length} plateau(x) · {readyPlants.length} prete(s)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {etagere.plateaux.length < 3 && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => addPlateauToEtagere(etagere.id)}
+                    disabled={coins < 50}
+                    className="px-2 py-1 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors text-[8px] font-bold text-emerald-700 disabled:opacity-50"
+                    title="Ajouter un plateau (50 🪙)"
+                  >
+                    + Plateau
+                  </motion.button>
+                )}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (confirm("Supprimer cette étagère et toutes ses plantes ?")) {
+                      removeEtagere(etagere.id);
+                    }
+                  }}
+                  className="p-1.5 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                  title="Supprimer"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Plateaux */}
+            <div className="bg-gradient-to-b from-white to-stone-50/50 space-y-0">
+              {etagere.plateaux.map((plateau, plateauIdx) => {
+                const plateauPlants = plateau.slots.flat().filter(p => p !== null);
+                const plateauReady = plateauPlants.filter(p => canTransplantToGarden(p as any)).length;
+
+                return (
+                  <div key={plateau.id} className="relative">
+                    {/* Shelf separator (metallic bar) */}
+                    {plateauIdx > 0 && (
+                      <div className="h-1.5 bg-gradient-to-r from-stone-200 via-stone-400 to-stone-200 border-y border-stone-500/30" />
+                    )}
+
+                    {/* Plateau label */}
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50/50">
+                      <div className="w-1.5 h-4 rounded-full bg-emerald-300 border border-emerald-400" />
+                      <span className="text-[8px] font-bold text-stone-400 uppercase">
+                        Plateau {plateauIdx + 1}
+                      </span>
+                      <span className="text-[7px] text-stone-300">
+                        ({plateauPlants.length}/20 🪴{plateauReady > 0 ? ` · ${plateauReady} prete(s)` : ""})
+                      </span>
+                      <div className="flex-1" />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => waterAllPlateau(etagere.id, plateauIdx)}
+                        className="p-1 bg-sky-50 border border-sky-200 rounded hover:bg-sky-100 transition-colors"
+                        title="Arroser tout le plateau"
+                      >
+                        <Droplets className="w-3 h-3 text-sky-500" />
+                      </motion.button>
+                    </div>
+
+                    {/* 5×4 grid */}
+                    <div className="p-3 pt-1.5">
+                      <div className="border-2 border-stone-200 rounded-xl p-2 bg-gradient-to-br from-amber-50/50 to-stone-50">
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {plateau.slots.map((row, rowIdx) =>
+                            row.map((plant, colIdx) => {
+                              if (!plant) {
+                                return (
+                                  <motion.div
+                                    key={`${rowIdx}-${colIdx}`}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setPendingSlot({ etagereId: etagere.id, plateauIdx, row: rowIdx, col: colIdx })}
+                                    className={`aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
+                                      pendingSlot
+                                        ? "border-green-400 bg-green-50 hover:bg-green-100"
+                                        : "border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/30"
+                                    }`}
+                                  >
+                                    {pendingSlot ? (
+                                      <Move className="w-3 h-3 text-green-400" />
+                                    ) : (
+                                      <Plus className="w-3 h-3 text-stone-200" />
+                                    )}
+                                  </motion.div>
+                                );
+                              }
+
+                              const PlantIcon = getPlantIcon(plant.plantDefId);
+                              const plantName = getPlantName(plant.plantDefId);
+                              const isReady = canTransplantToGarden(plant);
+                              const stage = getVisualStage(plant);
+
+                              return (
+                                <motion.div
+                                  key={`${rowIdx}-${colIdx}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => onViewDetail({
+                                    name: getPlantName(plant.plantDefId),
+                                    plantDefId: plant.plantDefId,
+                                    days: plant.daysSincePlanting,
+                                    stage: getVisualStage(plant),
+                                    growthRoute: plant.growthRoute,
+                                  })}
+                                  className={`relative aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all border-2 ${
+                                    isReady
+                                      ? "border-green-300 bg-green-50 hover:border-green-400"
+                                      : "border-emerald-200 bg-white hover:border-emerald-300"
+                                  }`}
+                                >
+                                  {/* Stage indicator */}
+                                  <div className={`absolute top-0.5 right-0.5 w-2 h-2 rounded-full ${
+                                    stage >= 4 ? "bg-green-400" : stage >= 2 ? "bg-amber-300" : "bg-yellow-300"
+                                  }`} />
+
+                                  {/* Mini pot badge */}
+                                  <div className="absolute bottom-0.5 left-0.5 text-[8px]">🪴</div>
+
+                                  <PlantIcon className={`w-4 h-4 ${isReady ? "text-green-600" : "text-stone-500"}`} />
+                                  <span className="text-[6px] font-bold text-stone-500 mt-0.5 leading-none truncate max-w-full px-0.5">
+                                    {plantName}
+                                  </span>
+
+                                  {/* Ready indicator */}
+                                  {isReady && (
+                                    <div className="absolute top-0.5 left-0.5">
+                                      <Flower2 className="w-2.5 h-2.5 text-green-500" />
+                                    </div>
+                                  )}
+                                </motion.div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer: ready plants */}
+            {readyPlants.length > 0 && (
+              <div className="px-4 py-2.5 bg-green-50 border-t-2 border-green-200">
+                <div className="flex items-center gap-1.5">
+                  <Flower2 className="w-3.5 h-3.5 text-green-600" />
+                  <span className="text-[9px] font-black text-green-700">
+                    {readyPlants.length} plante(s) prete(s) a transplanter
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Buy another etagere */}
+      <div className="text-center">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => buyEtagere()}
+          disabled={coins < 150}
+          className={`px-4 py-2 text-[10px] font-black uppercase rounded-xl border-2 shadow-[2px_2px_0_0_#000] inline-flex items-center gap-1.5 ${
+            coins >= 150
+              ? "bg-gradient-to-b from-emerald-500 to-green-600 text-white border-emerald-700 hover:from-emerald-400 hover:to-green-500"
+              : "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+          }`}
+        >
+          <Grid3X3 className="w-3.5 h-3.5" />
+          Acheter une étagère — 150 🪙
+        </motion.button>
+      </div>
+
+      {/* Plantule placement panel */}
+      <AnimatePresence>
+        {pendingSlot && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="p-4 border-[3px] border-emerald-300 rounded-2xl bg-white shadow-[4px_4px_0_0_#000] space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="text-lg">🪴</div>
+                <div>
+                  <p className="text-[11px] font-black uppercase">Placer une plantule</p>
+                  <p className="text-[8px] text-stone-400">
+                    Plateau {pendingSlot.plateauIdx + 1}, ligne {pendingSlot.row + 1}, col {pendingSlot.col + 1}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPendingSlot(null)}
+                className="p-1 hover:bg-stone-100 rounded"
+              >
+                <X className="w-4 h-4 text-stone-400" />
+              </button>
+            </div>
+
+            {availablePlantules.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {availablePlantules.map((item) => {
+                  const PlantIcon = getPlantIcon(item.plantDefId);
+                  return (
+                    <motion.button
+                      key={item.plantDefId}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        const success = placePlantuleOnPlateau(
+                          pendingSlot.etagereId,
+                          pendingSlot.plateauIdx,
+                          pendingSlot.row,
+                          pendingSlot.col,
+                          item.plantDefId
+                        );
+                        if (success) setPendingSlot(null);
+                      }}
+                      className="p-2.5 bg-emerald-50 border-2 border-emerald-200 rounded-xl hover:border-emerald-400 transition-all text-left"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <PlantIcon className="w-4 h-4 text-emerald-600" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[9px] font-black truncate">{item.name}</p>
+                          <p className="text-[7px] text-stone-400">x{item.count} dispo</p>
+                        </div>
+                        <span className="text-sm">🪴</span>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 text-center border-2 border-dashed border-stone-200 rounded-xl">
+                <p className="text-[9px] text-stone-400">Aucune plantule disponible</p>
+                <p className="text-[7px] text-stone-300 mt-1">Achetez des plantules dans la Boutique</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1305,108 +1305,6 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-};
-
-  // ─── COURGE BUTTERNUT COCO ───
-  squash: {
-    id: 'squash',
-    plantCategory: 'vegetable',
-    tBase: 12,
-    tCap: 35,
-    stageGDD: [40, 125, 150, 335],
-    kc: 1.00,
-    waterNeedMmPerDay: 4,
-    minSoilTempForSowing: 15,
-    optimalSoilTemp: 15,
-    lightNeedHours: 7,
-    stageDurations: [8, 25, 30, 67],
-    companions: [
-      { plantId: 'mais', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'haricot', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'capucine', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'pomme-de-terre', type: 'harmful', reason: 'Incompatible',
-      { plantId: 'autres-courges', type: 'harmful', reason: 'Incompatible'
-    ],
-    diseaseRisks: [
-      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
-      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
-      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
-    ],
-    optimalPlantMonths: [1, 2, 3],
-    harvestSeason: ['autumn'],
-    totalDaysToHarvest: 130,
-    plantFamily: 'Cucurbitaceae',
-    droughtResistance: 0.63,
-    diseaseResistance: 0.50,
-    pestResistance: 0.50,
-  },
-
-  // ─── PHOTINIA PANACHÉ  ───
-  photinia: {
-    id: 'photinia',
-    plantCategory: 'vegetable',
-    tBase: 10,
-    tCap: 32,
-    stageGDD: [85, 85, 85, 95],
-    kc: 0.88,
-    waterNeedMmPerDay: 3.5,
-    minSoilTempForSowing: 13,
-    optimalSoilTemp: 13,
-    lightNeedHours: 7,
-    stageDurations: [17, 17, 17, 19],
-    companions: [
-      { plantId: 'persil', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'fenouil', type: 'harmful', reason: 'Incompatible',
-      { plantId: 'ail', type: 'harmful', reason: 'Incompatible'
-    ],
-    diseaseRisks: [
-      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
-      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
-      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
-    ],
-    optimalPlantMonths: [3, 4, 5],
-    harvestSeason: ['spring', 'autumn'],
-    totalDaysToHarvest: 70,
-    plantFamily: 'Unknown',
-    droughtResistance: 0.63,
-    diseaseResistance: 0.50,
-    pestResistance: 0.50,
-  },
-
-  // ─── GOURGE STRIPED CUSHAW ───
-  squash: {
-    id: 'squash',
-    plantCategory: 'vegetable',
-    tBase: 15,
-    tCap: 35,
-    stageGDD: [40, 110, 150, 325],
-    kc: 1.20,
-    waterNeedMmPerDay: 5.5,
-    minSoilTempForSowing: 18,
-    optimalSoilTemp: 18,
-    lightNeedHours: 8,
-    stageDurations: [8, 22, 30, 65],
-    companions: [
-      { plantId: 'mais', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'haricot', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'capucine', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'pomme-de-terre', type: 'harmful', reason: 'Incompatible'
-    ],
-    diseaseRisks: [
-      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
-      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
-      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
-    ],
-    optimalPlantMonths: [1, 2, 3],
-    harvestSeason: ['autumn'],
-    totalDaysToHarvest: 125,
-    plantFamily: 'Cucurbitaceae',
-    droughtResistance: 0.63,
-    diseaseResistance: 0.50,
-    pestResistance: 0.50,
-  },
 
   // ─── PERSIL LION ───
   parsley: {
@@ -1420,28 +1318,26 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     minSoilTempForSowing: 13,
     optimalSoilTemp: 13,
     lightNeedHours: 7,
-    stageDurations: [17, 17, 17, 19],
+    stageDurations: [14, 28, 30, 40],
     companions: [
-      { plantId: 'persil', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
-      { plantId: 'fenouil', type: 'harmful', reason: 'Incompatible',
-      { plantId: 'ail', type: 'harmful', reason: 'Incompatible'
+      { plantId: 'tomato', type: 'beneficial', reason: 'Améliore la saveur' },
+      { plantId: 'carrot', type: 'beneficial', reason: 'Compagne naturelle' },
+      { plantId: 'basil', type: 'beneficial', reason: 'Repousse les ravageurs' },
+      { plantId: 'mint', type: 'harmful', reason: 'Compétition agressive' },
     ],
     diseaseRisks: [
-      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
-      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
-      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidité', prevention: 'Aérer, éviter irrigation foliaire' },
+      { name: 'Oïdium', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aération, éviter excès azote' },
     ],
-    optimalPlantMonths: [3, 4, 5],
-    harvestSeason: ['spring', 'autumn'],
-    totalDaysToHarvest: 70,
-    plantFamily: 'Unknown',
-    droughtResistance: 0.63,
-    diseaseResistance: 0.50,
-    pestResistance: 0.50,
+    optimalPlantMonths: [2, 3, 4, 5],
+    harvestSeason: ['spring', 'summer', 'autumn'],
+    totalDaysToHarvest: 112,
+    plantFamily: 'Apiaceae',
+    droughtResistance: 0.40,
+    diseaseResistance: 0.55,
+    pestResistance: 0.60,
   },
-
+};
 // ═══ FIN PLANT_CARDS ═══
 
 // ═══════════════════════════════════════════════════════════════

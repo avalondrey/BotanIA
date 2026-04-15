@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameStore, SEED_CATALOG, SEED_VARIETIES, PLANTULE_CATALOG, PEPINIERE_STAGES, PEPINIERE_STAGE_NAMES, getStageImage, getPepiniereStage, getPepiniereTransplantDay, MINI_SERRE_ROWS, MINI_SERRE_COLS, type MiniSerre, MINI_SERRE_PRICE } from "@/store/game-store";
-import { PLANTS } from "@/lib/ai-engine";
+import { useGameStore, SEED_CATALOG, SEED_VARIETIES, PLANTULE_CATALOG, PEPINIERE_STAGES, PEPINIERE_STAGE_NAMES, getStageImage, getPepiniereStage, getPepiniereTransplantDay, MINI_SERRE_ROWS, MINI_SERRE_COLS, type MiniSerre, MINI_SERRE_PRICE, getVisualStage, getRouteStageName, getRouteStageEmoji, needsRepotting, canTransplantToGarden, ROUTE_STAGE_LABELS } from "@/store/game-store";
+import { PLANTS, type GrowthRoute } from "@/lib/ai-engine";
 import {
   Droplets, Heart, Sprout, Pill, Plus,
   Thermometer, Sun, X,
@@ -31,32 +31,53 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerPlantDefId, setDatePickerPlantDefId] = useState<string | null>(null);
   const [daysAgoInput, setDaysAgoInput] = useState(10);
+  const [selectedRoute, setSelectedRoute] = useState<GrowthRoute>('jardin');
 
   let plantCount = 0;
   let readyCount = 0;
   serre.slots.forEach((row) => row.forEach((plant) => {
     if (plant) {
       plantCount++;
-      if (getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 4) readyCount++;
+      if (canTransplantToGarden(plant)) readyCount++;
     }
   }));
 
   // Build unified seed list from BOTH inventories
-  // Classic seeds (from SEED_CATALOG + seedCollection) + Shop varieties (from SEED_VARIETIES + seedVarieties)
+  // Classic seeds (from SEED_CATALOG + seedCollection) + Shop varieties (from SEED_VARIETIES + seedVarieties) + Plantules
   const availableSeeds = (() => {
-    const seeds: Array<{ id: string; plantDefId: string; name: string; emoji: string; count: number; source: 'classic' | 'variety' }> = [];
-    // Add classic seeds
+    const seeds: Array<{ id: string; plantDefId: string; name: string; emoji: string; count: number; source: 'classic' | 'variety' | 'plantule' }> = [];
+    // Add all plantable seeds from seedCollection (classic + opened variety packets)
+    const seen = new Set<string>();
     for (const item of SEED_CATALOG) {
       const count = seedCollection[item.plantDefId] || 0;
-      if (count > 0) {
+      if (count > 0 && !seen.has(item.plantDefId)) {
         seeds.push({ id: `classic-${item.plantDefId}`, plantDefId: item.plantDefId, name: item.name, emoji: item.emoji, count, source: 'classic' });
+        seen.add(item.plantDefId);
       }
     }
-    // Add variety seeds (from shops like Vilmorin/Clause)
+    // Add opened variety seeds that may have plantDefIds not in SEED_CATALOG
     for (const v of SEED_VARIETIES) {
-      const count = seedVarieties[v.id] || 0;
-      if (count > 0) {
-        seeds.push({ id: `variety-${v.id}`, plantDefId: v.plantDefId, name: v.name, emoji: v.emoji, count, source: 'variety' });
+      const count = seedCollection[v.plantDefId] || 0;
+      if (count > 0 && !seen.has(v.plantDefId)) {
+        const plantDef = PLANTS[v.plantDefId];
+        seeds.push({ id: `variety-${v.plantDefId}`, plantDefId: v.plantDefId, name: plantDef?.name || v.plantDefId, emoji: plantDef?.emoji || '🌱', count, source: 'variety' });
+        seen.add(v.plantDefId);
+      }
+    }
+    // Add plantules from plantuleCollection
+    for (const [plantDefId, count] of Object.entries(plantuleCollection)) {
+      if (count > 0 && !seen.has(plantDefId)) {
+        const plantDef = PLANTS[plantDefId];
+        const catItem = PLANTULE_CATALOG.find(p => p.plantDefId === plantDefId);
+        seeds.push({
+          id: `plantule-${plantDefId}`,
+          plantDefId,
+          name: catItem?.name || `Plantule ${plantDef?.name || plantDefId}`,
+          emoji: '🪴',
+          count,
+          source: 'plantule',
+        });
+        seen.add(plantDefId);
       }
     }
     return seeds;
@@ -77,9 +98,13 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
     setShowFillMenu(false);
   };
 
-  const handleSelectSeedForSlot = (plantDefId: string) => {
+  const handleSelectSeedForSlot = (item: { plantDefId: string; source: string }) => {
     if (!pendingSlot) return;
-    useGameStore.getState().placeSeedInMiniSerre(serre.id, pendingSlot.row, pendingSlot.col, plantDefId);
+    if (item.source === 'plantule') {
+      useGameStore.getState().placePlantuleInMiniSerre(serre.id, pendingSlot.row, pendingSlot.col, item.plantDefId);
+    } else {
+      useGameStore.getState().placeSeedInMiniSerre(serre.id, pendingSlot.row, pendingSlot.col, item.plantDefId, selectedRoute);
+    }
     setShowSlotMenu(false);
     setPendingSlot(null);
   };
@@ -199,7 +224,11 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
       </AnimatePresence>
 
       {/* 6×4 Compact Grid */}
-      <div className="p-2">
+      <div className="p-2 relative">
+        <div
+          className="absolute inset-0 opacity-20 bg-cover bg-center rounded-b-2xl"
+          style={{ backgroundImage: 'url(/serre-bg.png)' }}
+        />
         <div
           className="grid gap-[3px]"
           style={{ gridTemplateColumns: `repeat(${MINI_SERRE_COLS}, 1fr)` }}
@@ -208,8 +237,9 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
             row.map((plant, colIdx) => {
               const isSelected = selectedMiniSerreId === serre.id && selectedSlot?.row === rowIdx && selectedSlot?.col === colIdx;
               const plantDef = plant ? PLANTS[plant.plantDefId] : null;
-              const pepStage = plant ? getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) : -1;
-              const isReady = pepStage >= 5;
+              const pepStage = plant ? getVisualStage(plant) : -1;
+              const isReady = plant ? canTransplantToGarden(plant) : false;
+              const needsRepot = plant ? needsRepotting(plant) : false;
               const isStunted = plant?.health !== undefined && plant.health <= 20;
               const waterColor = !plant ? "" : plant.waterLevel > 50 ? "bg-blue-400" : plant.waterLevel > 20 ? "bg-amber-400" : "bg-red-400";
 
@@ -235,12 +265,27 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                       <div className="absolute inset-0">
                         <Image
                           src={getStageImage(plant.plantDefId, Math.min(pepStage, 5))}
-                          alt={PEPINIERE_STAGE_NAMES[Math.min(pepStage, 5)]}
+                          alt={getRouteStageName(plant)}
                           fill
                           sizes="(max-width: 768px) 12vw, 8vw"
                           className={`object-cover rounded-[3px] ${isStunted ? "grayscale opacity-40" : ""}`}
                         />
                       </div>
+                      {/* Mini pot emoji badge */}
+                      {(plant as any).containerType === 'mini-pot' && (
+                        <div className="absolute bottom-[6px] right-[1px] text-[10px] leading-none pointer-events-none" title="Mini pot individuel">🪴</div>
+                      )}
+                      {/* Rempotage needed indicator */}
+                      {needsRepot && (
+                        <motion.div
+                          className="absolute -bottom-[1px] -left-[1px] px-1 py-0 bg-amber-400 text-amber-900 text-[5px] font-black rounded-sm"
+                          animate={{ opacity: [1, 0.5, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          title="Rempotage nécessaire"
+                        >
+                          🪴
+                        </motion.div>
+                      )}
                       {/* Growth progress bar */}
                       <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-black/15 rounded-b">
                         <motion.div
@@ -289,9 +334,11 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
           if (!plant) return null;
           const plantDef = PLANTS[plant.plantDefId];
           if (!plantDef) return null;
-          const pepStage = getPepiniereStage(plant.daysSincePlanting, plant.plantDefId);
-          const stageName = PEPINIERE_STAGE_NAMES[pepStage] || PEPINIERE_STAGES[pepStage]?.name;
+          const pepStage = getVisualStage(plant);
+          const stageName = getRouteStageName(plant);
+          const routeLabel = (plant as any).growthRoute === 'plantule' ? 'Plantule' : (plant as any).growthRoute === 'miniserre' ? 'Mini-Serre' : 'Jardin';
           const transplantDay = getPepiniereTransplantDay(plant.plantDefId);
+          const needsRepot = needsRepotting(plant);
 
           return (
             <motion.div
@@ -303,11 +350,11 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded bg-stone-100 border border-stone-300 flex items-center justify-center">
-                    <span className="text-[10px] font-black text-stone-500">{pepStage + 1}/6</span>
+                    <span className="text-[10px] font-black text-stone-500">{pepStage + 1}</span>
                   </div>
                   <div>
                     <p className="text-[9px] font-black">{plantDef.name}</p>
-                    <p className="text-[7px] text-stone-400">{stageName} · J{plant.daysSincePlanting}</p>
+                    <p className="text-[7px] text-stone-400">{stageName} · J{plant.daysSincePlanting} · {routeLabel}</p>
                   </div>
                 </div>
                 <button onClick={() => setSelectedSlot(serre.id, null)} className="text-stone-400 hover:text-black"><X className="w-3 h-3" /></button>
@@ -336,7 +383,16 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                   <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().waterMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); }} className="px-1.5 py-0.5 bg-blue-500 text-white text-[7px] font-bold rounded hover:bg-blue-600" title="Arroser"><Droplets className="w-2.5 h-2.5" /></button>
                   {(plant.hasDisease || plant.hasPest) && <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().treatMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); }} className="px-1.5 py-0.5 bg-pink-500 text-white text-[7px] font-bold rounded hover:bg-pink-600" title="Traiter"><Pill className="w-2.5 h-2.5" /></button>}
                   <button onClick={(e) => { e.stopPropagation(); useGameStore.getState().fertilizeMiniSerrePlant(serre.id, selectedSlot.row, selectedSlot.col); }} className="px-1.5 py-0.5 bg-violet-500 text-white text-[7px] font-bold rounded hover:bg-violet-600" title="Engrais"><Sprout className="w-2.5 h-2.5" /></button>
-                  {pepStage >= 5 && (
+                  {needsRepot && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); useGameStore.getState().rempoterMiniSerre(serre.id, selectedSlot.row, selectedSlot.col); }}
+                      className="px-1.5 py-0.5 bg-gradient-to-b from-amber-400 to-orange-500 text-white text-[7px] font-bold rounded hover:from-amber-300 hover:to-orange-400 shadow-[1px_1px_0_0_#000]"
+                      title="Rempoter dans un pot individuel"
+                    >
+                      🪴 Rempoter
+                    </button>
+                  )}
+                  {canTransplantToGarden(plant) && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -387,6 +443,25 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                 <button onClick={() => { setShowSlotMenu(false); setPendingSlot(null); }} className="text-stone-400 hover:text-black"><X className="w-5 h-5" /></button>
               </div>
 
+              {/* Route selector (seeds only — plantules are always 'plantule' route) */}
+              <div className="mb-3">
+                <p className="text-[8px] font-black text-stone-500 uppercase mb-1">Route de croissance :</p>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setSelectedRoute('jardin')}
+                    className={`flex-1 py-1.5 text-[9px] font-black rounded-lg border-2 transition-all ${selectedRoute === 'jardin' ? 'bg-green-200 text-green-900 border-green-400' : 'bg-white text-stone-500 border-stone-200 hover:border-green-300'}`}
+                  >
+                    🌿 Jardin (6 stades)
+                  </button>
+                  <button
+                    onClick={() => setSelectedRoute('miniserre')}
+                    className={`flex-1 py-1.5 text-[9px] font-black rounded-lg border-2 transition-all ${selectedRoute === 'miniserre' ? 'bg-blue-200 text-blue-900 border-blue-400' : 'bg-white text-stone-500 border-stone-200 hover:border-blue-300'}`}
+                  >
+                    🏠 Mini-Serre (5 stades)
+                  </button>
+                </div>
+              </div>
+
               {/* Mode toggle */}
               <div className="flex gap-1 mb-3">
                 <button
@@ -410,14 +485,14 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                     const plantDef = PLANTS[item.plantDefId];
                     return (
                       <motion.button key={`seed-${item.id}`} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                        onClick={() => handleSelectSeedForSlot(item.plantDefId)}
-                        className={`p-2 rounded-xl border-2 hover:shadow-[2px_2px_0_0_#000] transition-all text-left ${item.source === 'variety' ? 'bg-gradient-to-b from-purple-50 to-white border-purple-300' : 'bg-gradient-to-b from-amber-50 to-white border-amber-300'}`}
+                        onClick={() => handleSelectSeedForSlot(item)}
+                        className={`p-2 rounded-xl border-2 hover:shadow-[2px_2px_0_0_#000] transition-all text-left ${item.source === 'variety' ? 'bg-gradient-to-b from-purple-50 to-white border-purple-300' : item.source === 'plantule' ? 'bg-gradient-to-b from-green-50 to-white border-green-300' : 'bg-gradient-to-b from-amber-50 to-white border-amber-300'}`}
                       >
                         <div className="flex items-center gap-1.5">
                           <span className="text-base">{item.emoji}</span>
                           <div>
                             <p className="text-[8px] font-black">{item.source === 'variety' ? item.name : plantDef?.name}</p>
-                            <p className="text-[6px] text-stone-400">x{item.count}{item.source === 'variety' ? ' (variete)' : ''}</p>
+                            <p className="text-[6px] text-stone-400">x{item.count}{item.source === 'variety' ? ' (variete)' : item.source === 'plantule' ? ' (plantule)' : ''}</p>
                           </div>
                         </div>
                       </motion.button>
@@ -480,7 +555,8 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
 
               {(availableSeeds.length === 0) && (
                 <div className="text-center py-4">
-                  <p className="text-[10px] text-stone-400 mb-2">Aucune graine disponible.</p>
+                  <p className="text-[10px] text-stone-500 mb-1 font-bold">Aucune graine ni plantule disponible.</p>
+                  <p className="text-[8px] text-stone-400 mb-2">Achetez des graines dans la Boutique pour planter ici.</p>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -492,7 +568,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase rounded-xl border-2 border-amber-700 shadow-[2px_2px_0_0_#000] flex items-center justify-center gap-1.5 mx-auto"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
-                    Aller a la Boutique
+                    Acheter des graines
                   </motion.button>
                 </div>
               )}
@@ -514,6 +590,7 @@ export function Pepiniere() {
   const coins = useGameStore((s) => s.coins);
   const seedCollection = useGameStore((s) => s.seedCollection);
   const seedVarieties = useGameStore((s) => s.seedVarieties);
+  const plantuleCollection = useGameStore((s) => s.plantuleCollection);
 
   let miniSerreTotalPlants = 0;
   let miniSerreReadyPlants = 0;
@@ -522,7 +599,7 @@ export function Pepiniere() {
       row.forEach((plant) => {
         if (plant) {
           miniSerreTotalPlants++;
-          if (getPepiniereStage(plant.daysSincePlanting, plant.plantDefId) >= 4) miniSerreReadyPlants++;
+          if (canTransplantToGarden(plant)) miniSerreReadyPlants++;
         }
       });
     });
@@ -629,6 +706,30 @@ export function Pepiniere() {
                   <div key={v.id} className="flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-50 border border-purple-300 rounded-lg">
                     <span className="text-[10px]">{v.emoji}</span>
                     <span className="text-[7px] font-black text-purple-700">x{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Plantule inventory bar */}
+      {(() => {
+        const totalPlantules = Object.values(plantuleCollection).reduce((a, b) => a + b, 0);
+        return totalPlantules > 0 && (
+          <div className="p-2.5 bg-green-50 border-2 border-green-200 rounded-xl">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[9px] font-black uppercase text-green-700">🪴 Plantules ({totalPlantules})</p>
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {PLANTULE_CATALOG.map((item) => {
+                const count = plantuleCollection[item.plantDefId] || 0;
+                if (count <= 0) return null;
+                return (
+                  <div key={item.plantDefId} className="flex items-center gap-0.5 px-1.5 py-0.5 bg-white border border-green-300 rounded-lg">
+                    <span className="text-[10px]">🪴</span>
+                    <span className="text-[7px] font-black text-green-700">x{count}</span>
                   </div>
                 );
               })}

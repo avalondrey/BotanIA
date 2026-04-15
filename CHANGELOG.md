@@ -1,5 +1,210 @@
 # BotanIA - Changelog
 
+## v0.21.0 - Éditeur de Grille Professionnel (2026-04-15)
+
+### 🏗️ Éditeur de Jardin — Refonte Complète
+
+L'éditeur de grille (Vue Plan) passe d'un outil basique à un éditeur professionnel inspiré de GardenPlanner.net, VegPlotter et smallblueprinter.
+
+#### Grille & Snap (Phase 1)
+- **Lignes majeures/mineures** : double motif CSS — mineures tous les 25cm (rgba 0.05), majeures tous les 1m (rgba 0.14)
+- **Snap-to-grid configurable** : OFF / 25cm / 50cm / 1m — les éléments s'alignent automatiquement sur la grille
+- **3 modes d'affichage** : Grille complète / Majeures uniquement / Masquée
+- **Coordonnées au survol** : badge X/Y en cm qui suit le curseur
+- **Fond neutre crème** (#faf8f4) remplaçant le fond dégradé vert
+
+#### Undo/Redo + Panneau Propriétés (Phase 2)
+- **Système Undo/Redo** via `useUndoHistory.ts` — hook générique avec pile d'actions (max 50)
+- **Raccourcis clavier** : Ctrl+Z (annuler), Ctrl+Shift+Z / Ctrl+Y (rétablir)
+- **Panneau Propriétés** : sidebar droite animée affichant position X/Y, dimensions, type, capacité de l'élément sélectionné
+- **Actions** : Déplacer, Supprimer, Dupliquer depuis le panneau
+
+#### Guides d'Alignement Intelligents (Phase 3)
+- **Smart alignment guides** : lignes bleues (#3b82f6) pendant le drag quand les bords/centres s'alignent
+- **Seuil de détection** : 5px en display (quelques cm sur la grille)
+- **Centres H/V + bords gauche/droite/haut/bas** vérifiés
+- **Disparaissent au release**
+
+#### Barre d'Outils Restructurée (Phase 4)
+- **Barre en groupes** : Mode | Zones (5 outils) | Structures (6 outils) | Snap | Grille | Undo/Redo
+- **Icônes lucide-react** remplaçant les emoji seuls (Square, Leaf, Waves, Wheat, Flower2, Home, TreePine, Fence, etc.)
+- **Ghost preview** : aperçu translucide (opacité 0.4, border dashed) de l'élément au curseur quand l'outil est actif
+- **Bouton Annuler** contextuel quand un outil est actif
+
+#### Zoom & Grille Améliorés (Phase 5)
+- **Zoom à la molette** centré sur le curseur (onWheel)
+- **Fond uni crème** remplaçant le dégradé diagonal
+- **Grille adaptative** : les lignes mineures se masquent automatiquement quand le zoom est faible
+
+#### SeedRowPainter — Lissage (Phase 6)
+- **Douglas-Peucker** : simplification automatique des traits dessinés (epsilon=2px souris, 3px tactile)
+- **Undo par trait** : bouton "↩️ Annuler" pour retirer le dernier rang tracé
+- **Export `SeedRow`** : type + callback `onRowsChange` pour synchroniser avec la Vue Plan
+
+### 🎨 Nouveaux Assets
+- **14 paquets de graines Le Biau Germe** : placeholder PNG 1664×928
+  - Courgettes (Verte Milan Black Beauty, Verte d'Italie), Squash Striped Cushaw
+  - Aubergine Longue Violette, Poivrons (Doux d'Espagne, Ariane, Chocolat)
+  - Tomates (Raisin Vert, Cerisette Brin du Muguet, Saint-Pierre, Kumato, Evergreen)
+  - Concombres (Le Généreux, Rollinson's Telegraph)
+
+### 🐛 Corrections
+- **Doublons HologramEvolution** : suppression de 4 entrées orphelines (eleagnus, eggplant, laurus, tomato) causant l'erreur TS1117
+- **Type plant-integrator** : `missingImages`/`totalImages` renommés en `missing`/`total` pour correspondre à l'implémentation
+- **Import AnimatePresence** : ajout dans GardenPlanView.tsx
+- **Icône Grass** : remplacée par `Wheat` (non disponible dans la version lucide installée)
+- **Référence t.diameter** : corrigée en `obj.diameter` dans le panneau propriétés
+
+### 🔧 Technique
+- Nouveau fichier : `src/hooks/useUndoHistory.ts` — hook undo/redo générique
+- Modifié : `src/styles/garden.css` — fond crème, grille majeure/mineure, classes `.grid-hidden` / `.grid-minor-hidden`
+- Modifié : `src/components/game/GardenPlanView.tsx` — snap, guides, ghost, zoom, coordonnées, panneau propriétés
+- Modifié : `src/components/game/JardinPlacementControls.tsx` — barre d'outils complète avec icônes lucide
+- Modifié : `src/components/game/Jardin.tsx` — intégration undo/redo + raccourcis clavier
+- Modifié : `src/components/game/SeedRowPainter.tsx` — lissage Douglas-Peucker + undo par trait
+
+---
+
+## v0.20.0 - Rééquilibrage Économie & Paquets de Graines (2026-04-13)
+
+### 🪙 Système Économique Complet (economy-store.ts)
+
+Nouveau store Zustand persisté (`botania-economy`) ajoutant vente, quotidien et quêtes :
+
+- **Inventaire de récoltes** : chaque récolte ajoute 1 unité vendable (`harvestInventory`)
+- **Marché** : onglet "🌾 Marché" dans la Boutique pour vendre ses récoltes
+- **Prix de vente** : Tomate 8, Carotte 6, Fraise 10, Salade 5, Basilic 7, Piment 9, Courgette 6, Concombre 5, Pomme 15, Poire 18, Cerise 20
+- **Bonus quotidien** : 1 fois/jour, streak J1=5 → J2=6 → J3=7 → J4=8 → J5=9 → J6=10 → J7+=15 pièces
+- **Quêtes journalières** : 3 quêtes aléatoires parmi 8 (arroser, planter, identifier, récolter, planter un arbre)
+- **Popup quotidien** (`DailyBonusPopup.tsx`) au lancement si bonus non réclamé
+- **Suivi quêtes** (`QuestTracker.tsx`) avec barres de progression et bouton réclamer
+
+### 📦 Mécanique d'Ouverture des Paquets de Graines
+
+Les variétés achetées sont maintenant des paquets fermés qu'il faut ouvrir avant de planter :
+
+- **Achat** → paquet fermé dans `seedVarieties` (inventaire fermé)
+- **Ouvrir** → animation déchirure + révélation → graines dans `seedCollection` (plantables)
+- **Section "📦 Paquets à ouvrir"** dans Boutique (onglet Graines) et GrainCollection
+- **Animation Framer Motion** : étapes déchirure → révélement avec overlay plein écran
+- **Bouton "Ouvrir"** sur chaque paquet fermé
+
+### 🐛 Corrections
+
+- **Double récompense récolte** : `garden-store.ts` ajoutait des pièces ET `game-store.ts` aussi. Corrigé : récolte = +3 pièces base + 1 unité inventaire vendable (plus de double)
+- **"Aucune graine disponible"** : les graines variétés (paquets fermés) apparaissaient comme plantables dans la pépinière. `availableSeeds` vérifie maintenant uniquement `seedCollection` (graines ouvertes)
+- **Variétés verrouillées** : `unlockedVarieties` démarrait vide, les variétés avec `unlocked: true` dans le catalogue n'avaient pas de bouton achat. Auto-initialisation depuis le catalogue
+- **Duplicate photinia** : `HologramEvolution.tsx` avait `photinia` défini deux fois (lignes 881 + 1308), la deuxième avec des données erronées (Cucurbitaceae, 60j). Doublon supprimé
+- **Spring animation 3 keyframes** : Framer Motion ne supporte que 2 keyframes avec spring. Corrigé dans `DailyBonusPopup.tsx`
+
+### 💰 Rééquilibrage des Prix
+
+**Graines (SEED_CATALOG)** — divisé par ~2 :
+| Graine | Ancien | Nouveau |
+|---|---|---|
+| Tomate | 50 | 25 |
+| Carotte | 40 | 20 |
+| Fraise | 60 | 35 |
+| Salade | 30 | 15 |
+| Basilic | 45 | 25 |
+| Piment | 55 | 30 |
+
+**Plantules** — divisé par ~1.5 :
+| Plantule | Ancien | Nouveau |
+|---|---|---|
+| Tomate | 80 | 50 |
+| Carotte | 65 | 40 |
+| Fraise | 85 | 55 |
+| Salade | 50 | 30 |
+| Basilic | 70 | 45 |
+| Piment | 75 | 50 |
+
+**Équipement** — ajusté :
+| Équipement | Ancien | Nouveau |
+|---|---|---|
+| Mini Serre | 150 | 120 |
+| Chambre S | 250 | 200 |
+| Chambre M | 400 | 350 |
+| Chambre L | 650 | 550 |
+| Serre Tile | 50 | 40 |
+| Extension | 100 | 80 |
+| Zone serre | 200 | 150 |
+
+**Arbres fruitiers** — augmentés (gamme 150-200 → 200-300)
+
+**Haies Leaderplant** — légère hausse (+10-20)
+
+### 🏆 Achievements → Pièces
+
+- `coinReward` ajouté aux définitions d'achievements (15-30 pièces)
+- `unlockAchievement` appelle `addCoins(coinReward)` automatiquement
+- Toast affiche le gain : `(+${coinReward} 🪙)`
+
+### 🔧 Technique
+
+- Nouveau store : `economy-store.ts` (persistance `botania-economy`)
+- `shop-store.ts` : `openSeedPacket()`, auto-init `unlockedVarieties`, `buySeedVariety` ne sync plus `seedCollection`
+- `game-store.ts` : facades `openSeedPacket`, `trackIdentify()`
+- `garden-store.ts` : tracking économie (water, plant, harvest, tree)
+- `achievement-store.ts` : `coinReward` + `addCoins()` au déblocage
+- `catalog.ts` : prix recalibrés pour toutes les catégories
+- Nouveaux composants : `MarcheTab.tsx`, `DailyBonusPopup.tsx`, `QuestTracker.tsx`
+- Modifiés : `GrainesTab.tsx` (ouverture paquets + boutons achat), `GrainCollection.tsx` (section paquets), `Pepiniere.tsx` (filtre graines ouvertes), `Boutique.tsx` (onglet marché + quêtes), `GameTabs.tsx` (popup quotidien)
+
+---
+
+## v0.19.1 - Sprite Editor & Remote Access (2026-04-13)
+
+### 🖼️ Sprite Editor Dashboard
+
+- **Prompt IA complet par stade** — chaque stage affiche un macro/prompt copiable anime par l'IA (manga cel-shaded, kawaii, fond beige)
+- **Specs banner manga/cel-shaded** dans `openSpriteModal()` (ligne 648+)
+- **Bouton "Parcourir"** pour selectionner fichier PNG directement dans le navigateur
+- **Upload FormData** — le fichier est renomme automatiquement par le backend
+- **copyPrompt()** — copie le prompt dans le presse-papier
+
+### Stage names constants (dashboard.html lignes 358-383)
+- VEG: Graine / Lee / Plantule / Croissance / Floraison / Recolte
+- TREE: Scion / Jeune arbre / Arbre moyen / Arbre etabli / Arbre mature
+- PEPINIERE: Monticule / Petite plantule / Plantule 2f / Plantule 4f / Plantule 5f / Floraison
+
+### Infrastructure Scripts (ai-microservice/)
+- `1-Qdrant.ps1` — Lance Qdrant
+- `2-Microservice.ps1` — Lance microservice + charge .env
+- `3-Frontend.ps1` — Lance Next.js port 3000
+- `4-TailscaleFunnel.ps1` — Active tailscale funnel 3000
+
+### Remote Access (Tailscale)
+- Proxy `FormData` pour upload sprite dans `src/app/api/scan/plants/register/route.ts`
+- `.env` microservice configure avec `BOTANIA_ROOT`, `ALLOWED_ORIGINS`
+
+## v0.19.0 - Agent PlantCard & Dashboard Fixes (2026-04-12)
+
+### 🐛 Corrections
+
+- **`generatePlantCardCode`** : les PlantCards avec traits d'union (ex: `baco-noir`) étaient générées sans quotes — corrigé pour utiliser `'baco-noir': {` partout
+- **`validate-plantcard/route.ts`** : ajout d'une vérification post-écriture qui relit le fichier pour confirmer que la PlantCard a bien été insérée (protège contre HMR Next.js invalidant le cache)
+- **Patterns de vérification** : ajout de `id: 'nom-plante'` comme fallback pour détecter les PlantCards insérées
+
+### 🤖 Dashboard IA (`dashboard.html`)
+
+- **Cooldown anti-HMR** : variable `writeCooldown` bloque l'ouverture d'un modal pendant 3s après une écriture
+- **Alert cooldown** : si clic pendant le cooldown → alerte "attends 3 secondes"
+- **Reload auto** : après écriture réussie → `location.reload()`强制Next.js HMR à recharger le fichier propre → permet d'enchaîner les PlantCards sans recharger manuellement
+- **Message "Patiente 3s — reload imminent"** pendant le countdown
+
+### 🔧 Outils Agent (`src/lib/agent/`)
+
+- `plant-integrator.ts` : fix format PlantCard (quotes pour noms avec tiret)
+- `validate-plantcard/route.ts` : write verification + improved error messages
+- `generate-plantcard/route.ts` : alreadyExists check + backup creation
+
+### 📝 Note HMR Next.js
+
+Next.js en dev mode (HMR) met en cache le contenu de `HologramEvolution.tsx` entre les requêtes API. L'écriture sur disque n'invalide pas immédiatement le cache — d'où le reload auto obligatoire après chaque PlantCard.
+
+---
+
 ## v0.18.0 - Refactoring Store & Corrections (2026-04-11)
 
 ### 🏗️ Refactoring

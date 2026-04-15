@@ -36,32 +36,31 @@ export function useAgent(options: UseAgentOptions = {}) {
 
     try {
       const gameContext = buildGameContext(gameStore);
-      const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
 
-      // ── Direct Groq (sans RAG — RAG requires local Ollama+Qdrant) ──
-      if (groqKey) {
+      // ── Groq via proxy server-side (pas de RAG — nécessite local Ollama+Qdrant) ──
+      try {
         const plants = (gameContext.plants as any[]) || [];
         const ctx = `Jardin: ${plants.length} plantes. Météo: ${gameContext.temperatureCelsius}°C. Saison: ${gameContext.season}. Eau: ${gameContext.waterLiters}L.`;
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const res = await fetch('/api/agent/groq-chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            max_tokens: 400,
-            temperature: 0.35,
             messages: [
               { role: 'system', content: `Tu es Lia, assistante de jardinage bio française. Réponds en 2-3 phrases max, pratique et bienveillant. Contexte: ${ctx}` },
               { role: 'user', content: question },
             ],
+            max_tokens: 400,
+            temperature: 0.35,
           }),
+          signal: AbortSignal.timeout(20000),
         });
         if (res.ok) {
           const data = await res.json();
-          const reply = data.choices?.[0]?.message?.content?.trim() || 'Je ne sais pas.';
+          const reply = data.content?.trim() || 'Je ne sais pas.';
           store.addMessage({ role: 'assistant', content: reply, engine: 'groq' });
           return;
         }
-      }
+      } catch { /* fallback statique */ }
 
       // ── Fallback statique ──
       const tip = generateTip({ plants: (gameContext.plants as any[]) || [], weather: { temperature: gameContext.temperatureCelsius as number } });

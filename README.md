@@ -2,7 +2,7 @@
 
 > Application de jardinage botanique **scientifique** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-0.18.0-green)
+![Version](https://img.shields.io/badge/version-0.21.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)
@@ -47,6 +47,21 @@ Les données de croissance (GDD, besoins en eau, compagnonnage, risques sanitair
 | Sync grille jardin | Les rangs colorés s'affichent dans la Vue Plan |
 | Nommage des rangs | "Carottes", "Tomates"... avec modale |
 
+### 🏗️ Éditeur de Jardin Pro (v0.21.0)
+| Feature | Détail |
+|---|---|
+| Grille majeure/mineure | Lignes 25cm (fine) + 1m (épaisse), 3 modes d'affichage |
+| Snap-to-grid | Configurable : OFF / 25cm / 50cm / 1m |
+| Coordonnées au survol | Badge X/Y en cm qui suit le curseur |
+| Undo/Redo | Ctrl+Z / Ctrl+Shift+Z, pile de 50 actions |
+| Panneau Propriétés | Position X/Y éditable, dimensions, type, actions |
+| Guides d'alignement | Lignes bleues auto pendant le drag (centres + bords) |
+| Ghost preview | Aperçu translucide de l'élément au curseur |
+| Zoom molette | Zoom fluide centré sur le curseur |
+| Barre d'outils complète | Zones (5) + Structures (6) + Snap + Grille + Undo |
+| Lissage Douglas-Peucker | Simplification auto des traits SeedRowPainter |
+| Undo par trait | Annuler le dernier rang tracé |
+
 ### 🔍 Identificateur de Plantes (v0.12.0)
 | Moteur | Type | Coût |
 |---|---|---|
@@ -74,6 +89,17 @@ Les données de croissance (GDD, besoins en eau, compagnonnage, risques sanitair
 | 🌿 Kokopelli, 🌾 Biau Germe, 🏡 Ste Marthe | Bio & paysannes |
 | 🌳 Guignard, 🔬 INRAE, 🌲 Bordas | Arbres fruitiers |
 | 🌴 Arbres Tissot, 🍎 Fruitiers Forest | Vergers |
+| 🌾 Marché | Vendre ses récoltes |
+
+### 🪙 Économie (v0.20.0)
+| Feature | Détail |
+|---|---|
+| Inventaire de récoltes | Chaque récolte = 1 unité vendable au marché |
+| Marché | Onglet Boutique pour vendre ses récoltes (prix 5-20 pièces/unité) |
+| Bonus quotidien | Streak J1=5 → J7+=15 pièces, 1 fois/jour |
+| Quêtes journalières | 3 quêtes/jour (arroser, planter, identifier, récolter, arbres) |
+| Paquets de graines | Achat → paquet fermé → animation d'ouverture → graines plantables |
+| Achievements → pièces | Déblocage achievement = 15-30 pièces bonus |
 
 ---
 
@@ -124,8 +150,11 @@ Ouvrir **http://localhost:3000**
 
 ```env
 # Groq (gratuit — https://console.groq.com/keys)
-NEXT_PUBLIC_GROQ_API_KEY=gsk_...
+GROQ_API_KEY=gsk_...
 GROQ_MODEL=llama-3.3-70b-versatile
+
+# Secret for validate-plantcard endpoint (generates/changes PlantCards)
+VALIDATE_PLANT_SECRET=ton-secret-aqui
 
 # Ollama (local, optionnel — agent RAG)
 OLLAMA_MODEL=qwen2.5:7b
@@ -150,12 +179,15 @@ ANTHROPIC_API_KEY=sk-ant-...
 ## Guide d'utilisation
 
 ```
-1. Boutique → acheter graines ou arbres
-2. Pépinière / Mini Serre → semer et suivre germination
-3. Jardin → transplanter, arroser, fertiliser
-4. Vue Rangs → photographier et tracer vos vrais rangs
-5. Identificateur → identifier une plante inconnue avec l'IA
-6. Récolter → Suivi des récoltes avec poids et qualité
+1. Boutique → acheter graines ou arbres (ouvrir les paquets de graines!)
+2. Marché → vendre ses récoltes pour gagner des pièces
+3. Pépinière / Mini Serre → semer et suivre germination
+4. Jardin → transplanter, arroser, fertiliser
+5. Vue Rangs → photographier et tracer vos vrais rangs
+6. Identificateur → identifier une plante inconnue avec l'IA
+7. Récolter → +3 pièces + 1 unité inventaire vendable
+8. Quêtes → compléter 3 quêtes/jour pour des bonus pièces
+9. Quotidien → réclamer le bonus journalier (streak bonus!)
 ```
 
 **Contrôles clavier :**
@@ -181,8 +213,9 @@ BotanIA/
 │   │   └── page.tsx              # Page principale + onglets
 │   ├── components/game/
 │   │   ├── Jardin.tsx            # Onglet Jardin (Plan, Cartes, Rangs)
-│   │   ├── GardenPlanView.tsx    # Vue Plan avec overlay rangs
-│   │   ├── SeedRowPainter.tsx    # Dessin rangs sur photo
+│   │   ├── GardenPlanView.tsx    # Vue Plan — snap, guides, ghost, zoom, propriétés
+│   │   ├── JardinPlacementControls.tsx # Barre d'outils (zones, structures, snap, grille)
+│   │   ├── SeedRowPainter.tsx    # Dessin rangs sur photo (Douglas-Peucker + undo)
 │   │   ├── PlantIdentifier.tsx    # Identificateur IA
 │   │   ├── GardenCardsView.tsx   # Vue cartes manga
 │   │   ├── HologramEvolution.tsx # Carte de croissance botanique
@@ -191,9 +224,15 @@ BotanIA/
 │   │   ├── Boutique.tsx          # Multi-semenciers
 │   │   └── ...
 │   ├── hooks/
-│   │   └── useAgroData.ts        # 🌾 Données agronomiques temps réel
+│   │   ├── useAgroData.ts        # 🌾 Données agronomiques temps réel
+│   │   └── useUndoHistory.ts     # ↩️ Undo/Redo générique (pile 50 actions)
 │   ├── store/
-│   │   ├── game-store.ts         # État principal
+│   │   ├── game-store.ts         # État principal (facade)
+│   │   ├── shop-store.ts         # Économie, graines, plantules
+│   │   ├── economy-store.ts      # Inventaire récoltes, quotidien, quêtes
+│   │   ├── nursery-store.ts      # Pépinière, mini-serres
+│   │   ├── garden-store.ts       # Plantes jardin, zones serre
+│   │   ├── simulation-store.ts   # Cycle jour/météo/tick
 │   │   ├── photo-store.ts        # Photos + GPS + rangs
 │   │   ├── harvest-store.ts      # Suivi récoltes
 │   │   └── achievement-store.ts  # Badges jardinier
@@ -233,6 +272,9 @@ BotanIA/
 - [x] 📍 **GPS automatique EXIF + device (v0.12.0)**
 - [x] 🔍 **Identificateur IA 4 moteurs (v0.12.0)**
 - [x] 🌾 **Carte de croissance botanique enrichie (v0.12.1)**
+- [x] 🪙 **Économie : marché, quotidien, quêtes, vente récoltes (v0.20.0)**
+- [x] 📦 **Paquets de graines : achat → ouverture → plantation (v0.20.0)**
+- [x] 🏗️ **Éditeur de grille pro : snap, guides, undo, zoom (v0.21.0)**
 
 ### 🚀 Idées à implanter
 - [ ] **Calendrier lunaire** — affichage phase + conseil semis/récolte selon tradition

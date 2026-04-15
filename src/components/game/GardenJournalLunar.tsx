@@ -623,6 +623,7 @@ export function GardenJournalLunar() {
                       return isSameDay(photoDate, selectedDate);
                     })
                     .slice(0, 4)
+                    .filter(photo => photo.dataUrl)
                     .map(photo => (
                       <div key={photo.id} className="w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0">
                         <img src={photo.dataUrl} alt="" className="w-full h-full object-cover" />

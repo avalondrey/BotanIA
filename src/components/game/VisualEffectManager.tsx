@@ -56,8 +56,8 @@ export function VisualEffectManager() {
           {eff.type === "success-pop" && (
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: [0, 1.2, 1], rotate: 0 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="absolute inset-0 flex items-center justify-center"
             >
               <span className="text-8xl font-black text-yellow-400 italic drop-shadow-[0_5px_0_#000] uppercase">

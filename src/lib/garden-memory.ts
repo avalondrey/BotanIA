@@ -3,6 +3,8 @@
  * Stocke l'historique dans des fichiers MD locaux pour que Lia apprenne de ton jardin
  */
 
+import path from 'path';
+
 export interface PlantMemory {
   plantId: string;
   name: string;
@@ -65,7 +67,7 @@ export interface CalculatedAverages {
 
 // ── Storage paths ──────────────────────────────────────────────
 
-const MEMORY_DIR = 'C:/Users/Administrateur/Desktop/BotanIA/data/garden-memory';
+const MEMORY_DIR = path.join(process.cwd(), 'data/garden-memory');
 
 // ── Memory operations ──────────────────────────────────────────
 

@@ -52,7 +52,7 @@ export interface GardenTree {
 
 export interface GardenHedge {
   id: string;
-  type: 'laurel' | 'cypress' | 'boxwood' | 'bamboo';
+  type: 'laurel' | 'cypress' | 'boxwood' | 'bamboo' | 'photinia' | 'eleagnus' | 'laurus' | 'thuja' | 'escallonia';
   x: number;
   y: number;
   length: number;

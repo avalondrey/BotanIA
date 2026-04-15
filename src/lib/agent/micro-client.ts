@@ -94,7 +94,7 @@ export async function checkMicroHealth(): Promise<MicroHealth | null> {
 }
 
 export async function microChat(req: MicroChatRequest): Promise<MicroChatResponse> {
-  return microFetch<MicroChatResponse>('/', req);
+  return microFetch<MicroChatResponse>('/chat', req);
 }
 
 export async function microEmbed(text: string): Promise<{ embedding: number[] }> {

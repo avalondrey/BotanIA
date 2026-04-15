@@ -15,7 +15,7 @@ export function GameHeader({ weatherStatus, gpsCoords, onRefreshWeather }: GameH
   return (
     <>
       <header className="relative bg-gradient-to-r from-green-800 via-green-700 to-emerald-700 text-white z-10 shadow-lg">
-        <div className="max-w-[1400px] mx-auto px-4 py-2 flex items-center justify-between">
+        <div className="mx-auto px-4 py-2 flex items-center justify-between" style={{ maxWidth: 'var(--ui-container-max)' }}>
           <div className="flex items-center gap-3">
             <motion.h1
               className="text-xl md:text-2xl font-black tracking-tight cursor-pointer"
@@ -24,8 +24,8 @@ export function GameHeader({ weatherStatus, gpsCoords, onRefreshWeather }: GameH
             >
               🌱 BotanIA
             </motion.h1>
-            <span className="px-1.5 py-0.5 bg-white/20 text-[8px] font-bold uppercase rounded backdrop-blur-sm">v0.18.0</span>
-            <span className="hidden sm:inline-block px-1.5 py-0.5 bg-amber-500/30 text-[8px] font-bold uppercase rounded backdrop-blur-sm border border-amber-400/40">alpha</span>
+            <span className="px-1.5 py-0.5 bg-white/20 font-bold uppercase rounded backdrop-blur-sm" style={{ fontSize: 'var(--ui-hud-font)' }}>v0.18.0</span>
+            <span className="hidden sm:inline-block px-1.5 py-0.5 bg-amber-500/30 font-bold uppercase rounded backdrop-blur-sm border border-amber-400/40" style={{ fontSize: 'var(--ui-hud-font)' }}>alpha</span>
             {weatherStatus === "ready" && (
               <span className="hidden md:inline-block px-1.5 py-0.5 bg-emerald-500/30 text-[8px] font-bold uppercase rounded backdrop-blur-sm border border-emerald-400/40">
                 🌤️ Météo live

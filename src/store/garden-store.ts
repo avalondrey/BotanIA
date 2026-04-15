@@ -80,7 +80,7 @@ export interface GardenState {
   buyShed: (cost: number) => boolean;
   buyTank: (capacity: number, cost: number) => boolean;
   buyTree: (cost: number) => boolean;
-  buyHedge: (cost: number) => boolean;
+  buyHedge: (cost: number, hedgeType?: GardenHedge['type']) => boolean;
   buyDrum: (cost: number) => boolean;
   addGardenZone: (x: number, y: number, width: number, height: number, type?: GardenZone['type']) => void;
   removeGardenShed: (id: string) => void;
@@ -187,6 +187,13 @@ export const useGardenStore = create<GardenState>()(
 
         const newGardenPlants = [...state.gardenPlants, newGardenPlant];
         set({ gardenPlants: newGardenPlants });
+
+        // Track planting for daily quest
+        try {
+          const { useEconomyStore } = require('@/store/economy-store');
+          useEconomyStore.getState().trackPlantSeed();
+        } catch {}
+
         return true;
       },
 
@@ -282,6 +289,11 @@ export const useGardenStore = create<GardenState>()(
           );
           return { gardenPlants: newGardenPlants };
         });
+        // Track watering for daily quest
+        try {
+          const { useEconomyStore } = require('@/store/economy-store');
+          useEconomyStore.getState().trackWaterPlant();
+        } catch {}
       },
 
       treatPlantGarden: (plantId: string) => {
@@ -310,21 +322,28 @@ export const useGardenStore = create<GardenState>()(
         const newGardenPlants = state.gardenPlants.filter((gp) => gp.id !== plantId);
         set({ gardenPlants: newGardenPlants });
 
-        // Award coins and score via shop store
+        // Score only — coin rewards are handled by game-store facade
         const plantDef = PLANTS[plant.plantDefId];
-        const coinReward = plantDef ? Math.ceil(plantDef.realDaysToHarvest / 5) : 15;
         const scoreReward = plantDef ? Math.ceil(plantDef.realDaysToHarvest / 3) : 10;
-        useShopStore.getState().addCoins(coinReward);
         useShopStore.getState().addScore(scoreReward);
       },
 
       waterAllGarden: () => {
+        const state = get();
+        const plantCount = state.gardenPlants.length;
         set((s) => ({
           gardenPlants: s.gardenPlants.map((gp) => ({
             ...gp,
             plant: applyWatering(gp.plant),
           })),
         }));
+        // Track each watered plant for daily quests
+        try {
+          const { useEconomyStore } = require('@/store/economy-store');
+          for (let i = 0; i < plantCount; i++) {
+            useEconomyStore.getState().trackWaterPlant();
+          }
+        } catch {}
       },
 
       moveGardenPlant: (plantId: string, newX: number, newY: number) => {
@@ -406,14 +425,19 @@ export const useGardenStore = create<GardenState>()(
         const newTree: GardenTree = { id: `tree-${Date.now()}`, type: 'apple', x: 100 + state.gardenTrees.length * 120, y: 200, diameter: 100, age: 0 };
         useShopStore.setState({ coins: shop.coins - cost });
         set({ gardenTrees: [...state.gardenTrees, newTree] });
+        // Track tree planting for daily quest
+        try {
+          const { useEconomyStore } = require('@/store/economy-store');
+          useEconomyStore.getState().trackTreePlanted();
+        } catch {}
         return true;
       },
 
-      buyHedge: (cost: number) => {
+      buyHedge: (cost: number, hedgeType: GardenHedge['type'] = 'laurel') => {
         const shop = useShopStore.getState();
         if (shop.coins < cost) return false;
         const state = get();
-        const newHedge: GardenHedge = { id: `hedge-${Date.now()}`, type: 'laurel', x: 20, y: state.gardenHeightCm - 100, length: 200, orientation: 'horizontal', height: 120 };
+        const newHedge: GardenHedge = { id: `hedge-${Date.now()}`, type: hedgeType, x: 20, y: state.gardenHeightCm - 100, length: 200, orientation: 'horizontal', height: 120 };
         useShopStore.setState({ coins: shop.coins - cost });
         set({ gardenHedges: [...state.gardenHedges, newHedge] });
         return true;
@@ -501,6 +525,9 @@ export const useGardenStore = create<GardenState>()(
         const plant = serre.slots[row]?.[col];
         if (!plant) return false;
 
+        // Mini-serre route plants cannot be transplanted to garden
+        if ((plant as any).growthRoute === 'miniserre') return false;
+
         const spacing = PLANT_SPACING[plant.plantDefId];
         if (!spacing) return false;
 
@@ -528,13 +555,14 @@ export const useGardenStore = create<GardenState>()(
         });
         useNurseryStore.setState({ miniSerres: newMiniSerres });
 
-        // Add to garden
+        // Add to garden with correct container type
+        const containerType = inSerre ? 'pot-serre' : 'sol-jardin';
         const newGardenPlant: GardenPlant = {
           id: uid(),
           plantDefId: plant.plantDefId,
           x: gardenX,
           y: gardenY,
-          plant: { ...plant },
+          plant: { ...plant, containerType: containerType as any },
         };
 
         set({ gardenPlants: [...state.gardenPlants, newGardenPlant] });
@@ -543,6 +571,23 @@ export const useGardenStore = create<GardenState>()(
     }),
     {
       name: 'botania-garden',
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          const state = persistedState as GardenState;
+          if (state.gardenPlants) {
+            state.gardenPlants = state.gardenPlants.map((gp: any) => ({
+              ...gp,
+              plant: gp.plant ? {
+                ...gp.plant,
+                growthRoute: gp.plant.growthRoute || 'jardin',
+                containerType: gp.plant.containerType || 'sol-jardin',
+              } : gp.plant,
+            }));
+          }
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         gardenWidthCm: state.gardenWidthCm,
         gardenHeightCm: state.gardenHeightCm,

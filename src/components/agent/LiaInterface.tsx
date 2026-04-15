@@ -13,12 +13,13 @@ import { useAgentStore } from '@/store/agent-store';
 import { useMissingSprites } from '@/hooks/useMissingSprites';
 import { LiaStatusIndicator } from './LiaStatusIndicator';
 import { LiaValidationModal } from './LiaValidationModal';
+import { LiaPanel } from './LiaPanel';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
-type LiaTab = 'chat' | 'suggestions' | 'tasks' | 'validation';
+type LiaTab = 'chat' | 'suggestions' | 'tasks' | 'sprites' | 'validation';
 
 interface LiaInterfaceProps {
   initialOpen?: boolean;
@@ -34,6 +35,22 @@ export function LiaInterface({ initialOpen = true, className = '' }: LiaInterfac
   const scrollRef = useRef<HTMLDivElement>(null);
   const [validationOpen, setValidationOpen] = useState(false);
   const [previewJobs, setPreviewJobs] = useState<any[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+
+  const handleScanPlants = async () => {
+    if (isScanning) return;
+    setIsScanning(true);
+    try {
+      const res = await fetch('/api/agent/scan-plants', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        const { summary } = data.data;
+        await ask(`✅ Scan 8 points terminé !\n\n📊 Résumé: ${summary.complete} complètes, ${summary.partial} partielles, ${summary.incomplete} incomplètes.\n\n${summary.incomplete > 0 ? `${summary.incomplete} plantes ont des données manquantes. Tape "génère les PlantCards" pour que je prépare le code.` : 'Toutes les plantes sont à jour !'}`);
+      }
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +88,6 @@ export function LiaInterface({ initialOpen = true, className = '' }: LiaInterfac
   };
 
   const analyzeHologram = async () => {
-    // Appel direct Groq — contourne le RAG/embeddings (pas nécessaire ici)
-    const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
-
     const res = await fetch('/api/analyze-hologram');
     const data = await res.json();
 
@@ -95,30 +109,27 @@ Données semences (extrait) : ${(data.seedSummary || '').slice(0, 800)}
 
 En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fonctions. Sois concis.`;
 
-    // Si Groq dispo : appel direct sans passer par RAG
-    if (groqKey) {
-      try {
-        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            max_tokens: 500,
-            temperature: 0.3,
-            messages: [{ role: 'user', content: prompt }],
-          }),
-        });
-        if (groqRes.ok) {
-          const groqData = await groqRes.json();
-          const reply = groqData.choices?.[0]?.message?.content?.trim() || 'Aucune réponse';
-          // Injecter directement dans les messages sans passer par ask() → pas d'embedding
-          const { addMessage } = await import('@/store/agent-store').then(m => ({ addMessage: m.useAgentStore.getState().addMessage }));
-          addMessage({ role: 'user', content: '🔍 Lancer l\'analyse HologramEvolution' });
-          addMessage({ role: 'assistant', content: reply, engine: 'groq' });
-          return;
-        }
-      } catch { /* fallback ask */ }
-    }
+    // Groq via proxy server-side
+    try {
+      const groqRes = await fetch('/api/agent/groq-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 500,
+          temperature: 0.3,
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (groqRes.ok) {
+        const groqData = await groqRes.json();
+        const reply = groqData.content?.trim() || 'Aucune réponse';
+        const { addMessage } = await import('@/store/agent-store').then(m => ({ addMessage: m.useAgentStore.getState().addMessage }));
+        addMessage({ role: 'user', content: '🔍 Lancer l\'analyse HologramEvolution' });
+        addMessage({ role: 'assistant', content: reply, engine: 'groq' });
+        return;
+      }
+    } catch { /* fallback ask */ }
 
     // Fallback : passe par ask() (peut échouer si Ollama KO)
     await ask(prompt);
@@ -181,6 +192,14 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
           📋 Tâches
         </button>
         <button
+          onClick={() => setActiveTab('sprites')}
+          className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors ${
+            activeTab === 'sprites' ? 'border-pink-500 text-pink-700 bg-pink-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
+          }`}
+        >
+          🖼️ Sprites
+        </button>
+        <button
           onClick={() => {
             setActiveTab('validation');
             // Fetch previews when opening
@@ -221,6 +240,27 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
                     ? 'Mon IA locale est active, pose-moi tes questions!'
                     : 'Active le mode Super IA Locale pour mes capacités complètes!'}
                 </p>
+                <div className="flex gap-2 mt-3 justify-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={analyzeHologram}
+                    className="text-xs"
+                    title="Analyser HologramEvolution pour détecter les incohérences"
+                  >
+                    🔍 Analyse Hologramme
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleScanPlants}
+                    disabled={isScanning}
+                    className="text-xs"
+                    title="Scanner les 8 points de chaque plante"
+                  >
+                    {isScanning ? '🔄 Scan...' : '🌱 Scanner Plantes (8 pts)'}
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-3">
@@ -381,6 +421,13 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
               )}
             </div>
           </div>
+        </ScrollArea>
+      )}
+
+      {/* Tab: Sprites */}
+      {activeTab === 'sprites' && (
+        <ScrollArea className="flex-1 max-h-[calc(100vh-200px)] p-3">
+          <LiaPanel />
         </ScrollArea>
       )}
 

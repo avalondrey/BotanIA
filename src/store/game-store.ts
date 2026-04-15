@@ -15,6 +15,7 @@
 import { create } from 'zustand';
 import {
   type PlantState,
+  type GrowthRoute,
   type AlertData,
   type WeatherData,
   PLANTS,
@@ -28,6 +29,20 @@ import {
   getMonthFromDay,
   getTodayDayOfYear,
 } from '@/lib/ai-engine';
+
+// Growth route utilities (v0.20.0)
+export {
+  ROUTE_STAGE_LABELS,
+  ROUTE_STAGE_EMOJIS,
+  ROUTE_MAX_STAGES,
+  ROUTE_CONTAINER_TRANSITIONS,
+  getVisualStage,
+  getRouteStageName,
+  getRouteStageEmoji,
+  getExpectedContainer,
+  needsRepotting,
+  canTransplantToGarden,
+} from '@/lib/growth-routes';
 import {
   type RealWeatherData,
   type GPSCoords,
@@ -49,10 +64,17 @@ export {
   MINI_SERRE_PRICE,
   MINI_SERRE_WIDTH_CM,
   MINI_SERRE_DEPTH_CM,
+  PLATEAU_ROWS,
+  PLATEAU_COLS,
+  ETAGERE_PRICE,
+  ETAGERE_MAX_PLATEAUX,
+  PLATEAU_ADD_PRICE,
   type ChambreModel,
   CHAMBRE_CATALOG,
   type MiniSerre,
+  type Etagere,
   createEmptyMiniSerre,
+  createEmptyEtagere,
   type SeedShop,
   type SeedVariety,
   SEED_SHOPS,
@@ -96,7 +118,7 @@ export const PEPINIERE_PLANT_THRESHOLDS: Record<string, number[]> = {
   pepper:      [8, 14, 22, 35, 55],
 };
 
-const DEFAULT_PEPINIERE_THRESHOLDS = [5, 10, 18, 28, 45];
+export const DEFAULT_PEPINIERE_THRESHOLDS = [5, 10, 18, 28, 45];
 
 export const PEPINIERE_STAGES = [
   { name: "Monticule de terre", minDays: 0, maxDays: 5 },
@@ -186,6 +208,7 @@ export interface GameState {
   // ── Nursery (delegated to nursery-store) ──
   pepiniere: PlantState[];
   miniSerres: import('./catalog').MiniSerre[];
+  etageres: import('./catalog').Etagere[];
   ownedChambres: Record<string, number>;
   activeChambreId: string | null;
   selectedMiniSerreId: string | null;
@@ -197,6 +220,7 @@ export interface GameState {
   seedCollection: Record<string, number>;
   plantuleCollection: Record<string, number>;
   seedVarieties: Record<string, number>;
+  unlockedVarieties: Record<string, boolean>;
   coins: number;
   ecoPoints: number;
   ecoLevel: number;
@@ -216,6 +240,9 @@ export interface GameState {
   alerts: AlertData[];
   harvested: number;
 
+  // ── Discovered plants (via photo identification) ──
+  discoveredPlants: Array<{ id: string; name: string; emoji: string; discoveredAt: number; source: 'photo' | 'manual' }>;
+
   // ── UI State (owned by game-store) ──
   showConsole: boolean;
   adminOpen: boolean;
@@ -232,6 +259,7 @@ export interface GameState {
   buySeeds: (itemIdOrPlantDefId: string) => boolean;
   buyPlantule: (plantDefId: string) => boolean;
   buySeedVariety: (varietyId: string) => boolean;
+  openSeedPacket: (varietyId: string) => boolean;
   unlockSeedVariety: (varietyId: string) => boolean;
   addEcoPoints: (points: number) => void;
   addScore: (points: number) => void;
@@ -243,14 +271,15 @@ export interface GameState {
   buyMiniSerre: () => boolean;
   buyChambreDeCulture: (modelId: string) => boolean;
   setActiveChambre: (modelId: string | null) => void;
-  placeSeedInPepiniere: (plantDefId: string) => boolean;
+  placeSeedInPepiniere: (plantDefId: string, growthRoute?: GrowthRoute) => boolean;
   placePlantuleInPepiniere: (plantDefId: string) => boolean;
   waterPlantPepiniere: (index: number) => void;
   treatPlantPepiniere: (index: number) => void;
   fertilizePlantPepiniere: (index: number) => void;
   removePlantPepiniere: (index: number) => void;
-  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => boolean;
+  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string, growthRoute?: GrowthRoute) => boolean;
   placePlantuleInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => boolean;
+  rempoterMiniSerre: (serreId: string, row: number, col: number) => boolean;
   waterMiniSerrePlant: (serreId: string, row: number, col: number) => void;
   treatMiniSerrePlant: (serreId: string, row: number, col: number) => void;
   fertilizeMiniSerrePlant: (serreId: string, row: number, col: number) => void;
@@ -261,6 +290,14 @@ export interface GameState {
   plantInMiniSerreAtDate: (serreId: string, row: number, col: number, plantDefId: string, daysSincePlanting: number) => boolean;
   setSelectedSlot: (serreId: string, slot: { row: number; col: number } | null) => void;
   updateHologramSettings: (settings: Partial<HologramSettings>) => void;
+
+  // ── Actions — Étagères & Plateaux ──
+  buyEtagere: () => boolean;
+  addPlateauToEtagere: (etagereId: string) => boolean;
+  removeEtagere: (etagereId: string) => void;
+  placePlantuleOnPlateau: (etagereId: string, plateauIdx: number, row: number, col: number, plantDefId: string) => boolean;
+  removeFromPlateau: (etagereId: string, plateauIdx: number, row: number, col: number) => void;
+  waterAllPlateau: (etagereId: string, plateauIdx: number) => void;
 
   // ── Actions — Garden ──
   placePlantInGarden: (plantDefId: string, x: number, y: number, pepIndex?: number) => boolean;
@@ -276,7 +313,7 @@ export interface GameState {
   buyShed: (cost: number) => boolean;
   buyTank: (capacity: number, cost: number) => boolean;
   buyTree: (cost: number) => boolean;
-  buyHedge: (cost: number) => boolean;
+  buyHedge: (cost: number, hedgeType?: GardenHedge['type']) => boolean;
   buyDrum: (cost: number) => boolean;
   removeSerreZone: (zoneId: string) => void;
   removeGardenShed: (id: string) => void;
@@ -377,6 +414,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   pepiniere: [],
   miniSerres: [],
+  etageres: [],
   ownedChambres: {},
   activeChambreId: null,
   selectedMiniSerreId: null,
@@ -387,6 +425,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   seedCollection: { tomato: 3, carrot: 2, strawberry: 2, lettuce: 3, basil: 2, pepper: 1 },
   plantuleCollection: {},
   seedVarieties: {},
+  unlockedVarieties: {},
   coins: 200,
   ecoPoints: 0,
   ecoLevel: 0,
@@ -404,6 +443,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   isPaused: false,
   alerts: [],
   harvested: 0,
+
+  // ── Discovered plants ──
+  discoveredPlants: [],
 
   // ── UI State ──
   showConsole: true,
@@ -443,7 +485,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const result = useShopStore.getState().buySeedVariety(varietyId);
     if (result) {
       const shop = useShopStore.getState();
-      set({ seedVarieties: shop.seedVarieties, seedCollection: shop.seedCollection, coins: shop.coins });
+      set({ seedVarieties: shop.seedVarieties, coins: shop.coins, unlockedVarieties: shop.unlockedVarieties });
+    }
+    return result;
+  },
+
+  openSeedPacket: (varietyId: string) => {
+    const result = useShopStore.getState().openSeedPacket(varietyId);
+    if (result) {
+      const shop = useShopStore.getState();
+      set({ seedVarieties: shop.seedVarieties, seedCollection: shop.seedCollection });
     }
     return result;
   },
@@ -490,7 +541,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const result = useNurseryStore.getState().buyMiniSerre();
     if (result) {
       const nursery = useNurseryStore.getState();
-      set({ miniSerres: nursery.miniSerres, coins: useShopStore.getState().coins });
+      set({ miniSerres: nursery.miniSerres, etageres: nursery.etageres, coins: useShopStore.getState().coins });
     }
     return result;
   },
@@ -509,8 +560,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ activeChambreId: useNurseryStore.getState().activeChambreId });
   },
 
-  placeSeedInPepiniere: (plantDefId: string) => {
-    const result = useNurseryStore.getState().placeSeedInPepiniere(plantDefId);
+  placeSeedInPepiniere: (plantDefId: string, growthRoute?: GrowthRoute) => {
+    const result = useNurseryStore.getState().placeSeedInPepiniere(plantDefId, growthRoute);
     if (result) {
       set({
         pepiniere: useNurseryStore.getState().pepiniere,
@@ -551,8 +602,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ pepiniere: useNurseryStore.getState().pepiniere });
   },
 
-  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string) => {
-    const result = useNurseryStore.getState().placeSeedInMiniSerre(serreId, row, col, plantDefId);
+  placeSeedInMiniSerre: (serreId: string, row: number, col: number, plantDefId: string, growthRoute?: GrowthRoute) => {
+    const result = useNurseryStore.getState().placeSeedInMiniSerre(serreId, row, col, plantDefId, growthRoute);
     if (result) {
       set({
         miniSerres: useNurseryStore.getState().miniSerres,
@@ -570,6 +621,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         miniSerres: useNurseryStore.getState().miniSerres,
         plantuleCollection: useShopStore.getState().plantuleCollection,
       });
+    }
+    return result;
+  },
+
+  rempoterMiniSerre: (serreId: string, row: number, col: number) => {
+    const result = useNurseryStore.getState().rempoterMiniSerre(serreId, row, col);
+    if (result) {
+      set({ miniSerres: useNurseryStore.getState().miniSerres });
     }
     return result;
   },
@@ -609,7 +668,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (result) {
       const nursery = useNurseryStore.getState();
       const shop = useShopStore.getState();
-      set({ miniSerres: nursery.miniSerres, seedCollection: shop.seedCollection, seedVarieties: shop.seedVarieties });
+      set({ miniSerres: nursery.miniSerres, etageres: nursery.etageres, seedCollection: shop.seedCollection, seedVarieties: shop.seedVarieties, unlockedVarieties: shop.unlockedVarieties });
     }
     return result;
   },
@@ -619,7 +678,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (result) {
       const nursery = useNurseryStore.getState();
       const shop = useShopStore.getState();
-      const updates: Record<string, unknown> = { miniSerres: nursery.miniSerres };
+      const updates: Record<string, unknown> = { miniSerres: nursery.miniSerres, etageres: nursery.etageres };
       if (shop.seedCollection !== get().seedCollection) updates.seedCollection = shop.seedCollection;
       if (shop.seedVarieties !== get().seedVarieties) updates.seedVarieties = shop.seedVarieties;
       set(updates);
@@ -636,6 +695,51 @@ export const useGameStore = create<GameState>((set, get) => ({
   updateHologramSettings: (settings: Partial<HologramSettings>) => {
     useNurseryStore.getState().updateHologramSettings(settings);
     set({ hologramSettings: useNurseryStore.getState().hologramSettings });
+  },
+
+  // ═══════════════════════════════════════════
+  // ── Actions — Étagères & Plateaux (delegated to nursery-store) ──
+  // ═══════════════════════════════════════════
+
+  buyEtagere: () => {
+    const result = useNurseryStore.getState().buyEtagere();
+    if (result) {
+      set({ etageres: useNurseryStore.getState().etageres, coins: useShopStore.getState().coins });
+    }
+    return result;
+  },
+
+  addPlateauToEtagere: (etagereId: string) => {
+    const result = useNurseryStore.getState().addPlateauToEtagere(etagereId);
+    if (result) {
+      set({ etageres: useNurseryStore.getState().etageres, coins: useShopStore.getState().coins });
+    }
+    return result;
+  },
+
+  removeEtagere: (etagereId: string) => {
+    useNurseryStore.getState().removeEtagere(etagereId);
+    set({ etageres: useNurseryStore.getState().etageres });
+  },
+
+  placePlantuleOnPlateau: (etagereId: string, plateauIdx: number, row: number, col: number, plantDefId: string) => {
+    const result = useNurseryStore.getState().placePlantuleOnPlateau(etagereId, plateauIdx, row, col, plantDefId);
+    if (result) {
+      const nursery = useNurseryStore.getState();
+      const shop = useShopStore.getState();
+      set({ etageres: nursery.etageres, plantuleCollection: shop.plantuleCollection });
+    }
+    return result;
+  },
+
+  removeFromPlateau: (etagereId: string, plateauIdx: number, row: number, col: number) => {
+    useNurseryStore.getState().removeFromPlateau(etagereId, plateauIdx, row, col);
+    set({ etageres: useNurseryStore.getState().etageres });
+  },
+
+  waterAllPlateau: (etagereId: string, plateauIdx: number) => {
+    useNurseryStore.getState().waterAllPlateau(etagereId, plateauIdx);
+    set({ etageres: useNurseryStore.getState().etageres });
   },
 
   // ═══════════════════════════════════════════
@@ -701,11 +805,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     useGardenStore.getState().harvestPlantGarden(plantId);
 
     const plantDef = PLANTS[gp.plantDefId];
-    const harvestReward = plantDef ? Math.round(plantDef.realDaysToHarvest * 0.5 + 20) : 50;
+    // Base harvest reward: 3 coins per harvest action
+    const harvestReward = 3;
 
-    // Add rewards to shop store
-    useShopStore.getState().addScore(100 + harvestReward);
+    // Add base reward + score
+    useShopStore.getState().addScore(20);
     useShopStore.getState().addCoins(harvestReward);
+
+    // Add harvested produce to sellable inventory (economy-store)
+    try {
+      const { useEconomyStore } = require('@/store/economy-store');
+      useEconomyStore.getState().addHarvestInventory(gp.plantDefId);
+      useEconomyStore.getState().trackHarvest();
+    } catch {}
 
     const totalHarvested = get().harvested + 1;
     if (totalHarvested >= 50) {
@@ -726,7 +838,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         {
           id: `harvest-reward-${Date.now()}`,
           type: "harvest" as const,
-          message: `${plantDef?.harvestEmoji || "🌿"} Récolte ! +${harvestReward} 🪙 pièces`,
+          message: `${plantDef?.harvestEmoji || "🌿"} Récolte ! +${harvestReward} 🪙 · Vendre au marché pour plus`,
           emoji: "💰", cellX: 0, cellY: 0,
           timestamp: Date.now(), severity: "info" as const,
         },
@@ -781,8 +893,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     return result;
   },
 
-  buyHedge: (cost: number) => {
-    const result = useGardenStore.getState().buyHedge(cost);
+  buyHedge: (cost: number, hedgeType?: GardenHedge['type']) => {
+    const result = useGardenStore.getState().buyHedge(cost, hedgeType);
     if (result) {
       set({ gardenHedges: useGardenStore.getState().gardenHedges, coins: useShopStore.getState().coins });
     }
@@ -897,7 +1009,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (result) {
       const garden = useGardenStore.getState();
       const nursery = useNurseryStore.getState();
-      set({ miniSerres: nursery.miniSerres, gardenPlants: garden.gardenPlants });
+      set({ miniSerres: nursery.miniSerres, etageres: nursery.etageres, gardenPlants: garden.gardenPlants });
     }
     return result;
   },
@@ -969,6 +1081,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       alerts: sim.alerts,
       pepiniere: nursery.pepiniere,
       miniSerres: nursery.miniSerres,
+      etageres: nursery.etageres,
       gardenPlants: garden.gardenPlants,
       gardenTanks: garden.gardenTanks,
       score: shop.score,
@@ -1030,15 +1143,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   loadGameState: (state) => {
     const currentState = get();
 
-    // Apply date catch-up logic (same as loadDay)
-    let restoredDay = state.day ?? currentState.day;
-    if (restoredDay !== undefined && restoredDay !== null) {
-      const today = getTodayDayOfYear();
-      if (restoredDay < 1 || restoredDay > 365 || Math.abs(restoredDay - today) > 30) {
-        restoredDay = today;
-      }
-    }
-    const restoredSeason = getSeason(restoredDay);
+    // Date — toujours aujourd'hui, ignorer la sauvegarde
+    const today = getTodayDayOfYear();
+    const restoredDay = today;
+    const restoredSeason = getSeason(today);
 
     // Restore domain state to sub-stores
     if (state.gardenPlants) useGardenStore.setState({ gardenPlants: state.gardenPlants });
@@ -1053,12 +1161,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     if (state.pepiniere) useNurseryStore.setState({ pepiniere: state.pepiniere });
     if (state.miniSerres) useNurseryStore.setState({ miniSerres: state.miniSerres });
+    if (state.etageres) useNurseryStore.setState({ etageres: state.etageres } as any);
     if (state.ownedChambres) useNurseryStore.setState({ ownedChambres: state.ownedChambres });
     if (state.activeChambreId !== undefined) useNurseryStore.setState({ activeChambreId: state.activeChambreId });
 
     if (state.seedCollection) useShopStore.setState({ seedCollection: state.seedCollection });
     if (state.plantuleCollection) useShopStore.setState({ plantuleCollection: state.plantuleCollection });
     if (state.seedVarieties) useShopStore.setState({ seedVarieties: state.seedVarieties });
+    if (state.unlockedVarieties) useShopStore.setState({ unlockedVarieties: state.unlockedVarieties });
+    if (state.discoveredPlants) useShopStore.setState({ discoveredPlants: state.discoveredPlants });
     if (state.coins !== undefined) useShopStore.setState({ coins: state.coins });
     if (state.ecoPoints !== undefined) useShopStore.setState({ ecoPoints: state.ecoPoints, ecoLevel: state.ecoLevel });
     if (state.score !== undefined) useShopStore.setState({ score: state.score });
@@ -1089,11 +1200,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       gardenHeightCm: garden.gardenHeightCm,
       pepiniere: nursery.pepiniere,
       miniSerres: nursery.miniSerres,
+      etageres: nursery.etageres,
       ownedChambres: nursery.ownedChambres,
       activeChambreId: nursery.activeChambreId,
       seedCollection: shop.seedCollection,
       plantuleCollection: shop.plantuleCollection,
       seedVarieties: shop.seedVarieties,
+      unlockedVarieties: shop.unlockedVarieties,
+      discoveredPlants: shop.discoveredPlants,
       coins: shop.coins,
       ecoPoints: shop.ecoPoints,
       ecoLevel: shop.ecoLevel,
@@ -1174,6 +1288,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       gardenZones: garden.gardenZones,
       pepiniere: nursery.pepiniere,
       miniSerres: nursery.miniSerres,
+      etageres: nursery.etageres,
       serreTiles: nursery.serreTiles,
       ownedChambres: nursery.ownedChambres,
       activeChambreId: nursery.activeChambreId,
@@ -1183,6 +1298,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       seedCollection: shop.seedCollection,
       plantuleCollection: shop.plantuleCollection,
       seedVarieties: shop.seedVarieties,
+      unlockedVarieties: shop.unlockedVarieties,
+      discoveredPlants: shop.discoveredPlants,
       coins: shop.coins,
       ecoPoints: shop.ecoPoints,
       ecoLevel: shop.ecoLevel,
@@ -1227,14 +1344,38 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   createDigitalTwinInGarden: (plantDefId, x, y, scanData) => {
     const state = get();
-    const plantDef = PLANTS[plantDefId];
+    let plantDef = PLANTS[plantDefId];
+
+    // Si la plante n'est pas dans le catalogue, créer une définition générique
     if (!plantDef) {
-      return { success: false, message: `❌ Type de plante "${plantDefId}" non reconnu.`, rewards: null };
+      const customName = scanData?.plantName || plantDefId;
+      plantDef = {
+        id: plantDefId, name: customName, emoji: '🌱',
+        image: '/cards/card-custom-plant.png',
+        stageDurations: [7, 21, 28, 45] as [number, number, number, number],
+        optimalTemp: [12, 28], waterNeed: 4.0, lightNeed: 7,
+        harvestEmoji: '🌿', cropCoefficient: 0.8,
+        optimalPlantMonths: [3, 4, 5], optimalSeasons: ['summer'],
+        diseaseResistance: 0.5, pestResistance: 0.5, droughtResistance: 0.4,
+        realDaysToHarvest: 90,
+      };
+      // Enregistrer dans PLANTS pour les prochaines fois
+      PLANTS[plantDefId] = plantDef;
+      // Ajouter l'espacement par défaut
+      if (!PLANT_SPACING[plantDefId]) {
+        PLANT_SPACING[plantDefId] = { plantSpacingCm: 30, rowSpacingCm: 40, color: '#22c55e', label: '30×40cm' };
+      }
+      // Sauvegarder comme plante découverte (dans shop-store pour persistance)
+      const shopDiscovered = [...(useShopStore.getState().discoveredPlants || []), { id: plantDefId, name: customName, emoji: '🌱', discoveredAt: Date.now(), source: 'photo' as const }];
+      useShopStore.setState({ discoveredPlants: shopDiscovered });
+      // Track identification for daily quest
+      try {
+        const { useEconomyStore } = require('@/store/economy-store');
+        useEconomyStore.getState().trackIdentify();
+      } catch {}
     }
+
     const spacing = PLANT_SPACING[plantDefId];
-    if (!spacing) {
-      return { success: false, message: `❌ Pas d'espacement défini pour ${plantDef.name}.`, rewards: null };
-    }
     if (x < 0 || y < 0 || x + spacing.plantSpacingCm > state.gardenWidthCm || y + spacing.rowSpacingCm > state.gardenHeightCm) {
       return { success: false, message: `❌ Position hors limites du jardin.`, rewards: null };
     }

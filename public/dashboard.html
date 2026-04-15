@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BotanIA — Agent IA Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e5e5e5;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #16a34a 0%, #0d9488 100%);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .header-emoji { font-size: 36px; }
+    .header-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-sub { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+
+    .status-bar {
+      background: #161b22;
+      padding: 8px 24px;
+      display: flex;
+      gap: 20px;
+      font-size: 11px;
+      border-bottom: 1px solid #21262d;
+      flex-wrap: wrap;
+    }
+    .status-item { display: flex; align-items: center; gap: 6px; color: #8b949e; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ok { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+    .dot-err { background: #ef4444; }
+    .dot-off { background: #484f58; }
+
+    .toolbar {
+      padding: 12px 24px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary { background: #16a34a; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #15803d; }
+    .btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+    .btn-secondary:hover:not(:disabled) { background: #30363d; }
+    .btn-danger { background: #21262d; color: #f85149; border: 1px solid #f8514944; }
+    .btn-danger:hover:not(:disabled) { background: #f8514922; }
+    .btn-ghost { background: transparent; color: #8b949e; border: 1px solid #30363d; }
+    .btn-ghost:hover { background: #21262d; color: #c9d1d9; }
+
+    .main { padding: 16px 24px; }
+
+    /* Summary */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .summary-card.ok { border-color: #22c55e66; }
+    .summary-card.warn { border-color: #eab30866; }
+    .summary-card.err { border-color: #ef444466; }
+    .summary-num { font-size: 36px; font-weight: 800; }
+    .summary-label { font-size: 11px; color: #8b949e; text-transform: uppercase; margin-top: 4px; }
+    .summary-card.ok .summary-num { color: #22c55e; }
+    .summary-card.warn .summary-num { color: #eab308; }
+    .summary-card.err .summary-num { color: #ef4444; }
+
+    /* Plants list */
+    .plants-section { margin-top: 16px; }
+    .plants-section h2 { font-size: 12px; font-weight: 700; color: #6e7681; text-transform: uppercase; margin-bottom: 10px; }
+
+    .plant-item {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      border-left: 4px solid transparent;
+    }
+    .plant-item.ok { border-left-color: #22c55e; }
+    .plant-item.warn { border-left-color: #eab308; }
+    .plant-item.err { border-left-color: #ef4444; }
+
+    .plant-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .plant-name { font-weight: 700; font-size: 13px; }
+    .plant-id { font-size: 10px; color: #6e7681; font-family: monospace; }
+    .plant-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: auto;
+    }
+    .badge-ok { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; }
+    .badge-warn { background: #eab30822; color: #eab308; border: 1px solid #eab30844; }
+    .badge-err { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
+
+    .check-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .check-chip {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+    .check-chip.ok { background: #22c55e22; color: #22c55e; }
+    .check-chip.ok:hover { background: #22c55e44; }
+    .check-chip.warn { background: #eab30822; color: #eab308; }
+    .check-chip.warn:hover { background: #eab30844; }
+    .check-chip.err { background: #ef444422; color: #ef4444; }
+    .check-chip.err:hover { background: #ef444444; border-color: #ef4444; }
+    .check-chip.opt { background: #8b949e22; color: #8b949e; cursor: default; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      display: none;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      width: min(700px, 95vw);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      background: #1c2128;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-size: 14px; font-weight: 700; }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #8b949e;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .modal-close:hover { color: #c9d1d9; }
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #21262d;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .code-preview {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .code-preview .comment { color: #6e7681; }
+    .code-preview .key { color: #79c0ff; }
+    .code-preview .value { color: #a5d6ff; }
+    .code-preview .number { color: #79c0ff; }
+
+    .modal-info {
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: #1c2128;
+      border-radius: 6px;
+      border-left: 3px solid #eab308;
+    }
+
+    .success-box {
+      background: #22c55e22;
+      border: 1px solid #22c55e44;
+      border-radius: 6px;
+      padding: 12px;
+      color: #22c55e;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .error-box {
+      background: #ef444422;
+      border: 1px solid #ef444444;
+      border-radius: 6px;
+      padding: 12px;
+      color: #ef4444;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .loading { display: flex; align-items: center; gap: 10px; padding: 20px; color: #6e7681; font-size: 12px; }
+    .spinner { width: 14px; height: 14px; border: 2px solid #30363d; border-top-color: #16a34a; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty { padding: 40px; text-align: center; color: #484f58; font-size: 13px; }
+    .empty-emoji { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-emoji">🤖</div>
+    <div>
+      <div class="header-title">BotanIA — Agent IA</div>
+      <div class="header-sub">Co-pilote proactif & autonome • Ollama + Qdrant</div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-item">
+      <span class="dot dot-ok" id="dotBotania"></span>
+      BotanIA (3000)
+    </div>
+    <div class="status-item">
+      <span class="dot dot-ok" id="dotMicro"></span>
+      Microservice (3001)
+    </div>
+    <div class="status-item">
+      <span class="dot dot-ok" id="dotOllama"></span>
+      Ollama
+    </div>
+    <div class="status-item">
+      <span class="dot dot-err" id="dotQdrant"></span>
+      Qdrant (6333)
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-primary" id="btnScan" onclick="runScan()">🔍 Scanner 8 pts</button>
+    <button class="btn btn-secondary" onclick="runProactive()">🔔 Analyse Proactive</button>
+    <button class="btn btn-secondary" onclick="openSpriteEditor()">🖼️ Éditeur Sprites</button>
+    <button class="btn btn-secondary" onclick="runRAG()">📚 RAG Query</button>
+    <button class="btn btn-secondary" onclick="runStatus()">📡 Status</button>
+    <button class="btn btn-danger" onclick="clearAll()" style="margin-left:auto">✕ Reset</button>
+  </div>
+
+  <!-- Sprite Editor Panel (hidden by default) -->
+  <div class="main" id="spriteEditorPanel" style="display:none; margin-top:16px;">
+    <div class="modal-info" style="margin-bottom:16px;">
+      📐 <strong>Spécifications sprites :</strong> PNG 512×512px · Manga cel-shaded · Thick black borders · Kawaii · Fond transparent (stages finaux) ou beige
+    </div>
+    <div id="spritePlantsList"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div id="loading" class="loading" style="display:none">
+      <div class="spinner"></div>
+      <span id="loadingText">Analyse en cours...</span>
+    </div>
+
+    <div id="empty" class="empty">
+      <div class="empty-emoji">🌱</div>
+      Clique sur "Scanner 8 pts" pour analyser BotanIA
+    </div>
+
+    <!-- Summary -->
+    <div class="summary" id="summary" style="display:none"></div>
+
+    <!-- Plants -->
+    <div class="plants-section" id="plantsSection" style="display:none">
+      <h2>Détail — Clique sur ❌ pour générer et valider</h2>
+      <div id="plantsList"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">PlantCard — akebia</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info" id="modalInfo">
+          Clique sur "Générer" pour créer le code PlantCard.
+        </div>
+        <div id="modalContent">
+          <div class="code-preview" id="codePreview">// Le code apparaîtra ici...</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary" id="btnGenerate" onclick="generateCode()">⚡ Générer</button>
+        <button class="btn btn-primary" id="btnValidate" onclick="validateCode()" style="display:none">✅ Valider & Écrire</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Use relative URLs on localhost; use port 3001 directly on Tailscale
+const isTailscale = window.location.hostname.includes('tail56d862');
+const ORIGIN = isTailscale ? '' : 'http://localhost:3000';
+const MICRO_API = ORIGIN + '/api';
+
+// Only expose Botania proxied endpoints on localhost (these don't exist in microservice)
+const BOTANIA_API = ORIGIN + '/api/agent';
+
+// Stage names & descriptions
+const STAGE_NAMES_VEG = ['Graine','Levée','Plantule','Croissance','Floraison','Récolte'];
+const STAGE_DESCS_VEG = [
+  'Graine germée — tiny sprout, just broke soil, cotyledon leaves barely visible, pale green',
+  'Petite plantule — 2-4 true leaves, delicate thin stem, fresh green, 3-5cm tall',
+  'Plantule établie — 6-10 leaves, stronger stem, bushy appearance, 8-12cm tall',
+  'Plante juvénile — full foliage, established root system, beginning of structural growth',
+  'Plante mature — flowering or early fruiting, full size, vibrant healthy leaves',
+  'Récolte prête — peak maturity, abundant fruit/vegetable visible, harvest-ready',
+];
+const STAGE_NAMES_TREE = ['Scion','Jeune arbre','Arbre moyen','Arbre établi','Arbre mature'];
+const STAGE_DESCS_TREE = [
+  '~20cm mini scion in pot, thin trunk, few leaves, very young',
+  '~40cm young sapling, developing crown, trunk thickening',
+  '~80cm juvenile tree, established structure, growing canopy',
+  '~150cm semi-mature tree, flowering/fruits appearing, good canopy',
+  '~200cm mature productive tree, full canopy, healthy appearance',
+];
+const STAGE_NAMES_PEPINIERE = ['Monticule','Petite plantule','Plantule 2f','Plantule 4f','Plantule 5f','Floraison'];
+const STAGE_DESCS_PEPINIERE = [
+  'Dirt mound, just planted seed barely visible',
+  'Small seedling, 2 cotyledon leaves, 3-5cm',
+  'Seedling with 2 true leaves, 5-10cm',
+  'Seedling with 4 leaves, 10-15cm',
+  'Seedling with 5+ leaves, 15-20cm, ready for transplant',
+  'Flowering stage, small white/pink flowers',
+];
+
+let currentPlant = null;
+let generatedCode = null;
+let writeCooldown = false;
+let scanData = null; // store scan results for sprite editor
+let currentSpritePlant = null;
+
+// ─── Status ───────────────────────────────────────────────────────────────────
+async function checkStatus() {
+  try {
+    const r = await fetch(`${MICRO_API}/health`);
+    const d = await r.json();
+    setDot('dotOllama', d.ollama?.available);
+    setDot('dotQdrant', d.qdrant?.available);
+    setDot('dotMicro', true);
+  } catch { setDot('dotMicro', false); }
+
+  try {
+    await fetch(`${MICRO_API}/scan/plants`, {method:'HEAD'});
+    setDot('dotBotania', true);
+  } catch { setDot('dotBotania', false); }
+}
+
+function setDot(id, ok) {
+  document.getElementById(id).className = ok ? 'dot dot-ok' : 'dot dot-err';
+}
+
+// ─── Scan ─────────────────────────────────────────────────────────────────────
+async function runScan() {
+  showLoading('Lancement du scan 8 points...');
+
+  try {
+    const r = await fetch(`${MICRO_API}/scan/plants`, { method: 'POST' });
+    const responseText = await r.text();
+    let d;
+    try {
+      d = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error(`Scan ${r.status} parse error. Response: ${responseText.slice(0, 500)}`);
+    }
+    if (!r.ok) throw new Error(`Scan ${r.status}: ${JSON.stringify(d)}`);
+    // Microservice returns {results,summary} directly (no wrapper)
+    if (d.data) d = d.data;
+    if (!d.results) throw new Error('Réponse invalide du scan: ' + JSON.stringify(d).slice(0,100));
+
+    scanData = d;
+
+    const s = d.summary;
+    document.getElementById('summary').innerHTML = `
+      <div class="summary-card ok"><div class="summary-num">${s.complete}</div><div class="summary-label">Complètes</div></div>
+      <div class="summary-card warn"><div class="summary-num">${s.partial}</div><div class="summary-label">Partielles</div></div>
+      <div class="summary-card err"><div class="summary-num">${s.incomplete}</div><div class="summary-label">Incomplètes</div></div>
+    `;
+    document.getElementById('summary').style.display = 'grid';
+
+    const sorted = [...d.results].sort((a,b) => {
+      const o = {'❌ INCOMPLET':0,'⚠️ PARTIEL':1,'✅ COMPLET':2};
+      return (o[a.overallStatus]??3)-(o[b.overallStatus]??3);
+    });
+
+    document.getElementById('plantsList').innerHTML = sorted.map(p => {
+      const cls = p.overallStatus === '✅ COMPLET' ? 'ok'
+                : p.overallStatus === '⚠️ PARTIEL' ? 'warn' : 'err';
+      const checks = [
+        {key:'PlantCard', s:p.checks.plantCard.status, action:'plantcard'},
+        {key:'Sprites', s:p.checks.sprites.status, v:`${p.checks.sprites.missing}/6`, action:'sprites'},
+        {key:'CARD_DATA', s:p.checks.cardData.status, action:'carddata'},
+        {key:'SEED', s:p.checks.seedVariety.status, action:null},
+        {key:'Plantule', s:p.checks.plantule.status, action:null},
+        {key:'Packet', s:p.checks.packetImage.status, action:null},
+        {key:'PLANTS', s:p.checks.plantsEntry.status, action:'plants'},
+        {key:'Companion', s:p.checks.companionData.status, action:null},
+      ];
+      const chips = checks.map(c => {
+        const cc = c.s === '✅' ? 'ok' : c.s === '⚠️' ? 'warn' : c.s === '❌' ? 'err' : 'opt';
+        // Sprites = toujours clickable, ouvre le sprite editor
+        if (c.key === 'Sprites') {
+          return `<span class="check-chip ${cc}" onclick="openSpriteModal('${p.plantDefId}')" style="cursor:pointer">${c.s} ${c.key}${c.v?' '+c.v:''}</span>`;
+        }
+        const clickable = c.action && c.s === '❌' ? `onclick="openCheck('${p.plantDefId}','${c.action}')" style="cursor:pointer"` : '';
+        return `<span class="check-chip ${cc}" ${clickable}>${c.s} ${c.key}${c.v?' '+c.v:''}</span>`;
+      }).join('');
+      return `<div class="plant-item ${cls}">
+        <div class="plant-header">
+          <span class="plant-name">${p.displayName}</span>
+          <span class="plant-id">${p.plantDefId}</span>
+          <span class="plant-badge badge-${cls}">${p.overallStatus}</span>
+        </div>
+        <div class="check-grid">${chips}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('plantsSection').style.display = 'block';
+    document.getElementById('empty').style.display = 'none';
+  } catch (e) {
+    alert('Erreur scan: ' + e.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ─── Modal ───────────────────────────────────────────────────────────────────
+function openCheck(plantDefId, action) {
+  if (writeCooldown) {
+    alert('⏳ Attends 3 secondes entre chaque écriture — le fichier est en cours de synchronisation par Next.js HMR.');
+    return;
+  }
+  currentPlant = { plantDefId, action, shopId: null, fileName: null };
+  generatedCode = null;
+
+  const actionLabels = {
+    plantcard: 'PlantCard → HologramEvolution.tsx',
+    sprites: 'Sprites (6 stades)',
+    carddata: 'CARD_DATA → src/data/graines/',
+    plants: 'PLANTS entry → ai-engine.ts',
+  };
+
+  document.getElementById('modalTitle').textContent =
+    `${actionLabels[action] || action} — ${plantDefId}`;
+  document.getElementById('modalInfo').style.display = 'block';
+  document.getElementById('modalInfo').textContent =
+    'Clique sur "Générer" pour créer le code.';
+  document.getElementById('btnGenerate').style.display = '';
+  document.getElementById('btnValidate').style.display = 'none';
+  // Reset modalContent without destroying codePreview
+  document.getElementById('modalContent').innerHTML = '<div class="code-preview" id="codePreview">// Clique sur "Générer"...</div>';
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  currentPlant = null;
+  generatedCode = null;
+}
+
+// ─── Generate ────────────────────────────────────────────────────────────────
+async function generateCode() {
+  if (!currentPlant) return;
+  const { plantDefId, action } = currentPlant;
+
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  btn.textContent = '⏳ Génération...';
+
+  try {
+    if (action === 'plantcard') {
+      const r = await fetch(`${BOTANIA_API}/generate-plantcard`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plantDefId }),
+      });
+      const d = await r.json();
+
+      if (!d.success) throw new Error(d.error);
+
+      generatedCode = d.code;
+      document.getElementById('modalContent').innerHTML = `
+        <div class="code-preview">${escapeHtml(generatedCode)}</div>
+      `;
+      document.getElementById('modalInfo').textContent = d.alreadyExists
+        ? '⚠️ ' + d.message
+        : '✅ Code généré ! Clique sur "Valider & Écrire" pour l\'ajouter à HologramEvolution.tsx';
+
+      btn.style.display = 'none';
+      document.getElementById('btnValidate').style.display = '';
+
+    } else if (action === 'carddata') {
+      const r = await fetch(`${BOTANIA_API}/generate-carddata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plantDefId }),
+      });
+      const d = await r.json();
+
+      if (!d.success) throw new Error(d.error);
+
+      generatedCode = d.code;
+      // Stocker les métadonnées pour validate
+      currentPlant.shopId = d.shopId;
+      currentPlant.fileName = d.fileName;
+
+      document.getElementById('modalContent').innerHTML = `
+        <div style="margin-bottom:8px;font-size:11px;color:#8b949e">
+          📄 Fichier : <code style="color:#22c55e">src/data/graines/${d.shopId}/${d.fileName}</code>
+        </div>
+        <div class="code-preview">${escapeHtml(generatedCode)}</div>
+      `;
+      document.getElementById('modalInfo').textContent = d.alreadyExists
+        ? '⚠️ ' + d.message
+        : `✅ Code généré pour ${d.seedName} — clique "Valider & Écrire" pour créer le fichier`;
+
+      btn.style.display = 'none';
+      document.getElementById('btnValidate').style.display = '';
+
+    } else {
+      document.getElementById('modalContent').innerHTML = `
+        <div class="code-preview">// Action "${action}" pour ${plantDefId}
+// Cette fonctionnalité sera développée.</div>
+      `;
+      btn.style.display = 'none';
+    }
+  } catch (e) {
+    document.getElementById('modalInfo').textContent = '❌ Erreur: ' + e.message;
+    document.getElementById('modalInfo').style.borderLeftColor = '#ef4444';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Générer';
+  }
+}
+
+// ─── Validate ────────────────────────────────────────────────────────────────
+async function validateCode() {
+  if (!currentPlant || !generatedCode) return;
+  const { plantDefId, action, shopId, fileName } = currentPlant;
+
+  const btn = document.getElementById('btnValidate');
+  btn.disabled = true;
+  btn.textContent = '⏳ Écriture...';
+
+  try {
+    let endpoint, body;
+
+    if (action === 'carddata') {
+      endpoint = `${BOTANIA_API}/validate-carddata`;
+      body = { plantDefId, code: generatedCode, shopId, fileName };
+    } else {
+      // plantcard (default)
+      endpoint = `${BOTANIA_API}/validate-plantcard`;
+      body = { plantDefId, code: generatedCode };
+    }
+
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+
+    if (d.success) {
+      writeCooldown = true;
+      document.getElementById('modalContent').innerHTML += `
+        <div class="success-box">${d.message}</div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;color:#8b949e">⏳ Patiente 3s — reload imminent...</div>
+      `;
+      btn.style.display = 'none';
+      document.getElementById('btnGenerate').style.display = 'none';
+      setTimeout(() => { closeModal(); }, 500);
+      setTimeout(() => { writeCooldown = false; location.reload(); }, 3000);
+    } else {
+      document.getElementById('modalContent').innerHTML += `
+        <div class="error-box">❌ ${d.error}</div>
+      `;
+      btn.disabled = false;
+      btn.textContent = '✅ Valider & Écrire';
+    }
+  } catch (e) {
+    document.getElementById('modalContent').innerHTML += `
+      <div class="error-box">❌ Erreur: ${e.message}</div>
+    `;
+    btn.disabled = false;
+    btn.textContent = '✅ Valider & Écrire';
+  }
+}
+
+// ─── Other actions ───────────────────────────────────────────────────────────
+async function runProactive() {
+  showLoading('Analyse proactive...');
+  try {
+    const r = await fetch(`${MICRO_API}/scan/plants`, {method:'POST'});
+    let d = await r.json();
+    if (d.data) d = d.data;
+    const incomplete = d.results?.filter(r=>r.overallStatus!=='✅ COMPLET').slice(0,3) || [];
+    const prompt = `Tu es Lia, agente IA proactive. Scan: ${d.summary?.complete} complètes, ${d.summary?.partial} partielles, ${d.summary?.incomplete} incomplètes.` +
+      (incomplete.length ? `\nProblèmes:\n${incomplete.map(p=>`- ${p.displayName}`).join('\n')}` : '') +
+      `\nDonne 3 actions prioritaires concrètes.`;
+    const cr = await fetch(`${MICRO_API}/chat`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt})});
+    const crd = await cr.json();
+    alert('Lia:\n' + (crd.answer || '...'));
+  } catch(e) { alert('Erreur: ' + e.message); }
+  finally { hideLoading(); }
+}
+
+async function runRAG() {
+  const q = prompt('Question RAG:');
+  if (!q) return;
+  try {
+    const r = await fetch(`${MICRO_API}/rag`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,gameContext:{}})});
+    const d = await r.json();
+    alert('RAG:\n' + (d.answer || '...'));
+  } catch(e) { alert('Erreur: ' + e.message); }
+}
+
+async function runStatus() {
+  try {
+    const r = await fetch(`${MICRO_API}/status`);
+    const d = await r.json();
+    alert('📡 Status\nOllama: ' + (d.ollama?.available?'OK':'OFF') + '\nQdrant: ' + (d.qdrant?.available?'OK':'OFF'));
+  } catch(e) { alert('Erreur: ' + e.message); }
+}
+
+function clearAll() {
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('plantsSection').style.display = 'none';
+  document.getElementById('empty').style.display = 'block';
+  document.getElementById('spriteEditorPanel').style.display = 'none';
+}
+
+// ─── Sprite Editor Panel
+function openSpriteModal(plantDefId) {
+  if (!scanData) return;
+  const plant = scanData.results.find(p => p.plantDefId === plantDefId);
+  if (!plant) return;
+  currentSpritePlant = plant;
+
+  // Detect tree vs vegetable (tree paths go to /trees/ shop folder, plants go to /plants/)
+  const isTree = plant.imageAssets.some(a => a.type === 'tree-stage');
+  const stageCount = isTree ? 5 : 6;
+  const isPlantule = plant.catalogSource === 'PLANTULES_LOCALES';
+
+  const stageNames = isTree ? STAGE_NAMES_TREE : (isPlantule ? STAGE_NAMES_PEPINIERE : STAGE_NAMES_VEG);
+  const stageDescs = isTree ? STAGE_DESCS_TREE : (isPlantule ? STAGE_DESCS_PEPINIERE : STAGE_DESCS_VEG);
+
+  // Build full prompt macro from plant data
+  const shopId = plant.shopId || plant.catalogSource || 'unknown';
+  const displayName = plant.displayName || plantDefId;
+  const botanicalName = plant.botanicalName || '';
+  const categoryLabel = isTree ? 'arbre fruitier' : (isPlantule ? 'plantule' : 'légume');
+
+  // Card data info
+  const cardData = plant.checks?.cardData?.details?.replace('CARD_DATA trouvé: ', '') || '';
+
+  document.getElementById('modalTitle').textContent = `🖼️ Sprites — ${displayName}`;
+  document.getElementById('modalInfo').style.display = 'block';
+
+  // Build specs banner
+  let specsHtml = `
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:12px">
+    <div style="font-size:11px;font-weight:700;margin-bottom:8px">📐 SPÉCIFICATIONS GÉNÉRALES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
+      <div><span style="color:#8b949e">Format:</span> <span style="color:#c9d1d9">PNG 512×512px</span></div>
+      <div><span style="color:#8b949e">Style:</span> <span style="color:#c9d1d9">Manga cel-shaded</span></div>
+      <div><span style="color:#8b949e">Bordures:</span> <span style="color:#c9d1d9">Noires épaisses</span></div>
+      <div><span style="color:#8b949e">Esthétique:</span> <span style="color:#c9d1d9">Kawaii</span></div>
+      <div><span style="color:#8b949e">Fond:</span> <span style="color:#c9d1d9">${isTree ? 'Beige kraft' : 'Beige uni ou transparent'}</span></div>
+      <div><span style="color:#8b949e">Catégorie:</span> <span style="color:#c9d1d9">${isTree ? '🌳 Arbre fruitier' : (isPlantule ? '🌱 Plantule' : '🌱 Légume')}</span></div>
+      <div><span style="color:#8b949e">Boutique:</span> <span style="color:#c9d1d9">${shopId}</span></div>
+      <div><span style="color:#8b949e">Stades:</span> <span style="color:#c9d1d9">${stageCount}</span></div>
+      ${botanicalName ? `<div style="grid-column:1/-1"><span style="color:#8b949e">Nom botanique:</span> <span style="color:#c9d1d9;font-style:italic">${botanicalName}</span></div>` : ''}
+      ${cardData ? `<div style="grid-column:1/-1"><span style="color:#8b949e">card_data:</span> <span style="color:#22c55e">${cardData}</span></div>` : ''}
+    </div>
+  </div>`;
+
+  document.getElementById('modalInfo').innerHTML = specsHtml;
+  document.getElementById('btnGenerate').style.display = 'none';
+  document.getElementById('btnValidate').style.display = 'none';
+
+  const stageAssets = plant.imageAssets.filter(a => a.type === 'plant-stage' || a.type === 'tree-stage');
+  let html = '<div style="display:flex;flex-direction:column;gap:12px">';
+
+  for (let n = 1; n <= stageCount; n++) {
+    const asset = stageAssets.find(a => a.stageNumber === n);
+    const found = !!asset?.foundPath;
+    const idx = n - 1;
+    const stageName = stageNames[idx] || `Stage ${n}`;
+    const stageDesc = stageDescs[idx] || '';
+
+    // Build stage-specific prompt
+    const basePrompt = isTree
+      ? `manga-style ${displayName} fruit tree growth stage ${n} of ${stageCount}, in terracotta pot, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, `
+        + (n === 1 ? 'mini scion 20cm' : n === 2 ? 'young tree 40cm' : n === 3 ? 'medium tree 80cm' : n === 4 ? 'tall tree 150cm' : 'mature tree 200cm')
+        + `, 512x512px, BotanIA game style`
+      : isPlantule
+      ? `manga-style ${displayName} seedling stage ${n} of ${stageCount}, in small pot or module, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, ${stageDesc}, 512x512px, BotanIA game style`
+      : `manga-style ${displayName} growth stage ${n} of ${stageCount}, vegetable in terracotta pot, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, ${stageDesc}, 512x512px, BotanIA game style`;
+
+    const pathHint = isTree
+      ? `/trees/${shopId}/${plantDefId}-stage-${n}.png`
+      : `/plants/${plantDefId}-stage-${n}.png`;
+
+    html += `<div style="background:#0d1117;border:1px solid ${found ? '#22c55e44' : '#ef444444'};border-radius:8px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div>
+          <span style="font-weight:700;font-size:12px;color:#c9d1d9">Stage ${n}</span>
+          <span style="font-size:11px;color:#8b949e;margin-left:6px">— ${stageName}</span>
+        </div>
+        <span style="font-size:10px;color:${found ? '#22c55e' : '#ef4444'}">${found ? '✓ Présente' : '❌ Manquant'}</span>
+      </div>
+      <div style="font-size:10px;color:#6e7681;margin-bottom:8px;font-style:italic">${stageDesc}</div>
+
+      <!-- Macro / Prompt -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:600;color:#f0883e">📋 MACRO / PROMPT IA</span>
+          <button class="btn btn-secondary" style="font-size:9px;padding:2px 8px" onclick="copyPrompt('prompt-${plantDefId}-${n}')">📋 Copier</button>
+        </div>
+        <textarea id="prompt-${plantDefId}-${n}" rows="3" readonly style="
+          width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-size:9px;
+          font-family:monospace;padding:6px;border-radius:4px;resize:none;box-sizing:border-box;
+          line-height:1.4" onclick="this.select()">${basePrompt}</textarea>
+      </div>
+
+      <!-- Path hint -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:10px;color:#484f58;flex-shrink:0">📁 Chemin attendu:</span>
+        <code style="font-size:9px;background:#161b22;padding:2px 6px;border-radius:4px;color:#8b949e">${pathHint}</code>
+      </div>
+
+      <!-- Upload -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="text" id="sprite-path-${n}" placeholder="C:\\Images\\${plantDefId}-stage-${n}.png"
+          style="flex:1;background:#161b22;border:1px solid #30363d;color:#c9d1d9;font-size:10px;padding:4px 6px;border-radius:4px;min-width:0">
+        <input type="file" id="sprite-file-${n}" accept="image/png" style="display:none"
+          onchange="var f=this.files[0];if(f){document.getElementById('sprite-path-${n}').value=f.path||f.name;}">
+        <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px;white-space:nowrap"
+          onclick="document.getElementById('sprite-file-${n}').click()">Parcourir</button>
+        <button class="btn btn-primary" style="font-size:10px;padding:4px 10px;white-space:nowrap"
+          onclick="uploadSprite('${plantDefId}',${n},'${isTree ? 'tree-stage' : 'plant-stage'}')">Envoyer</button>
+      </div>
+    </div>`;
+  }
+  html += `<div id="spriteMsg" style="margin-top:8px;text-align:center;font-size:11px"></div>`;
+  html += '</div>';
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+
+function copyPrompt(promptId) {
+  const el = document.getElementById(promptId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.value).then(() => {
+    const btn = el.nextElementSibling;
+    if (btn && btn.textContent.includes('Copier')) {
+      const orig = btn.textContent;
+      btn.textContent = '✅ Copié!';
+      btn.style.color = '#22c55e';
+      setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+    }
+  }).catch(() => {
+    el.select();
+    document.execCommand('copy');
+  });
+}
+
+async function uploadSprite(plantDefId, stageNumber, imageType) {
+  const input = document.getElementById(`sprite-path-${stageNumber}`);
+  const fileInput = document.getElementById(`sprite-file-${stageNumber}`);
+  const msg = document.getElementById('spriteMsg');
+  const path = input.value.trim();
+  if (!path) { msg.textContent = '❌ Indique le chemin ou selectionne un fichier'; msg.style.color='#ef4444'; return; }
+
+  msg.textContent = '⏳ Envoi en cours...'; msg.style.color='#8b949e';
+  try {
+    const formData = new FormData();
+    formData.append('plantDefId', plantDefId);
+    formData.append('imageType', imageType);
+    formData.append('stageNumber', String(stageNumber));
+
+    // Si fichier selectionne via le navigateur, l'envoyer
+    if (fileInput.files.length > 0) {
+      formData.append('file', fileInput.files[0]);
+      formData.append('sourcePath', path);
+    } else {
+      // Sinon juste le chemin — le backend tentera de lire le fichier
+      formData.append('sourcePath', path);
+    }
+
+    const r = await fetch(`${MICRO_API}/scan/plants/register`, {
+      method: 'POST',
+      body: formData,
+    });
+    const d = await r.json();
+    if (d.success) {
+      msg.textContent = `✅ Stage ${stageNumber} — Image enregistree !`;
+      msg.style.color = '#22c55e';
+      if (scanData) {
+        const plant = scanData.results.find(p => p.plantDefId === plantDefId);
+        if (plant) {
+          const asset = plant.imageAssets.find(a => a.type === imageType && a.stageNumber === stageNumber);
+          if (asset) { asset.foundPath = d.publicUrl; asset.status = '✅'; }
+        }
+      }
+      renderSpriteEditor(scanData);
+    } else {
+      msg.textContent = `❌ ${d.error}`; msg.style.color = '#ef4444';
+    }
+  } catch(e) {
+    msg.textContent = `❌ Erreur: ${e.message}`; msg.style.color = '#ef4444';
+  }
+}
+
+// ─── Plantule Modal (10 images: 5 stages + 5 mature) ────────────────────────
+function openPlantuleModal(plantDefId) {
+  if (!scanData) return;
+  const plant = scanData.results.find(p => p.plantDefId === plantDefId);
+  if (!plant) return;
+  currentSpritePlant = plant;
+
+  const displayName = plant.displayName || plantDefId;
+  const stageAssets = plant.imageAssets.filter(a => a.type === 'plantule-stage' || a.type === 'plantule-mature');
+
+  document.getElementById('modalTitle').textContent = `🌱 Plantules — ${displayName}`;
+  document.getElementById('modalInfo').style.display = 'none';
+  document.getElementById('btnGenerate').style.display = 'none';
+  document.getElementById('btnValidate').style.display = 'none';
+
+  const STAGE_NAMES = ['Graine', 'Levée', 'Plantule', 'Croissance', 'Floraison'];
+  const STAGE_DESCS = [
+    'Tiny seedling, 2 cotyledon leaves, 5cm pot',
+    'First true leaves developing, 7cm pot',
+    'Established seedling, 4-6 leaves, 10cm mini-pot',
+    'Young plant, 8-10 leaves, 12cm mini-pot',
+    'Mature plant, first flower buds, 15cm pot',
+  ];
+  const MATURE_DESCS = [
+    'First young fruits forming, green fruits visible',
+    'Fruits growing, green fruits developing',
+    'Véraison: color change beginning, some colored',
+    'Fruits nearly mature, peak production',
+    'Fully productive, ripe fruits ready to harvest',
+  ];
+
+  let html = '<div style="margin-bottom:16px;padding:8px;background:#161b22;border-radius:6px;font-size:10px;color:#8b949e">';
+  html += '📁 /plantules/ | 🌱 Stages (1-5) croissance serre | 🍅 Mature (1-5) fruits/récolte | PNG 512×512 | Manga cel-shaded';
+  html += '</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:12px">';
+
+  html += `<div style="font-size:11px;font-weight:700;color:#f0883e;margin-top:4px">🌱 STAGES 1-5 — Croissance en serre</div>`;
+  for (let n = 1; n <= 5; n++) {
+    const asset = stageAssets.find(a => a.type === 'plantule-stage' && a.stageNumber === n);
+    const found = !!asset?.foundPath;
+    const pathHint = `/plantules/${plantDefId}-stage-${n}.png`;
+    const basePrompt = `manga-style ${displayName} seedling growth stage ${n} of 5, ${STAGE_DESCS[n-1]}, cel-shaded, thick black manga borders, beige kraft background, kawaii aesthetic, 512x512px, BotanIA game style`;
+
+    html += `<div style="background:#0d1117;border:1px solid ${found ? '#22c55e44' : '#ef444444'};border-radius:8px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div><span style="font-weight:700;font-size:12px;color:#c9d1d9">Stage ${n}</span><span style="font-size:11px;color:#8b949e;margin-left:6px">— ${STAGE_NAMES[n-1]}</span></div>
+        <span style="font-size:10px;color:${found ? '#22c55e' : '#ef4444'}">${found ? '✓ Présente' : '❌ Manquant'}</span>
+      </div>
+      <div style="font-size:10px;color:#6e7681;margin-bottom:8px;font-style:italic">${STAGE_DESCS[n-1]}</div>
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:600;color:#f0883e">📋 MACRO</span>
+          <button class="btn btn-secondary" style="font-size:9px;padding:2px 8px" onclick="copyPrompt('plt-${plantDefId}-stage-${n}')">📋 Copier</button>
+        </div>
+        <textarea id="plt-${plantDefId}-stage-${n}" rows="2" readonly style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-size:9px;font-family:monospace;padding:6px;border-radius:4px;resize:none;box-sizing:border-box;line-height:1.4" onclick="this.select()">${basePrompt}</textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:10px;color:#484f58;flex-shrink:0">📁 Chemin:</span>
+        <code style="font-size:9px;background:#161b22;padding:2px 6px;border-radius:4px;color:#8b949e">${pathHint}</code>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="text" id="plt-stage-path-${n}" placeholder="C:\\Images\\${plantDefId}-stage-${n}.png" style="flex:1;background:#161b22;border:1px solid #30363d;color:#c9d1d9;font-size:10px;padding:4px 6px;border-radius:4px;min-width:0">
+        <input type="file" id="plt-stage-file-${n}" accept="image/png" style="display:none" onchange="var f=this.files[0];if(f){document.getElementById('plt-stage-path-${n}').value=f.path||f.name;}">
+        <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px" onclick="document.getElementById('plt-stage-file-${n}').click()">Parcourir</button>
+        <button class="btn btn-primary" style="font-size:10px;padding:4px 10px" onclick="uploadPlantuleImage('${plantDefId}',${n},'stage')">Envoyer</button>
+      </div>
+    </div>`;
+  }
+
+  html += `<div style="font-size:11px;font-weight:700;color:#22c55e;margin-top:8px">🍅 MATURE 1-5 — Fruits &amp; Récolte</div>`;
+  for (let n = 1; n <= 5; n++) {
+    const asset = stageAssets.find(a => a.type === 'plantule-mature' && a.stageNumber === n);
+    const found = !!asset?.foundPath;
+    const pathHint = `/plantules/${plantDefId}-mature-${n}.png`;
+    const basePrompt = `manga-style ${displayName} fruit maturation stage ${n} of 5, ${MATURE_DESCS[n-1]}, cel-shaded, thick black manga borders, beige kraft background, kawaii aesthetic, 512x512px, BotanIA game style`;
+
+    html += `<div style="background:#0d1117;border:1px solid ${found ? '#22c55e44' : '#ef444444'};border-radius:8px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div><span style="font-weight:700;font-size:12px;color:#c9d1d9">Mature ${n}</span><span style="font-size:11px;color:#8b949e;margin-left:6px">— Fruit en développement</span></div>
+        <span style="font-size:10px;color:${found ? '#22c55e' : '#ef4444'}">${found ? '✓ Présente' : '❌ Manquant'}</span>
+      </div>
+      <div style="font-size:10px;color:#6e7681;margin-bottom:8px;font-style:italic">${MATURE_DESCS[n-1]}</div>
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:600;color:#22c55e">📋 MACRO</span>
+          <button class="btn btn-secondary" style="font-size:9px;padding:2px 8px" onclick="copyPrompt('plt-${plantDefId}-mature-${n}')">📋 Copier</button>
+        </div>
+        <textarea id="plt-${plantDefId}-mature-${n}" rows="2" readonly style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-size:9px;font-family:monospace;padding:6px;border-radius:4px;resize:none;box-sizing:border-box;line-height:1.4" onclick="this.select()">${basePrompt}</textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:10px;color:#484f58;flex-shrink:0">📁 Chemin:</span>
+        <code style="font-size:9px;background:#161b22;padding:2px 6px;border-radius:4px;color:#8b949e">${pathHint}</code>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="text" id="plt-mature-path-${n}" placeholder="C:\\Images\\${plantDefId}-mature-${n}.png" style="flex:1;background:#161b22;border:1px solid #30363d;color:#c9d1d9;font-size:10px;padding:4px 6px;border-radius:4px;min-width:0">
+        <input type="file" id="plt-mature-file-${n}" accept="image/png" style="display:none" onchange="var f=this.files[0];if(f){document.getElementById('plt-mature-path-${n}').value=f.path||f.name;}">
+        <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px" onclick="document.getElementById('plt-mature-file-${n}').click()">Parcourir</button>
+        <button class="btn btn-primary" style="font-size:10px;padding:4px 10px" onclick="uploadPlantuleImage('${plantDefId}',${n},'mature')">Envoyer</button>
+      </div>
+    </div>`;
+  }
+
+  html += `<div id="plantuleMsg" style="margin-top:8px;text-align:center;font-size:11px"></div>`;
+  html += '</div>';
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function uploadPlantuleImage(plantDefId, stageNumber, group) {
+  const prefix = group === 'stage' ? 'plt-stage' : 'plt-mature';
+  const input = document.getElementById(`${prefix}-path-${stageNumber}`);
+  const fileInput = document.getElementById(`${prefix}-file-${stageNumber}`);
+  const msg = document.getElementById('plantuleMsg');
+  const path = input.value.trim();
+  if (!path) { msg.textContent = '❌ Indique le chemin ou sélectionne un fichier'; msg.style.color='#ef4444'; return; }
+
+  msg.textContent = '⏳ Envoi en cours...'; msg.style.color='#8b949e';
+  try {
+    const formData = new FormData();
+    formData.append('plantDefId', plantDefId);
+    formData.append('imageType', group === 'stage' ? 'plantule-stage' : 'plantule-mature');
+    formData.append('stageNumber', String(stageNumber));
+
+    if (fileInput.files.length > 0) {
+      formData.append('file', fileInput.files[0]);
+      formData.append('sourcePath', path);
+    } else {
+      formData.append('sourcePath', path);
+    }
+
+    const r = await fetch(`${MICRO_API}/scan/plants/register`, {
+      method: 'POST',
+      body: formData,
+    });
+    const d = await r.json();
+    if (d.success) {
+      msg.textContent = `✅ ${group === 'stage' ? 'Stage' : 'Mature'} ${stageNumber} — Image enregistrée !`;
+      msg.style.color = '#22c55e';
+      if (scanData) {
+        const plant = scanData.results.find(p => p.plantDefId === plantDefId);
+        if (plant) {
+          const assetType = group === 'stage' ? 'plantule-stage' : 'plantule-mature';
+          const asset = plant.imageAssets.find(a => a.type === assetType && a.stageNumber === stageNumber);
+          if (asset) { asset.foundPath = d.publicUrl; asset.status = '✅'; }
+          const missing = plant.imageAssets.filter(a => (a.type === 'plantule-stage' || a.type === 'plantule-mature') && !a.foundPath).length;
+          plant.checks.plantule.missingImages = missing;
+        }
+      }
+    } else {
+      msg.textContent = `❌ ${d.error}`; msg.style.color = '#ef4444';
+    }
+  } catch(e) {
+    msg.textContent = `❌ Erreur: ${e.message}`; msg.style.color = '#ef4444';
+  }
+}
+
+// ─── Sprite Editor Panel ─────────────────────────────────────────────────────
+function openSpriteEditor() {
+  if (!scanData) { alert('Lance d\'abord le scan 8 points !'); return; }
+  document.getElementById('plantsSection').style.display = 'none';
+  document.getElementById('spriteEditorPanel').style.display = '';
+  renderSpriteEditor(scanData);
+}
+
+function closeSpriteEditor() {
+  document.getElementById('spriteEditorPanel').style.display = 'none';
+}
+
+function renderSpriteEditor(data) {
+  if (!data || !data.results) return;
+  const plants = data.results.filter(p =>
+    p.checks?.sprites?.missing > 0 || p.checks?.plantCard?.status === '❌'
+  );
+  if (plants.length === 0) {
+    document.getElementById('spritePlantsList').innerHTML =
+      '<div style="text-align:center;color:#22c55e;padding:40px">✅ Tous les sprites sont présents !</div>';
+    return;
+  }
+  document.getElementById('spritePlantsList').innerHTML = plants.map(p => {
+    const sprites = p.checks?.sprites || {};
+    const missing = sprites.missing || 0;
+    const total = sprites.total || (p.imageAssets?.filter(a => a.type === 'plant-stage' || a.type === 'tree-stage').length || 6);
+    const isTree = p.imageAssets?.some(a => a.type === 'tree-stage');
+    const stageCount = isTree ? 5 : 6;
+    const stages = [];
+    for (let n = 1; n <= stageCount; n++) {
+      const asset = p.imageAssets?.find(a => (a.type === 'plant-stage' || a.type === 'tree-stage') && a.stageNumber === n);
+      stages.push({ n, found: !!asset?.foundPath });
+    }
+    const stageBadges = stages.map(s =>
+      `<span style="
+        display:inline-flex;align-items:center;justify-content:center;
+        width:22px;height:22px;border-radius:4px;font-size:9px;font-weight:700;
+        background:${s.found ? '#22c55e22' : '#ef444422'};
+        color:${s.found ? '#22c55e' : '#ef4444'};
+        border:1px solid ${s.found ? '#22c55e44' : '#ef444444'};
+      ">${s.n}</span>`
+    ).join('');
+    return `<div style="
+      background:#161b22;border:1px solid #30363d;border-radius:8px;
+      padding:12px;margin-bottom:10px;cursor:pointer"
+      onclick="openSpriteModal('${p.plantDefId}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div>
+          <span style="font-size:13px;font-weight:700;color:#c9d1d9">${p.displayName || p.plantDefId}</span>
+          <span style="font-size:10px;color:#484f58;margin-left:6px">${p.plantDefId}</span>
+        </div>
+        <span style="font-size:10px;color:#f0883e">🖼️ Gérer</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;gap:3px">${stageBadges}</div>
+        <span style="font-size:10px;color:#6e7681">${missing} sprite${missing > 1 ? 's' : ''} manquant${missing > 1 ? 's' : ''} / ${total}</span>
+        ${p.checks?.plantule?.missingImages > 0 ? `<span style="font-size:9px;background:#f0883e22;color:#f0883e;padding:1px 5px;border-radius:3px;cursor:pointer" onclick="openPlantuleModal('${p.plantDefId}')">🌱 Plantule ${p.checks?.plantule?.missingImages || 0}/10</span>` : ''}
+        ${p.checks?.cardData?.status !== '✅' ? '<span style="font-size:9px;background:#22c55e22;color:#22c55e;padding:1px 5px;border-radius:3px">📄 CARD_DATA</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Utils ──────────────────────────────────────────────────────────────────
+function showLoading(txt) {
+  const el = document.getElementById('loading');
+  document.getElementById('loadingText').textContent = txt;
+  el.style.display = 'flex';
+  document.getElementById('empty').style.display = 'none';
+}
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+checkStatus();
+setInterval(checkStatus, 30000);
+</script>
+</body>
+</html>

@@ -3,6 +3,8 @@
  * Utilise Filesystem pour persistence locale
  */
 
+import path from 'path';
+
 export interface JournalEntry {
   date: string;
   day: number;
@@ -24,7 +26,7 @@ export interface PlantPhoto {
   notes?: string;
 }
 
-const DATA_DIR = 'C:/Users/Administrateur/Desktop/BotanIA/data';
+const DATA_DIR = path.join(process.cwd(), 'data');
 
 /**
  * Initialiser les dossiers de données

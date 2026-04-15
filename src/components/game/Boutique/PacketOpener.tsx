@@ -119,7 +119,7 @@ export function PacketOpener({ packet, onCardCollected, onClose }: PacketOpenerP
             <motion.img
               src={packet.packetAsset}
               alt={packet.name}
-              className="w-64 h-64 object-contain drop-shadow-2xl"
+              className="object-contain drop-shadow-2xl" style={{ width: 'var(--ui-packet-image)', height: 'var(--ui-packet-image)' }}
               whileHover={{ scale: 1.08, rotate: -2 }}
               whileTap={{ scale: 0.95 }}
             />
@@ -140,7 +140,7 @@ export function PacketOpener({ packet, onCardCollected, onClose }: PacketOpenerP
             initial={{ scale: 1 }}
             animate={{ scale: [1, 1.3, 0] }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative w-64 h-64"
+            className="relative" style={{ width: 'var(--ui-packet-image)', height: 'var(--ui-packet-image)' }}
           >
             <img
               src={packet.packetAsset}
@@ -224,7 +224,7 @@ export function PacketOpener({ packet, onCardCollected, onClose }: PacketOpenerP
                 <img
                   src={packet.cardData.cardAsset}
                   alt={packet.cardData.name}
-                  className="w-36 h-36 object-contain drop-shadow-lg"
+                  className="object-contain drop-shadow-lg" style={{ width: 'calc(var(--ui-packet-image) * 0.5625)', height: 'calc(var(--ui-packet-image) * 0.5625)' }}
                 />
               </div>
 
@@ -247,8 +247,8 @@ export function PacketOpener({ packet, onCardCollected, onClose }: PacketOpenerP
             {/* Badge NOUVELLE CARTE */}
             <motion.div
               initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.2, 1] }}
-              transition={{ delay: 0.5, type: 'spring' }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: 'spring', damping: 30 }}
               className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-black rounded-full uppercase tracking-wider"
             >
               ✨ Nouvelle Carte ! ✨

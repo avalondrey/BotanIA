@@ -94,6 +94,20 @@ src/data/graines/{shopId}/{id}.ts
 - [x] cabbage-chou-milan.ts ✅
 - [x] spinach-merlon-vert.ts ✅
 - [x] lettuce-romaine.ts ✅
+- [x] zucchini-verte-milan-black-beauty.ts ✅
+- [x] zucchini-verte-italie.ts ✅
+- [x] squash-striped-cushaw.ts ✅
+- [x] eggplant-longue-violette.ts ✅
+- [x] pepper-doux-espagne.ts ✅
+- [x] pepper-ariane.ts ✅
+- [x] pepper-chocolat.ts ✅
+- [x] tomato-raisin-vert.ts ✅
+- [x] tomato-cerisette-brin-muguet.ts ✅
+- [x] cucumber-le-genereux.ts ✅
+- [x] cucumber-rollisons-telegraph.ts ✅
+- [x] tomato-saint-pierre.ts ✅
+- [x] tomato-kumato.ts ✅
+- [x] tomato-evergreen.ts ✅
 
 ### Sainte Marthe
 - [x] basil-genoveeis.ts ✅

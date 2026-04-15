@@ -316,10 +316,15 @@ export const useSimulationStore = create<SimulationState>()(
     }),
     {
       name: 'botania-simulation',
-      partialize: (state) => ({
-        day: state.day,
-        season: state.season,
-      }),
+      partialize: (_state) => ({}), // Ne rien persister — day est toujours calculé depuis getTodayDayOfYear()
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Toujours forcer la date du jour
+          const today = getTodayDayOfYear();
+          state.day = today;
+          state.season = getSeason(today);
+        }
+      },
     }
   )
 );

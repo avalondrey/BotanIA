@@ -27,6 +27,9 @@ export interface PlantDefinition {
   realDaysToHarvest: number; // durée totale moyenne graine→récolte
 }
 
+export type GrowthRoute = 'jardin' | 'miniserre' | 'plantule';
+export type ContainerType = 'sachet' | 'mini-pot' | 'pot-serre' | 'sol-jardin' | 'miniserre-slot' | 'pepiniere-slot';
+
 export interface PlantState {
   plantDefId: string;
   stage: number;
@@ -49,6 +52,9 @@ export interface PlantState {
   fertilizerLevel: number; // 0-100, current fertilizer level
   fruitSetRate: number; // 0-1, pollinator activity modifier for fruit formation
   diseasePressureHours: number; // heures consécutives avec conditions favorables aux maladies
+  // Growth route (v0.20.0)
+  growthRoute: GrowthRoute;
+  containerType: ContainerType;
 }
 
 export interface EnvironmentState {
@@ -185,20 +191,115 @@ export const PLANTS: Record<string, PlantDefinition> = {
   pepper: {
     id: "pepper", name: "Piment", emoji: "🌶️",
     image: "/cards/card-pepper.png",
-    // Botanique réel: Germination 14j → Plantule 35j (5 sem) → Floraison 30j → Fructification 55j = ~134j
-    // Source: semis fév-mars sous abri, repiquage mai, récolte août-sept
     stageDurations: [14, 35, 30, 55],
     optimalTemp: [20, 32],
-    waterNeed: 4.8, // mm/jour
+    waterNeed: 4.8,
     lightNeed: 8,
     harvestEmoji: "🌶️",
-    cropCoefficient: 1.1, // Kc FAO poivron/piment
-    optimalPlantMonths: [1, 2, 3, 4], // Semis: Fév-Avril (sous abri)
+    cropCoefficient: 1.1,
+    optimalPlantMonths: [1, 2, 3, 4],
     optimalSeasons: ["spring", "summer"],
-    diseaseResistance: 35, // Alternariose, mildiou
-    pestResistance: 45, // Pucerons, thrips
-    droughtResistance: 0.55, // medium root depth
+    diseaseResistance: 35,
+    pestResistance: 45,
+    droughtResistance: 0.55,
     realDaysToHarvest: 130,
+  },
+  // ── Nouvelles espèces Vilmorin 2026 ──
+  cucumber: {
+    id: "cucumber", name: "Concombre", emoji: "🥒",
+    image: "/cards/card-custom-plant.png",
+    stageDurations: [7, 21, 25, 40],
+    optimalTemp: [18, 30],
+    waterNeed: 5.0,
+    lightNeed: 7,
+    harvestEmoji: "🥒",
+    cropCoefficient: 1.0,
+    optimalPlantMonths: [3, 4, 5],
+    optimalSeasons: ["summer"],
+    diseaseResistance: 40,
+    pestResistance: 40,
+    droughtResistance: 0.45,
+    realDaysToHarvest: 93,
+  },
+  zucchini: {
+    id: "zucchini", name: "Courgette", emoji: "🥒",
+    image: "/cards/card-custom-plant.png",
+    stageDurations: [7, 21, 28, 40],
+    optimalTemp: [18, 28],
+    waterNeed: 5.0,
+    lightNeed: 7,
+    harvestEmoji: "🥒",
+    cropCoefficient: 0.95,
+    optimalPlantMonths: [4, 5],
+    optimalSeasons: ["summer"],
+    diseaseResistance: 40,
+    pestResistance: 35,
+    droughtResistance: 0.5,
+    realDaysToHarvest: 96,
+  },
+  melon: {
+    id: "melon", name: "Melon", emoji: "🍈",
+    image: "/cards/card-custom-plant.png",
+    stageDurations: [10, 25, 30, 50],
+    optimalTemp: [20, 32],
+    waterNeed: 5.5,
+    lightNeed: 9,
+    harvestEmoji: "🍈",
+    cropCoefficient: 1.05,
+    optimalPlantMonths: [3, 4, 5],
+    optimalSeasons: ["summer"],
+    diseaseResistance: 35,
+    pestResistance: 30,
+    droughtResistance: 0.4,
+    realDaysToHarvest: 115,
+  },
+  spinach: {
+    id: "spinach", name: "Épinard", emoji: "🥬",
+    image: "/cards/card-custom-plant.png",
+    stageDurations: [7, 14, 21, 28],
+    optimalTemp: [8, 20],
+    waterNeed: 4.0,
+    lightNeed: 5,
+    harvestEmoji: "🥬",
+    cropCoefficient: 0.85,
+    optimalPlantMonths: [2, 3, 9, 10],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 50,
+    pestResistance: 50,
+    droughtResistance: 0.6,
+    realDaysToHarvest: 70,
+  },
+  radish: {
+    id: "radish", name: "Radis", emoji: "🔴",
+    image: "/cards/card-custom-plant.png",
+    stageDurations: [4, 8, 12, 18],
+    optimalTemp: [10, 22],
+    waterNeed: 3.5,
+    lightNeed: 6,
+    harvestEmoji: "🔴",
+    cropCoefficient: 0.7,
+    optimalPlantMonths: [2, 3, 4, 8, 9],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 60,
+    pestResistance: 55,
+    droughtResistance: 0.5,
+    realDaysToHarvest: 42,
+  },
+  parsley: {
+    id: "parsley", name: "Persil", emoji: "🌿",
+    image: "/cards/card-custom-plant.png",
+    stageDurations: [14, 28, 30, 40],
+    optimalTemp: [12, 22],
+    waterNeed: 3.5,
+    lightNeed: 6,
+    harvestEmoji: "🌿",
+    cropCoefficient: 0.8,
+    optimalPlantMonths: [3, 4, 5],
+    optimalSeasons: ["spring", "summer"],
+    diseaseResistance: 55,
+    pestResistance: 55,
+    droughtResistance: 0.55,
+    realDaysToHarvest: 112,
   },
   // ── Petits fruits & plantes functional ──
   goji: {
@@ -330,6 +431,172 @@ export const PLANTS: Record<string, PlantDefinition> = {
     droughtResistance: 0.65,
     realDaysToHarvest: 148,
   },
+  bean: {
+    id: "bean", name: "Haricot", emoji: "🫘",
+    image: "/cards/card-bean.png",
+    stageDurations: [6, 14, 20, 30],
+    optimalTemp: [15, 25],
+    waterNeed: 3.5,
+    lightNeed: 7,
+    harvestEmoji: "🫘",
+    cropCoefficient: 0.85,
+    optimalPlantMonths: [4, 5, 6, 7],
+    optimalSeasons: ["spring", "summer"],
+    diseaseResistance: 60,
+    pestResistance: 55,
+    droughtResistance: 0.60,
+    realDaysToHarvest: 70,
+  },
+  squash: {
+    id: "squash", name: "Courge", emoji: "🎃",
+    image: "/cards/card-squash.png",
+    stageDurations: [8, 20, 30, 60],
+    optimalTemp: [18, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+    harvestEmoji: "🎃",
+    cropCoefficient: 0.90,
+    optimalPlantMonths: [4, 5],
+    optimalSeasons: ["spring"],
+    diseaseResistance: 55,
+    pestResistance: 50,
+    droughtResistance: 0.55,
+    realDaysToHarvest: 118,
+  },
+  sunflower: {
+    id: "sunflower", name: "Tournesol", emoji: "🌻",
+    image: "/cards/card-sunflower.png",
+    stageDurations: [7, 18, 25, 50],
+    optimalTemp: [15, 30],
+    waterNeed: 3.0,
+    lightNeed: 9,
+    harvestEmoji: "🌻",
+    cropCoefficient: 0.75,
+    optimalPlantMonths: [4, 5, 6],
+    optimalSeasons: ["spring", "summer"],
+    diseaseResistance: 65,
+    pestResistance: 60,
+    droughtResistance: 0.70,
+    realDaysToHarvest: 100,
+  },
+  quinoa: {
+    id: "quinoa", name: "Quinoa", emoji: "🌾",
+    image: "/cards/card-quinoa.png",
+    stageDurations: [7, 20, 30, 50],
+    optimalTemp: [12, 25],
+    waterNeed: 3.0,
+    lightNeed: 7,
+    harvestEmoji: "🌾",
+    cropCoefficient: 0.70,
+    optimalPlantMonths: [3, 4, 5],
+    optimalSeasons: ["spring"],
+    diseaseResistance: 70,
+    pestResistance: 65,
+    droughtResistance: 0.80,
+    realDaysToHarvest: 107,
+  },
+  amaranth: {
+    id: "amaranth", name: "Amarante", emoji: "🌺",
+    image: "/cards/card-amaranth.png",
+    stageDurations: [7, 18, 25, 45],
+    optimalTemp: [18, 30],
+    waterNeed: 3.0,
+    lightNeed: 8,
+    harvestEmoji: "🌺",
+    cropCoefficient: 0.70,
+    optimalPlantMonths: [4, 5, 6],
+    optimalSeasons: ["spring", "summer"],
+    diseaseResistance: 65,
+    pestResistance: 60,
+    droughtResistance: 0.75,
+    realDaysToHarvest: 95,
+  },
+  sorrel: {
+    id: "sorrel", name: "Oseille", emoji: "🥬",
+    image: "/cards/card-sorrel.png",
+    stageDurations: [7, 15, 20, 30],
+    optimalTemp: [10, 22],
+    waterNeed: 3.5,
+    lightNeed: 5,
+    harvestEmoji: "🥬",
+    cropCoefficient: 0.65,
+    optimalPlantMonths: [3, 4, 8, 9],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 70,
+    pestResistance: 65,
+    droughtResistance: 0.60,
+    realDaysToHarvest: 72,
+  },
+  corn: {
+    id: "corn", name: "Maïs", emoji: "🌽",
+    image: "/cards/card-corn.png",
+    stageDurations: [7, 20, 30, 55],
+    optimalTemp: [16, 28],
+    waterNeed: 5.0,
+    lightNeed: 8,
+    harvestEmoji: "🌽",
+    cropCoefficient: 0.85,
+    optimalPlantMonths: [4, 5],
+    optimalSeasons: ["spring"],
+    diseaseResistance: 55,
+    pestResistance: 50,
+    droughtResistance: 0.50,
+    realDaysToHarvest: 112,
+  },
+  cabbage: {
+    id: "cabbage",
+    name: "Chou Fleur",
+    emoji: "🥬",
+    image: "/cards/card-cabbage.png",
+    stageDurations: [8, 20, 30, 60],
+    optimalTemp: [12, 20],
+    waterNeed: 4.5,
+    lightNeed: 6,
+    harvestEmoji: "🥬",
+    cropCoefficient: 0.75,
+    optimalPlantMonths: [2, 3, 8, 9],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 40,
+    pestResistance: 35,
+    droughtResistance: 0.45,
+    realDaysToHarvest: 118,
+  },
+apple: {
+    id: "apple",
+    name: "Pommier Reinette",
+    emoji: "🍎",
+    image: "/cards/card-apple.png",
+    stageDurations: [30, 60, 120, 360],
+    optimalTemp: [8, 22],
+    waterNeed: 5,
+    lightNeed: 7,
+    harvestEmoji: "🍎",
+    cropCoefficient: 0.83,
+    optimalPlantMonths: [3, 4, 5, 9, 10],
+    optimalSeasons: ["spring", "autumn"],
+    diseaseResistance: 50,
+    pestResistance: 45,
+    droughtResistance: 0.50,
+    realDaysToHarvest: 730,
+  },
+pear: {
+    id: "pear",
+    name: "Poirier Comice",
+    emoji: "🍐",
+    image: "/cards/card-pear.png",
+    stageDurations: [30, 60, 120, 360],
+    optimalTemp: [7, 24],
+    waterNeed: 5,
+    lightNeed: 7,
+    harvestEmoji: "🍐",
+    cropCoefficient: 0.83,
+    optimalPlantMonths: [3, 4, 5, 9, 10],
+    optimalSeasons: ["spring", "summer"],
+    diseaseResistance: 50,
+    pestResistance: 45,
+    droughtResistance: 0.50,
+    realDaysToHarvest: 1095,
+  },
 };
 
 export const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
@@ -351,6 +618,13 @@ export const STAGE_IMAGES: Record<string, string[]> = {
   laurus:      ["/stages/laurus/0.png",   "/stages/laurus/1.png",   "/stages/laurus/2.png",   "/stages/laurus/3.png",   "/stages/laurus/4.png",   "/stages/laurus/5.png"],
   cornus:      ["/stages/cornus/0.png",   "/stages/cornus/1.png",   "/stages/cornus/2.png",   "/stages/cornus/3.png",   "/stages/cornus/4.png",   "/stages/cornus/5.png"],
   casseille:   ["/stages/casseille/0.png", "/stages/casseille/1.png", "/stages/casseille/2.png", "/stages/casseille/3.png", "/stages/casseille/4.png", "/stages/casseille/5.png"],
+  bean:        ["/stages/bean/0.png", "/stages/bean/1.png", "/stages/bean/2.png", "/stages/bean/3.png", "/stages/bean/4.png", "/stages/bean/5.png"],
+  squash:      ["/stages/squash/0.png", "/stages/squash/1.png", "/stages/squash/2.png", "/stages/squash/3.png", "/stages/squash/4.png", "/stages/squash/5.png"],
+  sunflower:   ["/stages/sunflower/0.png", "/stages/sunflower/1.png", "/stages/sunflower/2.png", "/stages/sunflower/3.png", "/stages/sunflower/4.png", "/stages/sunflower/5.png"],
+  quinoa:      ["/stages/quinoa/0.png", "/stages/quinoa/1.png", "/stages/quinoa/2.png", "/stages/quinoa/3.png", "/stages/quinoa/4.png", "/stages/quinoa/5.png"],
+  amaranth:    ["/stages/amaranth/0.png", "/stages/amaranth/1.png", "/stages/amaranth/2.png", "/stages/amaranth/3.png", "/stages/amaranth/4.png", "/stages/amaranth/5.png"],
+  sorrel:      ["/stages/sorrel/0.png", "/stages/sorrel/1.png", "/stages/sorrel/2.png", "/stages/sorrel/3.png", "/stages/sorrel/4.png", "/stages/sorrel/5.png"],
+  corn:        ["/stages/corn/0.png", "/stages/corn/1.png", "/stages/corn/2.png", "/stages/corn/3.png", "/stages/corn/4.png", "/stages/corn/5.png"],
 };
 
 export const ENVIRONMENTS: Record<
@@ -394,6 +668,24 @@ export const PLANT_SPACING: Record<string, PlantSpacingInfo> = {
   lettuce:    { plantSpacingCm: 25, rowSpacingCm: 30, color: '#16a34a', label: '25×30cm' },
   basil:      { plantSpacingCm: 20, rowSpacingCm: 35, color: '#65a30d', label: '20×35cm' },
   pepper:     { plantSpacingCm: 40, rowSpacingCm: 55, color: '#ca8a04', label: '40×55cm' },
+  cucumber:   { plantSpacingCm: 40, rowSpacingCm: 100, color: '#16a34a', label: '40×100cm' },
+  zucchini:   { plantSpacingCm: 60, rowSpacingCm: 100, color: '#65a30d', label: '60×100cm' },
+  melon:      { plantSpacingCm: 50, rowSpacingCm: 100, color: '#f59e0b', label: '50×100cm' },
+  spinach:    { plantSpacingCm: 15, rowSpacingCm: 25, color: '#22c55e', label: '15×25cm' },
+  radish:     { plantSpacingCm: 5, rowSpacingCm: 20, color: '#ef4444', label: '5×20cm' },
+  parsley:    { plantSpacingCm: 15, rowSpacingCm: 25, color: '#4ade80', label: '15×25cm' },
+  photinia:   { plantSpacingCm: 80, rowSpacingCm: 100, color: '#dc2626', label: '80×100cm' },
+  eleagnus:   { plantSpacingCm: 80, rowSpacingCm: 100, color: '#a3a3a3', label: '80×100cm' },
+  laurus:     { plantSpacingCm: 60, rowSpacingCm: 80, color: '#166534', label: '60×80cm' },
+  cornus:     { plantSpacingCm: 80, rowSpacingCm: 100, color: '#dc2626', label: '80×100cm' },
+  casseille:  { plantSpacingCm: 60, rowSpacingCm: 80, color: '#581c87', label: '60×80cm' },
+  bean:       { plantSpacingCm: 10, rowSpacingCm: 40, color: '#8B4513', label: '10×40cm' },
+  squash:     { plantSpacingCm: 100, rowSpacingCm: 150, color: '#f97316', label: '100×150cm' },
+  sunflower:  { plantSpacingCm: 30, rowSpacingCm: 50, color: '#eab308', label: '30×50cm' },
+  quinoa:     { plantSpacingCm: 20, rowSpacingCm: 40, color: '#a3a3a3', label: '20×40cm' },
+  amaranth:   { plantSpacingCm: 25, rowSpacingCm: 50, color: '#dc2626', label: '25×50cm' },
+  sorrel:     { plantSpacingCm: 20, rowSpacingCm: 30, color: '#22c55e', label: '20×30cm' },
+  corn:       { plantSpacingCm: 30, rowSpacingCm: 75, color: '#eab308', label: '30×75cm' },
 };
 
 // ═══════════════════════════════════════════════════
@@ -479,7 +771,7 @@ export function getRealDateDisplay(dayOfYear: number): string {
 export function getRealDateFull(dayOfYear: number): string {
   const month = getMonthFromDay(dayOfYear);
   const day = getDayOfMonth(dayOfYear);
-  return `${day} ${MONTH_NAMES[month]} 2026`;
+  return `${day} ${MONTH_NAMES[month]} ${new Date().getFullYear()}`;
 }
 
 /** Mois actuel (0-11) */
@@ -972,6 +1264,28 @@ export function createInitialPlantState(plantDefId: string): PlantState {
     fertilizerLevel: 50,
     fruitSetRate: 1.0,
     diseasePressureHours: 0,
+    growthRoute: 'jardin',
+    containerType: 'sachet',
+  };
+}
+
+export function createPlantuleState(plantDefId: string): PlantState {
+  return {
+    ...createInitialPlantState(plantDefId),
+    growthRoute: 'plantule',
+    containerType: 'mini-pot',
+    stage: 1,
+    growthProgress: 60,
+    daysSincePlanting: 20,
+    daysInCurrentStage: 10,
+  };
+}
+
+export function createMiniserreRouteState(plantDefId: string): PlantState {
+  return {
+    ...createInitialPlantState(plantDefId),
+    growthRoute: 'miniserre',
+    containerType: 'miniserre-slot',
   };
 }
 

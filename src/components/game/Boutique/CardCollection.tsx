@@ -179,10 +179,12 @@ export function CardCollection({ collectedCards, onClose }: CardCollectionProps)
               onClick={() => setSelectedCard(null)}
             >
               <motion.div
-                className="relative w-64 h-80 rounded-2xl border-4 overflow-hidden"
+                className="relative rounded-2xl border-4 overflow-hidden"
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
                 style={{
+                  width: 'var(--ui-packet-image)',
+                  height: 'calc(var(--ui-packet-image) * 1.25)',
                   backgroundColor: RARITY_COLORS[selectedCard.rarity].bg,
                   borderColor: RARITY_COLORS[selectedCard.rarity].border,
                 }}

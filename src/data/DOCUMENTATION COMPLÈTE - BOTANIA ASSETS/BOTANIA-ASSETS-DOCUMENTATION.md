@@ -39,20 +39,76 @@
 - **Éléments** : Illustration légume + nom variété + badge fournisseur
 - **Usage** : Cartes posables dans le jardin/mini-serres
 
-## 1.3 Plants - Stages de Croissance
-- **Style** : Manga cel-shade
-- **Fond** : Beige uni
-- **Éléments** : Plante en pot terracotta
-- **Stages** : 5 (mini-serre) ou 6 (jardin)
+## 1.3 Plants - Stades de Croissance
 
-| Stage | Description |
-|-------|-------------|
-| 1 | Germination/plantule |
-| 2 | Premières feuilles |
-| 3 | Croissance végétative |
-| 4 | Développement/fleurs |
-| 5 | Premiers fruits (mini-serre) ou maturité |
-| 6 | Pleine maturité/récolte (jardin) |
+Trois routes distinctes selon le mode de culture :
+
+### Route Jardin (6 stades) — semis en mini-serre → transvasements successifs → sol jardin
+
+| Stage | Description | Contenant |
+|-------|-------------|-----------|
+| 1 | Graines semées | Mini-serre (sachet/petit pot) |
+| 2 | Levée (petite plantule) | Mini-serre |
+| 3 | Croissance en mini-serre | Mini-serre ou petits pots individuels |
+| 4 | Repiquage dans serre jardin | Pots individuels en serre |
+| 5 | Après dernier gel → repiquage en sol | Sol jardin (pleine terre) |
+| 6 | Plante adulte productive | Sol jardin — récolte |
+
+> **Note** : Stade 3 = les plantules sortent de la mini-serre pour aller en petits pots individuels. Stade 5 = on attend le dernier gel (début mai) avant de transplanter en pleine terre.
+
+### Route Mini-Serre (5 stades) — croissance en serre uniquement, pas de transplantation en sol
+
+| Stage | Description | Contenant |
+|-------|-------------|-----------|
+| 1 | Graines semées en mini-serre | Mini-serre (chambre de culture) |
+| 2 | Premières feuilles | Mini-serre |
+| 3 | Croissance végétative | Mini-serre |
+| 4 | 2-3 feuilles, rempotage | Mini pots individuels dans mini-serre |
+| 5 | Plante mature, première fleur visible | Mini-serre — récolte en intérieur |
+
+> **Note** : La plante reste en serre. Au stade 4, passage en pots individuels pour attendre les conditions idéales. Pas de transplantation en sol jardin.
+
+### Route Plantules (5 stades) — achat local, skip les stades serre
+
+| Stage | Description | Contenant |
+|-------|-------------|-----------|
+| 1 | Plante mature en mini-serre (première fleur) | Mini-serre ou pot |
+| 2 | Jeunes fruits (ex: tomates vertes) | Pot / sol jardin |
+| 3 | Croissance des fruits (ex: tomates vertes développement) | Sol jardin |
+| 4 | Maturation (ex: tomates orange-rouge, véraison) | Sol jardin |
+| 5 | Plante adulte productive, fruit prêt à cueillir | Sol jardin — récolte |
+
+> **Note** : Les plantules achetées localement (Pépinière Locale, Marché Producteurs) sautent les stades de semis et arrivent directement au stade mature. Elles sont prêtes à être repiquées en sol après le dernier gel.
+
+### Résumé visuel des 3 routes
+
+```
+GRAINES (achat)                    PLANTULES (achat local)
+     │                                      │
+     ▼                                      ▼
+ ┌─────────┐                          ┌──────────┐
+ │Mini-Serre│                          │ Plante    │
+ │ S1→S2→S3 │                          │ mature   │
+ └────┬─────┘                          │ (fleur)  │
+      │                                 └────┬─────┘
+      ▼                                      ▼
+ ┌─────────┐                          ┌──────────┐
+ │Petits    │                          │ Jeunes   │
+ │pots S4  │                          │ fruits   │
+ └────┬─────┘                          └────┬─────┘
+      │                                      │
+      ▼  (après dernier gel)                  ▼
+ ┌─────────┐                          ┌──────────┐
+ │Sol S5   │                          │Croissance│
+ │jardin   │                          │ fruits   │
+ └────┬─────┘                          └────┬─────┘
+      │                                      │
+      ▼                                      ▼
+ ┌─────────┐                          ┌──────────┐
+ │Plante   │                          │Récolte   │
+ │adulte S6│                          │ S5       │
+ └─────────┘                          └──────────┘
+```
 
 ## 1.4 Arbres Fruitiers - POTS
 
