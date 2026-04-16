@@ -1,5 +1,43 @@
 # BotanIA - Changelog
 
+## v0.22.0 - EventBus, Notifications, Catalogue, Marché Dynamique (2026-04-15)
+
+### Couche 2 — EventBus & Notifications
+
+- **EventBus typé** (`src/lib/event-bus.ts`) : 17 types d'événements pour communication inter-modules découplée
+- **Onboarding 8 étapes** (`src/store/onboarding-store.ts`) : welcome → first-seed → first-plant → first-water → first-harvest → first-sell → discover-3 → quest-master
+- **Notifications toast** (`src/store/notification-store.ts`) : toasts in-app avec sévérité (success/info/warning/error), auto-dismiss 4-8s, max 5 visibles
+- **Célébrations animées** (`src/components/game/CelebrationOverlay.tsx`) : confetti sur achievements, quêtes, récoltes, bonus quotidien
+- **Émissions EventBus** dans garden-store (plant:planted, plant:watered), shop-store (coins:spent, coins:earned), economy-store (dailybonus:claimed, quest:completed, market:sold)
+- **Abonnements** dans page.tsx avec cleanup au démontage
+
+### Couche 3 — Composants UI avancés
+
+- **Catalogue des variétés** (`VarietyCatalog.tsx`) : recherche, filtres saison/catégorie, PlantStatCard + GrowthCurveChart par plante
+- **Calendrier de plantation** (`PlantingCalendar.tsx`) : vue mensuelle INRAE avec périodes semis/récolte
+- **Courbe sigmoïde GDD** (`GrowthCurveChart.tsx`) : progression réelle vs stades attendus
+- **Stat-cards plante** (`PlantStatCard.tsx`) : température, eau, lumière, Kc, résistances, calendrier
+- **Prévisions météo 7j** (`WeatherForecast.tsx`) : alertes gel (≤2°C), canicule (≥35°C), tempête (≥60 km/h)
+- **Timeline photo** (`PhotoTimeline.tsx`) : journal photo horodaté avec GPS, identification IA
+- **Marché dynamique** (`src/store/market-store.ts`) : prix saisonniers (primeur +40%, saison, après-saison -20%, hors saison -30%), offre/demande
+- **Suivi onboarding UI** (`OnboardingTracker.tsx`) : barre de progression 8 étapes avec récompenses
+
+### Couche 4 — Intégration navigation
+
+- **3 nouveaux onglets** dans GameTabs : Catalogue (📖), Météo (🌦️), Photos (📸)
+- **GrowthCurveChart** intégré dans l'onglet Croissance aux côtés de HologramEvolution
+- **Marché dynamique** intégré dans HarvestTracker : vente avec prix saisonniers, indicateurs tendance, quantités ajustables
+- **weather-service.ts** étendu : prévisions 7 jours (WeatherForecastDay avec tempMax, tempMin, précipitations, vent, UV, weatherCode)
+
+### Technique
+
+- Nouveaux stores : `onboarding-store.ts`, `notification-store.ts`, `market-store.ts`
+- Nouveaux composants : 9 fichiers dans `src/components/game/`
+- Modifiés : `page.tsx` (abonnements EventBus + CelebrationOverlay + NotificationContainer), `GameTabs.tsx` (3 onglets), `HarvestTracker.tsx` (section Marché), `Boutique.tsx` (OnboardingTracker)
+- EventBus intégré dans : `garden-store.ts`, `shop-store.ts`, `economy-store.ts`
+
+---
+
 ## v0.21.0 - Éditeur de Grille Professionnel (2026-04-15)
 
 ### 🏗️ Éditeur de Jardin — Refonte Complète

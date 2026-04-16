@@ -237,9 +237,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
     objXcm: number,
     objYcm: number
   ) => {
-    // Pas de drag si outil actif OU si un élément est déjà sélectionné en mode select
+    // Pas de drag si un outil de placement est actif
     if (activeTool !== 'none') return;
-    if (editMode === 'select' && selectedElement !== null) return;
     e.stopPropagation();
     e.preventDefault();
     dragRef.current = {
@@ -251,7 +250,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
       active: false,
     };
     setTooltip(null);
-  }, [activeTool, editMode, selectedElement]);
+  }, [activeTool]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -551,7 +550,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* ZONES NON CULTIVÉES */}
           {gardenZones.map((zone: any) => (
             <div key={zone.id}
-              onMouseDown={(e) => { e.stopPropagation(); if (activeTool === 'none') startDrag(e, 'zone', zone.id, zone.x, zone.y); }}
+              onMouseDown={(e) => { e.stopPropagation(); startDrag(e, 'zone', zone.id, zone.x, zone.y); }}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'zone', id: zone.id }); onSelectElement?.('zone', zone.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'zone', id: zone.id }); }}
               style={{
@@ -644,7 +643,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             <div key={hedge.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'hedge', id: hedge.id }); onSelectElement?.('hedge', hedge.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'hedge', id: hedge.id }); }}
-              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y); }}
+              onMouseDown={(e) => startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y)}
               style={{
                 position: 'absolute',
                 left: hedge.x * displayScale,
@@ -692,7 +691,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             <div key={tank.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tank', id: tank.id }); onSelectElement?.('tank', tank.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'tank', id: tank.id }); }}
-              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tank', tank.id, tank.x, tank.y); }}
+              onMouseDown={(e) => startDrag(e, 'tank', tank.id, tank.x, tank.y)}
               style={{
                 position: 'absolute',
                 left: tank.x * displayScale,
@@ -779,7 +778,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             <div key={shed.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'shed', id: shed.id }); onSelectElement?.('shed', shed.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'shed', id: shed.id }); }}
-              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'shed', shed.id, shed.x, shed.y); }}
+              onMouseDown={(e) => startDrag(e, 'shed', shed.id, shed.x, shed.y)}
               style={{
                 position: 'absolute',
                 left: shed.x * displayScale,
@@ -831,7 +830,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             <div key={drum.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'drum', id: drum.id }); onSelectElement?.('drum', drum.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'drum', id: drum.id }); }}
-              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'drum', drum.id, drum.x, drum.y); }}
+              onMouseDown={(e) => startDrag(e, 'drum', drum.id, drum.x, drum.y)}
               style={{
                 position: 'absolute',
                 left: drum.x * displayScale,
@@ -879,7 +878,7 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             <div key={tree.id}
               onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tree', id: tree.id }); onSelectElement?.('tree', tree.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'tree', id: tree.id }); }}
-              onMouseDown={(e) => { if (activeTool === 'none') startDrag(e, 'tree', tree.id, tree.x, tree.y); }}
+              onMouseDown={(e) => startDrag(e, 'tree', tree.id, tree.x, tree.y)}
               style={{
                 position: 'absolute',
                 left: tree.x * displayScale - (tree.diameter ?? 75) * 0.5 * displayScale,

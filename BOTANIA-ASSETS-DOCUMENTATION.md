@@ -51,16 +51,27 @@
 - **Style** : Manga cel-shade
 - **Fond** : Beige uni
 - **Éléments** : Plante en pot terracotta
-- **Stages** : 5 (mini-serre) ou 6 (jardin)
+- **Stages** : 5 stades
 
-| Stage | Description |
-|-------|-------------|
-| 1 | Germination/plantule |
-| 2 | Premières feuilles |
-| 3 | Croissance végétative |
-| 4 | Développement/fleurs |
-| 5 | Premiers fruits (mini-serre) ou maturité |
-| 6 | Pleine maturité/récolte (jardin) |
+**SPRITES (graines en mini-serre) — 5 stades :**
+
+| Stage | Nom | Description |
+|-------|-----|-------------|
+| 1 | Graines | Graines en mini-serre posée dans la chambre de culture |
+| 2 | Premières feuilles | 2 cotylédons, tige delicate, vert frais |
+| 3 | Croissance végétative | Feuilles en développement, tige plus solide, 5-10cm |
+| 4 | 2-3 feuilles | 2-3 vraies feuilles, système racinaire établi, 10-15cm |
+| 5 | Mature (fleur) | Plante mature en mini-serre, première fleur visible |
+
+**PLANTULES (achats en magasin/pépinière) — 5 stades maturité :**
+
+| Stage | Nom | Description |
+|-------|-----|-------------|
+| 1 | Mature (fleur) | Plante mature en mini-serre, première fleur visible |
+| 2 | Jeunes fruits | Jeunes fruits, ex: premières tomates vertes visibles |
+| 3 | Croissance | Croissance des fruits, ex: tomates vertes en développement |
+| 4 | Maturation | Maturation/véraison, ex: tomates orange-rouge |
+| 5 | Prête à cueillir | Plante adulte productive avec fruit prêt à cueillir |
 
 ### 1.4 Arbres Fruitiers - POTS (⚠️ PAS de graines!)
 

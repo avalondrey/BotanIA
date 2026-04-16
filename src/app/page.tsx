@@ -20,6 +20,10 @@ import { useNightMode, useAutoSave } from "@/lib/use-effects";
 import { useSlotAutoSave } from "@/hooks/useSlotAutoSave";
 import { useUISync } from "@/hooks/useUISync";
 import { loadAutoSave, hasAutoSave, getAllSlots } from "@/lib/save-manager";
+import { subscribeOnboardingEvents, unsubscribeOnboardingEvents } from "@/store/onboarding-store";
+import { subscribeNotificationEvents, unsubscribeNotificationEvents } from "@/store/notification-store";
+import { NotificationContainer } from "@/components/game/NotificationContainer";
+import { CelebrationOverlay } from "@/components/game/CelebrationOverlay";
 
 export default function GamePage() {
   const initGame = useGameStore((s) => s.initGame);
@@ -40,6 +44,21 @@ export default function GamePage() {
   useAutoSave();
   useSlotAutoSave();
   useUISync();
+
+  // Onboarding event subscription
+  useEffect(() => {
+    subscribeOnboardingEvents();
+    subscribeNotificationEvents();
+    // Auto-complete "welcome" step on first load
+    const { useOnboardingStore } = require('@/store/onboarding-store');
+    if (!useOnboardingStore.getState().completedSteps.includes('welcome')) {
+      useOnboardingStore.getState().completeStep('welcome');
+    }
+    return () => {
+      unsubscribeOnboardingEvents();
+      unsubscribeNotificationEvents();
+    };
+  }, []);
 
   const [weatherStatus, setWeatherStatus] = useState<"loading" | "ready" | "error">("loading");
   const [statusMessage, setStatusMessage] = useState("Chargement...");
@@ -244,6 +263,8 @@ export default function GamePage() {
 
       <AdminPanel />
       <WeatherEffects />
+      <NotificationContainer />
+      <CelebrationOverlay />
     </div>
   );
 }

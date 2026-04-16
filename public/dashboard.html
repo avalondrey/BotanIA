@@ -395,7 +395,8 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 const MICRO_API = isLocalhost ? 'http://localhost:3001' : (isTailscale ? 'https://pc-avalondrey.tail56d862.ts.net' : '/api');
 
 // Only expose Botania proxied endpoints on localhost (these don't exist in microservice)
-const BOTANIA_API = isTailscale ? 'http://localhost:3001/api/agent' : '/api/agent';
+// BOTANIA_API goes to Next.js (port 3000) which proxies to the agent routes
+const BOTANIA_API = isTailscale ? 'https://pc-avalondrey.tail56d862.ts.net/api/agent' : '/api/agent';
 
 // ─── Lia Chat Panel State (must be declared before functions) ───
 let liaOpen = false;

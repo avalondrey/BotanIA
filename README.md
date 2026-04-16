@@ -2,7 +2,7 @@
 
 > Application de jardinage botanique **scientifique** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-0.21.0-green)
+![Version](https://img.shields.io/badge/version-0.22.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)
@@ -96,10 +96,24 @@ Les données de croissance (GDD, besoins en eau, compagnonnage, risques sanitair
 |---|---|
 | Inventaire de récoltes | Chaque récolte = 1 unité vendable au marché |
 | Marché | Onglet Boutique pour vendre ses récoltes (prix 5-20 pièces/unité) |
+| Marché dynamique | Prix saisonniers : primeur +40%, saison normal, après-saison -20%, hors saison -30% |
 | Bonus quotidien | Streak J1=5 → J7+=15 pièces, 1 fois/jour |
 | Quêtes journalières | 3 quêtes/jour (arroser, planter, identifier, récolter, arbres) |
 | Paquets de graines | Achat → paquet fermé → animation d'ouverture → graines plantables |
 | Achievements → pièces | Déblocage achievement = 15-30 pièces bonus |
+
+### 📖 Catalogue & Outils (v0.22.0)
+| Feature | Détail |
+|---|---|
+| Catalogue variétés | Recherche, filtres saison/catégorie, PlantStatCard + GrowthCurveChart |
+| Calendrier plantation | Vue mensuelle INRAE, périodes semis/récolte pour toutes les plantes |
+| Prévisions météo 7j | Alertes gel, canicule, tempête automatiques (Open-Meteo) |
+| Timeline photo | Journal photo horodaté, GPS, identification IA, détection maladies |
+| Marché dynamique | Prix variant selon saison + offre/demande |
+| Onboarding 8 étapes | Progression guidée avec récompenses (5→30 pièces) |
+| Notifications toast | Toasts in-app liés aux événements EventBus |
+| Célébrations animées | Confetti + animations sur achievements, quêtes, récoltes |
+| EventBus typé | 17 types d'événements pour communication inter-modules |
 
 ---
 
@@ -235,7 +249,11 @@ BotanIA/
 │   │   ├── simulation-store.ts   # Cycle jour/météo/tick
 │   │   ├── photo-store.ts        # Photos + GPS + rangs
 │   │   ├── harvest-store.ts      # Suivi récoltes
-│   │   └── achievement-store.ts  # Badges jardinier
+│   │   ├── achievement-store.ts  # Badges jardinier
+│   │   ├── market-store.ts       # Prix dynamiques marché (saisonniers)
+│   │   ├── onboarding-store.ts   # Quêtes narratives 8 étapes
+│   │   ├── notification-store.ts # Toasts in-app (EventBus)
+│   │   └── ui-settings-store.ts  # Paramètres UI
 │   └── lib/
 │       ├── agent/                 # Agent IA Lia (qdrant, ollama, rag-engine, code-scanner...)
 │       ├── ai-engine.ts          # Moteur botanique
@@ -275,6 +293,8 @@ BotanIA/
 - [x] 🪙 **Économie : marché, quotidien, quêtes, vente récoltes (v0.20.0)**
 - [x] 📦 **Paquets de graines : achat → ouverture → plantation (v0.20.0)**
 - [x] 🏗️ **Éditeur de grille pro : snap, guides, undo, zoom (v0.21.0)**
+- [x] 📖 **Catalogue variétés + Calendrier INRAE + Météo 7j + Marché dynamique (v0.22.0)**
+- [x] 🔔 **EventBus + Notifications + Onboarding 8 étapes + Célébrations (v0.22.0)**
 
 ### 🚀 Idées à implanter
 - [ ] **Calendrier lunaire** — affichage phase + conseil semis/récolte selon tradition

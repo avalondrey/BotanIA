@@ -221,10 +221,18 @@ function extractPlantCardData(content: string, plantDefId: string): PlantCardDet
 
 // ─── Check 2: Sprite images (plant stages) ──────────────────────────────────
 
-async function checkSprites(plantDefId: string): Promise<{ status: CheckStatus; details: string; missing: number; total: number; presentFiles?: string[] }> {
-  // Check public/plants/{plantDefId}-stage-{n}.png for n=1-6
+async function checkSprites(plantDefId: string, isTree: boolean = false): Promise<{ status: CheckStatus; details: string; missing: number; total: number; presentFiles?: string[] }> {
+  // Check public/plants/{plantDefId}-stage-{n}.png for n=1-6 (vegetables)
+  // Or public/trees/{shopId}/{varietyId}-stage-{n}.png for n=1-5 (trees)
   const presentFiles: string[] = [];
-  const total = 6;
+  const total = isTree ? 5 : 6;
+
+  if (isTree) {
+    // For trees, we check the trees folder - but we need to know the shopId/varietyId
+    // This is handled in checkImageAssets which has access to cardData
+    // Here we just return a generic check for /trees/ folder structure
+    return { status: '⚠️', details: `Vérifié via checkImageAssets`, missing: 0, total: 0, presentFiles: [] };
+  }
 
   for (let n = 1; n <= total; n++) {
     const filePath = path.join(PUBLIC_ROOT, 'plants', `${plantDefId}-stage-${n}.png`);
@@ -239,11 +247,11 @@ async function checkSprites(plantDefId: string): Promise<{ status: CheckStatus; 
   const missing = total - presentFiles.length;
 
   if (missing === 0) {
-    return { status: '✅', details: `6/6 sprites présents dans /plants/`, missing: 0, total, presentFiles };
+    return { status: '✅', details: `${total}/${total} sprites présents dans /plants/`, missing: 0, total, presentFiles };
   } else if (missing <= 3) {
-    return { status: '⚠️', details: `${presentFiles.length}/6 sprites présents`, missing, total, presentFiles };
+    return { status: '⚠️', details: `${presentFiles.length}/${total} sprites présents`, missing, total, presentFiles };
   } else {
-    return { status: '❌', details: `${presentFiles.length}/6 sprites présents`, missing, total, presentFiles };
+    return { status: '❌', details: `${presentFiles.length}/${total} sprites présents`, missing, total, presentFiles };
   }
 }
 
@@ -349,21 +357,22 @@ async function checkPacketImage(plantDefId: string): Promise<{ status: CheckStat
   return { status: '❓', details: `Image packet non trouvée (optionnel)` };
 }
 
-// ─── Check 7: PLANTS entry ──────────────────────────────────────────────────
+// ─── Check 7: PlantDefinition entry (via plant-db.ts → PLANT_CARDS + TREE_CARDS) ──
 
-async function checkPlantsEntry(plantDefId: string, aiEngineContent: string): Promise<{ status: CheckStatus; details: string }> {
-  const patterns = [
-    new RegExp(`${plantDefId}\\s*:\\s*{`, 'i'),
-    new RegExp(`['"]${plantDefId}['"]\\s*:`, 'i'),
+async function checkPlantsEntry(plantDefId: string, holoContent: string): Promise<{ status: CheckStatus; details: string }> {
+  // Now plant-db.ts generates PlantDefinition from PLANT_CARDS + TREE_CARDS in HologramEvolution.tsx
+  // So we check that the plant exists in either PLANT_CARDS or TREE_CARDS
+  const plantCardPatterns = [
+    new RegExp(`['"]${plantDefId}['"]\\s*:\\s*{`, 'i'),
   ];
 
-  for (const pattern of patterns) {
-    if (pattern.test(aiEngineContent)) {
-      return { status: '✅', details: `Entry existe dans PLANTS (ai-engine.ts)` };
+  for (const pattern of plantCardPatterns) {
+    if (pattern.test(holoContent)) {
+      return { status: '✅', details: `Entry existe dans PLANT_CARDS ou TREE_CARDS (HologramEvolution.tsx)` };
     }
   }
 
-  return { status: '❌', details: `Entry MANQUANTE dans PLANTS` };
+  return { status: '❌', details: `Entry MANQUANTE dans HologramEvolution.tsx (PLANT_CARDS ou TREE_CARDS)` };
 }
 
 // ─── Check 8: Companion data ────────────────────────────────────────────────
@@ -535,7 +544,7 @@ async function checkImageAssets(cardData: CardDataInfo | null): Promise<ImageAss
   const isTree = category === 'fruit-tree';
 
   // Plant/tree stages
-  const stageCount = isTree ? 5 : 6;
+  const stageCount = isTree ? 5 : 5;
   for (let n = 1; n <= stageCount; n++) {
     const expected = isTree
       ? `/trees/${shopId}/${id}-stage-${n}.png`
@@ -738,7 +747,8 @@ export async function scanAllPlants(): Promise<ScanResult> {
 
   for (const plant of plantDefIds) {
     const plantCardResult = await checkPlantCard(plant.id, holoContent);
-    const spritesResult = await checkSprites(plant.id);
+    const isTree = ['fruit-tree', 'forest-tree'].includes(plantCardResult.cardData?.plantCategory || '');
+    const spritesResult = await checkSprites(plant.id, isTree);
     const cardDataResult = await checkCardData(plant.id);
     const companionResult = await checkCompanionData(plant.id, companionContent);
     const plantuleCatalogResult = await checkPlantule(plant.id, catalogContent);
@@ -754,12 +764,15 @@ export async function scanAllPlants(): Promise<ScanResult> {
         ...plantuleImagesResult,
       },
       packetImage: await checkPacketImage(plant.id),
-      plantsEntry: await checkPlantsEntry(plant.id, aiEngineContent),
+      plantsEntry: await checkPlantsEntry(plant.id, holoContent),
       companionData: companionResult,
     };
 
     const cardDataInfo = await readCardDataForPlant(plant.id);
     const imageAssets = await checkImageAssets(cardDataInfo);
+
+    // Count missing image assets (❌ status)
+    const missingImageAssets = imageAssets.filter(a => a.status === '❌').length;
 
     const missingCount = [
       checks.plantCard.status === '❌',
@@ -770,6 +783,7 @@ export async function scanAllPlants(): Promise<ScanResult> {
       checks.packetImage.status === '❌',
       checks.plantsEntry.status === '❌',
       checks.companionData.status === '❌',
+      missingImageAssets > 0, // Tree/plant image assets
     ].filter(Boolean).length;
 
     let overallStatus: PlantCheck['overallStatus'];

@@ -18,14 +18,22 @@ import { HologramEvolution } from "@/components/game/HologramEvolutionCard";
 import { GameConsole } from "@/components/game/GameConsole";
 import { DailyBonusPopup } from "@/components/game/DailyBonusPopup";
 import { QuestTracker } from "@/components/game/QuestTracker";
+import { OnboardingTracker } from "@/components/game/OnboardingTracker";
+import { VarietyCatalog } from "@/components/game/VarietyCatalog";
+import { PlantingCalendar } from "@/components/game/PlantingCalendar";
+import { WeatherForecast } from "@/components/game/WeatherForecast";
+import { PhotoTimeline } from "@/components/game/PhotoTimeline";
+import { GrowthCurveChart } from "@/components/game/GrowthCurveChart";
 import {
   TreePine, ShoppingBag, Sprout,
   Warehouse, Home, ScanSearch, BookOpen, Scale, Bug, Save, Droplets, Leaf,
+  Flower2, CalendarDays, Camera, TrendingUp,
 } from "lucide-react";
 
 export function GameTabs() {
   const activeTab = useGameStore((s) => s.activeTab);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
+  const gardenPlants = useGameStore((s) => s.gardenPlants);
 
   const tabStyle = {
     fontSize: 'var(--ui-tab-font)',
@@ -129,6 +137,27 @@ export function GameTabs() {
           <Leaf style={tabIconStyle} />
           🌱 Croissance
         </TabsTrigger>
+        <TabsTrigger
+          value="catalogue" style={tabStyle}
+          className="data-[state=active]:bg-emerald-100 data-[state=active]:border-emerald-300 border-transparent rounded-lg font-black uppercase"
+        >
+          <Flower2 style={tabIconStyle} />
+          📖 Catalogue
+        </TabsTrigger>
+        <TabsTrigger
+          value="meteo" style={tabStyle}
+          className="data-[state=active]:bg-sky-100 data-[state=active]:border-sky-300 border-transparent rounded-lg font-black uppercase"
+        >
+          <TrendingUp style={tabIconStyle} />
+          🌦️ Météo
+        </TabsTrigger>
+        <TabsTrigger
+          value="photos" style={tabStyle}
+          className="data-[state=active]:bg-purple-100 data-[state=active]:border-purple-300 border-transparent rounded-lg font-black uppercase"
+        >
+          <Camera style={tabIconStyle} />
+          📸 Photos
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="jardin" className="mt-4">
@@ -184,7 +213,42 @@ export function GameTabs() {
       </TabsContent>
 
       <TabsContent value="croissance" className="mt-4">
-        <HologramEvolution />
+        <div className="space-y-4">
+          <HologramEvolution />
+          {gardenPlants.length > 0 && (
+            <div className="p-3 bg-white border-2 border-lime-200 rounded-xl">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-[10px] font-black text-lime-600 uppercase">Courbe de croissance</span>
+              </div>
+              <GrowthCurveChart
+                plantDefId={gardenPlants[0].plantDefId}
+                currentStage={gardenPlants[0].plant.stage}
+                gddAccumulated={0}
+              />
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="catalogue" className="mt-4">
+        <div className="space-y-4">
+          <VarietyCatalog />
+          <div className="p-3 bg-gradient-to-br from-green-50 to-emerald-50 border-[3px] border-green-400 rounded-2xl shadow-[4px_4px_0_0_#000]">
+            <div className="flex items-center gap-2 mb-2">
+              <CalendarDays className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-black uppercase text-green-700">Calendrier de plantation</span>
+            </div>
+            <PlantingCalendar />
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="meteo" className="mt-4">
+        <WeatherForecast />
+      </TabsContent>
+
+      <TabsContent value="photos" className="mt-4">
+        <PhotoTimeline />
       </TabsContent>
     </Tabs>
     </>

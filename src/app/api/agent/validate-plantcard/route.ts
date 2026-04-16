@@ -79,15 +79,27 @@ export async function POST(request: Request) {
       });
     }
 
-    // We need to insert the new PlantCard just BEFORE the blank line before the marker
-    // The structure is: "...lastEntry},\n};\n\n// ═══ FIN..."
-    // Insert point is at markerIndex (before the \n\n before //)
-    // But we want the new entry to be INSIDE the object, before };
-    // So we look for the }; that comes right before the \n\n//
+    // We need to insert the new PlantCard just BEFORE the closing } of PLANT_CARDS
+    // The structure is: "...lastEntry},\r\n};\r\n// ═══ FIN PLANT_CARDS ═══"
+    // Insert point is at endIdx (the '}' of '};')
+    // So we look for "};\r\n//" or "};\r\n\r\n" before the marker
     const beforeMarker = content.slice(0, markerIndex);
-    // Find "};\n\n" pattern - this is the end of the PLANT_CARDS object
-    const endPattern = '};\n\n';
-    const endIdx = beforeMarker.lastIndexOf(endPattern);
+    // Find "};\r\n" or "};\r\n\r\n" pattern - this is the end of the PLANT_CARDS object
+    // Handle both CRLF (Windows) and LF (Unix) line endings
+    const endPattern1 = '};\r\n//';
+    const endPattern2 = '};\r\n\r\n';
+    const endPattern3 = '};\n//';
+    const endPattern4 = '};\n\n';
+    let endIdx = beforeMarker.lastIndexOf(endPattern1);
+    if (endIdx === -1) {
+      endIdx = beforeMarker.lastIndexOf(endPattern2);
+    }
+    if (endIdx === -1) {
+      endIdx = beforeMarker.lastIndexOf(endPattern3);
+    }
+    if (endIdx === -1) {
+      endIdx = beforeMarker.lastIndexOf(endPattern4);
+    }
 
     if (endIdx === -1) {
       return new Response(JSON.stringify({

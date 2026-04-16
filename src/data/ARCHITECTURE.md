@@ -1,7 +1,7 @@
 # BotanIA — Architecture Technique
 
 > Documentation de l'architecture technique pour les sessions IA.
-> Mis à jour : 2026-04-07
+> Mis à jour : 2026-04-15 (v0.22.0)
 
 ---
 
@@ -25,8 +25,16 @@
 
 ```
 src/store/
-├── game-store.ts         # [VOLUMINEUX ~2500 lignes] — TOUT l'état principal
-│                        # Problème: sera refactorisé en stores séparés
+├── game-store.ts         # État principal (jardin, pépinière, simulation)
+├── shop-store.ts         # Boutique, inventaire, pièces
+├── nursery-store.ts     # Pépinière
+├── garden-store.ts       # Plantes du jardin, zones serre, actions jardin
+├── simulation-store.ts  # Simulation temps
+├── economy-store.ts     # Quêtes quotidiennes, bonus, marché
+├── onboarding-store.ts  # Quêtes narratives d'onboarding (8 étapes)
+├── notification-store.ts # Toasts in-app pilotés par EventBus
+├── market-store.ts     # Marché dynamique (prix saisonniers)
+├── ui-settings-store.ts # Paramètres UI
 ├── photo-store.ts       # Photos, GPS, rangs tracés
 ├── harvest-store.ts     # Suivi des récoltes
 ├── achievement-store.ts # Badges jardinier
@@ -49,18 +57,28 @@ src/
 │   ├── PlantIdentifier.tsx     # Identification IA
 │   ├── Pepiniere.tsx           # Chambre de culture
 │   ├── Boutique.tsx            # Achat graines/arbres
+│   ├── OnboardingTracker.tsx  # Parcours onboarding (8 étapes)
+│   ├── NotificationContainer.tsx # Toasts in-app (EventBus)
+│   ├── CelebrationOverlay.tsx  # Animations de célébration
+│   ├── PlantStatCard.tsx      # Carte statistique plante
+│   ├── PlantingCalendar.tsx    # Calendrier INRAE
+│   ├── GrowthCurveChart.tsx    # Courbe sigmoïde GDD
+│   ├── WeatherForecast.tsx     # Prévisions 7j + alertes
+│   ├── PhotoTimeline.tsx       # Journal photo horodaté
+│   ├── VarietyCatalog.tsx      # Catalogue variétés
 │   └── ...
 ├── hooks/
 │   └── useAgroData.ts          # [UTILISE HologramEvolution] — Calcule données agronomiques
 │                                # pour chaque plante du jardin
 ├── lib/
-│   ├── ai-engine.ts            # PLANTS record — définitions botaniques
+│   ├── ai-engine.ts            # PLANTS re-export (source: plant-db.ts)
+│   ├── plant-db.ts             # Source unique de vérité PLANTS (depuis PLANT_CARDS)
 │   ├── gdd-engine.ts           # Calcul GDD (FAO)
 │   ├── hydro-engine.ts         # Besoins eau (ET0 FAO)
 │   ├── companion-matrix.ts     # Associations INRAE
+│   ├── event-bus.ts            # EventBus typé — communication inter-modules
+│   ├── water-budget.ts         # Budget hydrique hebdomadaire
 │   ├── soil-temperature.ts     # Température sol + semis
-│   ├── weather-dynamics.ts     # Modèles maladies
-│   ├── water-budget.ts         # Budget hydrique
 │   ├── weather-service.ts      # Open-Meteo
 │   └── gps-extractor.ts        # EXIF GPS
 └── data/
@@ -133,6 +151,28 @@ interface PlantCard {
 
 ---
 
+## Onglets de navigation (GameTabs)
+
+| Onglet | Composant | Description |
+|---|---|---|
+| 🌿 Jardin | Jardin + IAJardinier + GameConsole | Vue principale du jardin |
+| 🏡 Serre | SerreJardinView | Zones serre |
+| 🏠 Culture | Pepiniere | Chambre de culture |
+| 🏪 Boutique | Boutique + OnboardingTracker | Achat graines/arbres |
+| 🌱 Inventaire | GrainCollection | Collection de graines |
+| 🔍 ID | PlantIdentifier | Identification IA |
+| 📔 Journal | GardenJournalLunar | Journal + calendrier lunaire |
+| ⚖️ Récoltes | HarvestTracker + Marché dynamique | Suivi récoltes + vente |
+| 🦠 Maladies | DiseaseDetector | Détection maladies |
+| 💾 Save | GardenSaveManager | Sauvegardes |
+| 💧 Eau | WaterBudget | Budget hydrique |
+| 🌱 Croissance | HologramEvolution + GrowthCurveChart | Données agronomiques |
+| 📖 Catalogue | VarietyCatalog + PlantingCalendar | Catalogue variétés + calendrier |
+| 🌦️ Météo | WeatherForecast | Prévisions 7j + alertes |
+| 📸 Photos | PhotoTimeline | Journal photo horodaté |
+
+---
+
 ## Commandes importantes
 
 ```bash
@@ -155,10 +195,9 @@ npm run db:push
 
 | Criticité | Problème | Status |
 |---|---|---|
-| 🔴 Critique | `game-store.ts` monolithique (~2500 lignes) | À refactoriser |
-| 🔴 Critique | TypeScript `ignoreBuildErrors: false` maintenant activé | Corrigé |
 | 🟡 Moyen | 16 fichiers backup dans `src/store/` | À supprimer |
 | 🟡 Moyen | Pas de tests unitaires | Pas implémenté |
+| 🟢 Mineur | gdd-engine.test.ts : readonly tuple vs mutable | Pré-existant, n'affecte pas l'app |
 
 ---
 

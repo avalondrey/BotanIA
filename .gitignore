@@ -65,6 +65,9 @@ prompt
 *.tmp
 *.swp
 
+# Assets lourds (limite Vercel 250MB)
+public/trees/
+
 # Fichiers de travail
 worklog.md
 worklog_test.txt
@@ -72,6 +75,9 @@ _lia-b64.txt
 TEMP-*.tsx
 TEMP-*.txt
 SESSION-*.md
+
+# Test output
+test/
 *.backup
 *.backup-*
 test_write.txt

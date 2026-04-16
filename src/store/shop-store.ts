@@ -5,6 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { eventBus } from '@/lib/event-bus';
 import {
   SEED_CATALOG,
   PLANTULE_CATALOG,
@@ -100,6 +101,7 @@ export const useShopStore = create<ShopState>()(
         const newCoins = state.coins - item.price;
 
         set({ coins: newCoins, seedCollection: newCollection });
+        eventBus.emitAsync({ type: 'coins:spent', amount: item.price, item: `seed:${key}` });
         return true;
       },
 
@@ -114,6 +116,7 @@ export const useShopStore = create<ShopState>()(
         const newCoins = state.coins - item.price;
 
         set({ coins: newCoins, plantuleCollection: newCollection });
+        eventBus.emitAsync({ type: 'coins:spent', amount: item.price, item: `plantule:${plantDefId}` });
         return true;
       },
 
@@ -132,6 +135,7 @@ export const useShopStore = create<ShopState>()(
 
         // Seeds stay in seedVarieties as "closed packet" — must be opened via openSeedPacket
         set({ coins: newCoins, seedVarieties: newVarieties, unlockedVarieties: newUnlocked });
+        eventBus.emitAsync({ type: 'coins:spent', amount: variety.price, item: `variety:${varietyId}` });
         return true;
       },
 
@@ -186,6 +190,9 @@ export const useShopStore = create<ShopState>()(
 
       addCoins: (amount: number) => {
         set((state) => ({ coins: state.coins + amount }));
+        if (amount > 0) {
+          eventBus.emitAsync({ type: 'coins:earned', amount, source: 'bonus' });
+        }
       },
 
       // ── Seed helpers (used by nursery-store & garden-store) ──

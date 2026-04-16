@@ -5,6 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { eventBus } from '@/lib/event-bus';
 import {
   type PlantState,
   type AlertData,
@@ -194,6 +195,12 @@ export const useGardenStore = create<GardenState>()(
           useEconomyStore.getState().trackPlantSeed();
         } catch {}
 
+        // Événement métier
+        const containerType = state.gardenSerreZones.some(z =>
+          x >= z.x && y >= z.y && x <= z.x + z.width && y <= z.y + z.height
+        ) ? 'serre' : 'outdoor';
+        eventBus.emit({ type: 'plant:planted', plantDefId, containerType });
+
         return true;
       },
 
@@ -326,6 +333,10 @@ export const useGardenStore = create<GardenState>()(
         const plantDef = PLANTS[plant.plantDefId];
         const scoreReward = plantDef ? Math.ceil(plantDef.realDaysToHarvest / 3) : 10;
         useShopStore.getState().addScore(scoreReward);
+
+        // Événement métier
+        const coins = plantDef ? Math.ceil(plantDef.realDaysToHarvest / 10) : 3;
+        eventBus.emit({ type: 'plant:harvested', plantDefId: plant.plantDefId, coins });
       },
 
       waterAllGarden: () => {
@@ -344,6 +355,10 @@ export const useGardenStore = create<GardenState>()(
             useEconomyStore.getState().trackWaterPlant();
           }
         } catch {}
+        // Événement métier
+        for (const gp of state.gardenPlants) {
+          eventBus.emitAsync({ type: 'plant:watered', plantDefId: gp.plant.plantDefId, waterLevel: gp.plant.waterLevel });
+        }
       },
 
       moveGardenPlant: (plantId: string, newX: number, newY: number) => {

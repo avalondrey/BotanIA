@@ -11,6 +11,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { eventBus } from '@/lib/event-bus';
 
 // ═══ Sell prices per plant (coins per unit) ═══
 const SELL_PRICES: Record<string, number> = {
@@ -157,6 +158,8 @@ export const useEconomyStore = create<EconomyState>()(
           },
         }));
 
+        eventBus.emit({ type: 'market:sold', plantDefId, units: sellQty, coinsPerUnit: pricePerUnit });
+
         return totalCoins;
       },
 
@@ -192,6 +195,8 @@ export const useEconomyStore = create<EconomyState>()(
           dailyStreak: newStreak,
           totalDailyBonusesClaimed: get().totalDailyBonusesClaimed + 1,
         });
+
+        eventBus.emit({ type: 'dailybonus:claimed', streak: newStreak, coins: bonus });
 
         return { coins: bonus, streak: newStreak, alreadyClaimed: false };
       },
@@ -277,6 +282,8 @@ export const useEconomyStore = create<EconomyState>()(
           ),
           completedQuestIds: [...state.completedQuestIds, questId],
         }));
+
+        eventBus.emit({ type: 'quest:completed', questId, reward: quest.def.reward });
 
         return quest.def.reward;
       },

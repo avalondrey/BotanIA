@@ -18,9 +18,24 @@ export interface WeatherToday {
   /** Précipitations du jour en mm (Open-Meteo daily precipitation_sum) */
   precipitationMm: number;
 }
+
+/** Prévision journalière simplifiée */
+export interface WeatherForecastDay {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  precipitationMm: number;
+  windSpeedMax: number;
+  weatherCode: number;
+  weatherEmoji: string;
+  uvIndex: number;
+}
+
 export type RealWeatherData = {
   current: WeatherCurrent;
   today: WeatherToday;
+  /** Prévisions 7 jours (index 0 = aujourd'hui) */
+  forecast: WeatherForecastDay[];
   description: string;
 };
 export type GPSCoords = { lat: number; lon: number };
@@ -88,7 +103,7 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
   const now = Date.now();
   if (_cachedWeather && now - _cacheTime < CACHE_MS) return _cachedWeather;
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${typeof lat === 'number' ? lat : (lat as any)?.latitude || 48.8566}&longitude=${typeof lon === 'number' ? lon : (lon as any)?.longitude || 2.3522}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum&hourly=relative_humidity_2m&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${typeof lat === 'number' ? lat : (lat as any)?.latitude || 48.8566}&longitude=${typeof lon === 'number' ? lon : (lon as any)?.longitude || 2.3522}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,wind_speed_max,weather_code&hourly=relative_humidity_2m&timezone=auto&forecast_days=7`;
     const res = await fetch(url);
     const data = await res.json();
     const c = data.current_weather;
@@ -97,6 +112,29 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
     const uvIndex = data.daily?.uv_index_max?.[0] ?? 5;
     const precipMm: number = data.daily?.precipitation_sum?.[0] ?? (rainCodes.has(c.weathercode) ? 3 : 0);
     const isRaining = rainCodes.has(c.weathercode);
+    const daily = data.daily || {};
+    const forecastDays: WeatherForecastDay[] = [];
+    const dates = daily.time || [];
+    const tempMaxs = daily.temperature_2m_max || [];
+    const tempMins = daily.temperature_2m_min || [];
+    const precips = daily.precipitation_sum || [];
+    const windMaxs = daily.wind_speed_max || [];
+    const weatherCodes = daily.weather_code || [];
+    const uvMaxs = daily.uv_index_max || [];
+
+    for (let i = 0; i < Math.min(dates.length, 7); i++) {
+      forecastDays.push({
+        date: dates[i] || '',
+        tempMax: tempMaxs[i] ?? 20,
+        tempMin: tempMins[i] ?? 10,
+        precipitationMm: precips[i] ?? 0,
+        windSpeedMax: windMaxs[i] ?? 10,
+        weatherCode: weatherCodes[i] ?? 0,
+        weatherEmoji: weatherCodeEmoji(weatherCodes[i] ?? 0),
+        uvIndex: uvMaxs[i] ?? 5,
+      });
+    }
+
     _cachedWeather = {
       current: {
         temperature: c.temperature,
@@ -110,6 +148,7 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
         timestamp: Date.now(),
       },
       today: { tempMax: maxT, tempMin: minT, uvIndex, date: new Date().toISOString().split("T")[0], precipitationMm: precipMm },
+      forecast: forecastDays,
       description: "OK",
     };
     _cacheTime = now;
@@ -118,6 +157,7 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
     return {
       current: { temperature: 20, weatherCode: 0, weatherEmoji: "☀️", weatherDescription: "Ciel dégagé", gameWeather: "sunny", isRaining: false, windSpeed: 10, humidity: 60, timestamp: Date.now() },
       today: { tempMax: 25, tempMin: 15, uvIndex: 5, date: "", precipitationMm: 0 },
+      forecast: [],
       description: "Indisponible",
     };
   }

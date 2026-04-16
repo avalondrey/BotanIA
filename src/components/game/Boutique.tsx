@@ -23,6 +23,7 @@ import { AchatsLocauxTab } from "./Boutique/AchatsLocauxTab";
 import { DecouvertesTab } from "./Boutique/DecouvertesTab";
 import { MarcheTab } from "./Boutique/MarcheTab";
 import { QuestTracker } from "./QuestTracker";
+import { OnboardingTracker } from "./OnboardingTracker";
 import { BoutiqueSearchBar } from "./Boutique/BoutiqueSearchBar";
 import { BoutiqueSearchResults } from "./Boutique/BoutiqueSearchResults";
 import { useBoutiqueSearch } from "./Boutique/useBoutiqueSearch";
@@ -169,6 +170,7 @@ export function Boutique() {
   return (
     <div className="space-y-4">
       {/* Quest Tracker */}
+      <OnboardingTracker />
       <QuestTracker />
 
       {/* Shop Header */}
