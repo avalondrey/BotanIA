@@ -10,47 +10,59 @@ import { PEPINIERE_PLANT_THRESHOLDS, DEFAULT_PEPINIERE_THRESHOLDS } from '@/stor
 
 export const ROUTE_STAGE_LABELS: Record<GrowthRoute, string[]> = {
   jardin: [
-    'Graines en mini-serre',
-    'Levée (petite plantule)',
-    'Mini-serre / petits pots',
-    'Pot serre jardin',
-    'Sol jardin (post-gel)',
-    'Plante adulte productive',
+    'Graines en mini-serre',     // STAGE 1 : pot/sachet en mini-serre
+    'Levée',                      // STAGE 2 : petite plantule
+    'Petits pots',                // STAGE 3 : pots individuels
+    'Serre jardin',              // STAGE 4 : pots en serre
+    'Pleine terre (post-gel)',   // STAGE 5 : repiquage en sol
+    'Plante adulte productive',  // STAGE 6 : mature, productive
   ],
   miniserre: [
-    'Graines en mini-serre',
-    'Premières feuilles',
-    'Croissance végétative',
-    'Rempotage mini pots 🪴',
-    'Plante mature, fleur visible',
+    'Graines en mini-serre',     // STAGE 1 : chambre de culture
+    'Premières feuilles',        // STAGE 2
+    '2-3 feuilles',             // STAGE 3
+    '4-5 feuilles',             // STAGE 4
+    'Croissance végétative',    // STAGE 5
+    'Plante mature, fleur visible', // STAGE 6
   ],
   plantule: [
-    'Plante mature, fleur visible',
-    'Jeunes fruits (verts)',
-    'Croissance fruits',
-    'Maturation (véraison)',
-    'Fruit prêt à cueillir',
+    'Mini-serre, fleur visible', // STAGE 1 : plant acheté
+    'Jeunes fruits (verts)',     // STAGE 2 : en pleine terre
+    'Croissance fruits',        // STAGE 3
+    'Maturation (véraison)',    // STAGE 4
+    'Fruit prêt à cueillir',   // STAGE 5
+  ],
+  'semis-direct': [
+    'Semis en sillons',          // STAGE 0 : graine en terre
+    'Levée, cotylédons',         // STAGE 1 : petites feuilles
+    'Croissance racine',         // STAGE 2 : racine se forme
+    'Racine en gonflement',      // STAGE 3 : racine grossit
+    'Racine mature, récolte',    // STAGE 4 : prêt
+    'Montée en graine',          // STAGE 5 : fin de cycle
   ],
 };
 
 export const ROUTE_STAGE_EMOJIS: Record<GrowthRoute, string[]> = {
   jardin:    ['🌰', '🌱', '🪴', '🏡', '🌿', '🍅'],
-  miniserre: ['🌰', '🌱', '🌿', '🪴', '🌸'],
-  plantule:  ['🌸', '🟢', '📈', '🟠', '🔴'],
+  miniserre: ['🌰', '🌱', '🌿', '🌱', '🌿', '🌸'],
+  plantule:  ['🌸', '🟢', '📈', '🟠', '🍅'],
+  'semis-direct': ['🌰', '🌱', '🌿', '🥕', '🥬', '🌾'],
 };
 
 export const ROUTE_MAX_STAGES: Record<GrowthRoute, number> = {
   jardin: 5,    // 6 stages (0-5)
-  miniserre: 4, // 5 stages (0-4)
+  miniserre: 5, // 6 stages (0-5)
   plantule: 4,  // 5 stages (0-4)
+  'semis-direct': 5, // 6 stages (0-5)
 };
 
 // ═══ Container Transitions ═══
 
 export const ROUTE_CONTAINER_TRANSITIONS: Record<GrowthRoute, ContainerType[]> = {
   jardin:     ['sachet', 'sachet', 'mini-pot', 'pot-serre', 'sol-jardin', 'sol-jardin'],
-  miniserre:  ['miniserre-slot', 'miniserre-slot', 'miniserre-slot', 'mini-pot', 'mini-pot'],
-  plantule:   ['mini-pot', 'mini-pot', 'mini-pot', 'mini-pot', 'mini-pot'],
+  miniserre:  ['miniserre-slot', 'miniserre-slot', 'miniserre-slot', 'miniserre-slot', 'mini-pot', 'mini-pot'],
+  plantule:   ['mini-pot', 'sol-jardin', 'sol-jardin', 'sol-jardin', 'sol-jardin'],
+  'semis-direct': ['sillons', 'sillons', 'sillons', 'sillons', 'sillons', 'sillons'],
 };
 
 // ═══ Visual Stage Computation ═══
@@ -84,6 +96,17 @@ export function getVisualStage(plant: PlantState): number {
     if (days >= thresholds[3]) return 3;
     if (days >= thresholds[2]) return 2;
     if (days >= thresholds[1]) return 1;
+    return 0;
+  }
+
+  // jardin / semis-direct: 6 stages (0-5)
+  if (route === 'semis-direct') {
+    // Same threshold logic as jardin but no repotting — stays in sillons
+    if (days >= thresholds[4]) return 5;
+    if (days >= thresholds[3]) return 4;
+    if (days >= thresholds[2]) return 3;
+    if (days >= thresholds[1]) return 2;
+    if (days >= thresholds[0]) return 1;
     return 0;
   }
 
@@ -141,8 +164,9 @@ export function needsRepotting(plant: PlantState): boolean {
 export function canTransplantToGarden(plant: PlantState): boolean {
   const route: GrowthRoute = plant.growthRoute || 'jardin';
   if (route === 'miniserre') return false; // mini-serre plants stay in mini-serre
+  if (route === 'semis-direct') return false; // already in ground, no transplanting
   const stage = getVisualStage(plant);
   if (route === 'jardin') return stage >= 4;
-  if (route === 'plantule') return stage >= 1; // plantules can be transplanted early
+  if (route === 'plantule') return stage >= 2; // stage 1 = pot, stage 2+ = pleine terre
   return false;
 }

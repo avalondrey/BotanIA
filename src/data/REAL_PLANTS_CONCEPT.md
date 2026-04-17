@@ -83,70 +83,123 @@ Chaque plante dans BotanIA est basée sur une **plante réelle** avec des **donn
 
 ### Arbres fruitiers (8)
 
-| Arbre | Fruit | Années maturité | Entretien |
+| Arbre | Fruit | Années maturité | totalDaysToHarvest correct |
 |---|---|---|---|
-| Pommier | Apple | 4-5 ans | ⭐ |
-| Poirier | Pear | 4-5 ans | ⭐ |
-| Cerisier | Cherry | 3-4 ans | ⭐⭐ |
-| Prunier | Plum | 3-4 ans | ⭐ |
-| Abricotier | Apricot | 3-4 ans | ⭐⭐ |
-| Figuier | Fig | 2-3 ans | ⭐ |
-| Pêcher | Peach | 3-4 ans | ⭐⭐ |
-| Coing | Quince | 3-4 ans | ⭐ |
+| Pommier | Apple | 4-5 ans | **1825** (5 ans) |
+| Poirier | Pear | 4-5 ans | **1825** (5 ans) |
+| Cerisier | Cherry | 3-4 ans | **1460** (4 ans) |
+| Prunier | Plum | 3-4 ans | **1460** (4 ans) |
+| Abricotier | Apricot | 3-4 ans | **1460** (4 ans) |
+| Figuier | Fig | 2-3 ans | **1095** (3 ans) |
+| Pêcher | Peach | 3-4 ans | **1460** (4 ans) |
+| Coing | Quince | 3-4 ans | **1460** (4 ans) |
+| Agrumes (Oranger, Citronnier) | Orange, Lemon | 3-4 ans | **1460** (4 ans) |
+| Noisetier | Hazelnut | 5-6 ans | **2190** (6 ans) |
+| Noyer | Walnut | 8-10 ans | **2920** (8 ans) |
 
 ### Arbres forestiers (6)
 
-| Arbre | Usage | Années maturité |
-|---|---|---|
-| Chêne | Forestier | 30-50 ans |
-| Pin sylvestre | Forestier | 20-30 ans |
-| Érable | Ornement | 15-20 ans |
-| Bouleau | Ornement | 10-15 ans |
-| Magnolia | Ornement | 10-15 ans |
-| Noyer | Forestier | 8-12 ans |
+| Arbre | Usage | Années maturité | totalDaysToHarvest correct |
+|---|---|---|---|
+| Chêne | Forestier | 30-50 ans | **10950** (30 ans) |
+| Pin sylvestre | Forestier | 20-30 ans | **9125** (25 ans) |
+| Érable | Ornement | 15-20 ans | **6570** (18 ans) |
+| Bouleau | Ornement | 10-15 ans | **5475** (15 ans) |
+| Magnolia | Ornement | 10-15 ans | **5475** (15 ans) |
+| Noyer | Forestier | 8-12 ans | **3650** (10 ans) |
+
+### Règles de validation des données d'arbres
+
+> ⚠️ **IMPORTANT** : Ces règles DOIVENT être respectées lors de la génération de PlantCard pour les arbres.
+
+| Champ | Règle | Erreur courante |
+|-------|-------|-----------------|
+| `totalDaysToHarvest` | Fruitiers = 1095-2190 (3-6 ans). **PAS 5475 (15 ans)!** | Valeurs de 4000+ pour des fruitiers |
+| `firstHarvestYears` | Doit correspondre à `totalDaysToHarvest / 365` | premierHarvestYears: 4 mais totalDays: 5475 |
+| `stageDurations` | Arbres = `[45, 90, 180, 365]` (jours par stade) | `[30, 60, 120, 180]` (trop court) |
+| `stageGDD` | Arbres = `[200, 400, 800, 1500]` minimum | Valeurs type légume `[6, 15, 21, 18]` |
+| `plantCategory` | Doit être `'fruit-tree'` ou `'forest-tree'` | absent ou `'vegetable'` |
+| `treeData` | Obligatoire pour tous les arbres | absent |
+
+**Valeurs SANS EXCEPTION pour `totalDaysToHarvest` :**
+- Fruitiers à noyaux (pêche, prune, cherry, apricot) : **1095-1460**
+- Fruitiers à pepins (apple, pear, quince) : **1825**
+- Agrumes : **1460**
+- Noisetier : **2190**
+- Noyer : **2920**
+- Arbres forestiers/ornement : **5475-10950**
+
+**Ne jamais utiliser** : 365, 4380, 5110, 5475 (pour fruitiers), 6570
 
 ---
 
-## Cycle de vie dans l'application
+## Cycle de vie dans l'application — 3 routes de croissance
+
+BotanIA utilise **3 routes de croissance** distinctes selon le cheminement de la plante.
+
+---
+
+### Route JARDIN (6 stades)
 
 ```
-[SEMIS] ──→ [GERMINATION] ──→ [PÉPINIÈRE] ──→ [TRANSPLANTATION]
-              (7-14j)           (25-55j)         (au jardin)
-
-     ↓
-[GRAINES BOUTIQUE]
-   Achat → Stock → Semis
+[SEMIS] ──→ [POT/SACHET] ──→ [POTS INDIVIDUELS] ──→ [SERRE JARDIN] ──→ [PLEINE TERRE] ──→ [ADULTE PRODUCTIVE]
+  Stage 1         Stage 2              Stage 3               Stage 4              Stage 5              Stage 6
 ```
 
-### Stade 0 : Semis
-- La graine est plantée
-- Jours comptent à partir de 0
-- Besoin : chaleur, humidité
+| Stade | Label | Contenant | Description |
+|-------|-------|-----------|-------------|
+| 1 | Graines en mini-serre | Pot/sachet en mini-serre | La graine est plantée, chaleur et humidité |
+| 2 | Levée | Pot/sachet | Petite plantule, GDD commence à s'accumuler |
+| 3 | Petits pots | Pots individuels | Cotylédons visibles, photosynthèse active |
+| 4 | Serre jardin | Pots en serre | Vraies feuilles, croissance végétative |
+| 5 | Pleine terre (post-gel) | Sol jardin | Repiquage après dernier gel (début mai) |
+| 6 | Plante adulte productive | Sol jardin | Grande, productive, peut récolter |
 
-### Stade 1 : Levée
-- La germination commence
-- Tige sort du sol
-- GDD commence à s'accumuler
+---
 
-### Stade 2 : Plantule
-- Cotylédons (premières feuilles) visibles
-- Photosynthèse active
-- Besoins : lumière, eau modérée
+### Route MINI-SERRE (6 stades)
 
-### Stade 3 : Croissance
-- Vraies feuilles se développent
-- Croissance végétative
-- Besoins : eau, nutriments
+```
+Stage 1       Stage 2      Stage 3       Stage 4      Stage 5         Stage 6
+Graines →   1ères feuilles → 2-3 feuilles → 4-5 feuilles → Croissance végé → Fleur visible
+(en chambre de culture)
+```
 
-### Stade 4 : Floraison
-- Apparition des fleurs
-- Pollinisation nécessaire (vent, insectes)
-- Début fructification
+| Stade | Label | Description |
+|-------|-------|-------------|
+| 1 | Graines en mini-serre | Chambre de culture, chaleur |
+| 2 | Premières feuilles | 1-2 premières feuilles vraies |
+| 3 | 2-3 feuilles | 2-3 feuilles, développement foliaire |
+| 4 | 4-5 feuilles | 4-5 feuilles, plantule établie |
+| 5 | Croissance végétative | Croissance rapide, biomasse |
+| 6 | Plante mature, fleur visible | Première fleur, prête pour pollinisation |
 
-### Stade 5 : Récolte
-- Fruits mûrs
-- Prêt à consommer/recolter
-- Peut continuer à produire
+---
+
+### Route PLANTULE / ACHATS LOCAUX (5 stades)
+
+```
+Stage 1          Stage 2          Stage 3          Stage 4         Stage 5
+Mini-serre    → Pleine terre   → Pleine terre   → Pleine terre   → Récolte
+(fleur visible) (jeunes fruits)  (croissance)     (véraison)       (prêt)
+```
+> **Règle clé** : Stage 1 = en pot (bloque si reste en serre). Stage 2+ = pleine terre, évolue automatiquement.
+
+| Stade | Label | Contenant | Description |
+|-------|-------|-----------|-------------|
+| 1 | Mini-serre, fleur visible | Pot | Plant acheté, première fleur, reste en pot |
+| 2 | Jeunes fruits (verts) | Pleine terre | Fruits en formation (ex: tomates vertes) |
+| 3 | Croissance fruits | Pleine terre | Fruits en développement |
+| 4 | Maturation (véraison) | Pleine terre | Fruits orange-rouge, approche maturité |
+| 5 | Fruit prêt à cueillir | Pleine terre | Récolte, fruit mûr |
+
+---
+
+### Transition entre routes
+
+- **Jardin** : commence en pot (stage 1), évolue jusqu'au stage 6 en pleine terre
+- **Mini-serre** : stage 1 en chambre, reste en pot, évolue jusqu'à stage 6 en fleur
+- **Plantule** : stage 1 = plant acheté en pot → **transplanter en pleine terre** (stage 2+) pour évoluer
 
 ---
 

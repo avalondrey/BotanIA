@@ -67,6 +67,7 @@ prompt
 
 # Assets lourds (limite Vercel 250MB)
 public/trees/
+public/plants/
 
 # Fichiers de travail
 worklog.md

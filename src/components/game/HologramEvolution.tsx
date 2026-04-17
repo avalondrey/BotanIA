@@ -135,11 +135,208 @@ export interface CompanionResult {
   tip: string;
 }
 
+// PlantData is the same as PlantCard (reused for PLANT_DATA sub-set)
+export type PlantData = PlantCard;
+
+// Soil temperature check result
 export interface SoilResult {
   tempC: number;
   isOk: boolean;
   sowingAdvice: string;
   message: string;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PLANT_FAMILY_MAP — famille botanique par plante (fallback)
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+//  PLANT_FAMILY_MAP — famille botanique par plante (fallback)
+//
+//  Sources: Wikipedia Taxaceae, GBIF Botanical Taxonomy, Plants of the World Online (Kew)
+//  famille = "Unknown" signifie "pas dans la map — à corriger manuellement"
+// ═══════════════════════════════════════════════════════════════
+
+const PLANT_FAMILY_MAP: Record<string, string> = {
+  // ─── LÉGUMES FRUITS (Solanaceae) ───
+  tomato: 'Solanaceae',
+  pepper: 'Solanaceae',
+  eggplant: 'Solanaceae',
+  potato: 'Solanaceae',
+  goji: 'Solanaceae',
+  lycium: 'Solanaceae',
+
+  // ─── CUCURBITACÉES ───
+  cucumber: 'Cucurbitaceae',
+  zucchini: 'Cucurbitaceae',
+  squash: 'Cucurbitaceae',
+  pumpkin: 'Cucurbitaceae',
+  melon: 'Cucurbitaceae',
+  watermelon: 'Cucurbitaceae',
+
+  // ─── FABACÉES (légumineuses) ───
+  bean: 'Fabaceae',
+  pea: 'Fabaceae',
+  lentil: 'Fabaceae',
+  chickpea: 'Fabaceae',
+  faba: 'Fabaceae',
+
+  // ─── BRASSICACÉES (choux) ───
+  cabbage: 'Brassicaceae',
+  kale: 'Brassicaceae',
+  radish: 'Brassicaceae',
+  turnip: 'Brassicaceae',
+  broccoli: 'Brassicaceae',
+  cauliflower: 'Brassicaceae',
+  brusselsSprout: 'Brassicaceae',
+
+  // ─── ASTÉRACÉES (composées) ───
+  lettuce: 'Asteraceae',
+  sunflower: 'Asteraceae',
+  artichoke: 'Asteraceae',
+  endive: 'Asteraceae',
+  chicory: 'Asteraceae',
+
+  // ─── APIACÉES (ombellifères) ───
+  carrot: 'Apiaceae',
+  parsley: 'Apiaceae',
+  celery: 'Apiaceae',
+  dill: 'Apiaceae',
+  fennel: 'Apiaceae',
+  coriander: 'Apiaceae',
+
+  // ─── CHÉNOPODIACÉES / AMARANTHACÉES ───
+  spinach: 'Amaranthaceae',
+  chard: 'Amaranthaceae',
+  quinoa: 'Amaranthaceae',
+  amaranth: 'Amaranthaceae',
+  beet: 'Amaranthaceae',
+
+  // ─── LAMIACÉES (aromatiques) ───
+  basil: 'Lamiaceae',
+  mint: 'Lamiaceae',
+  thyme: 'Lamiaceae',
+  sage: 'Lamiaceae',
+  oregano: 'Lamiaceae',
+  rosemary: 'Lamiaceae',
+  lavender: 'Lamiaceae',
+
+  // ─── ROSACÉES (fruits) ───
+  strawberry: 'Rosaceae',
+  apple: 'Rosaceae',
+  pear: 'Rosaceae',
+  cherry: 'Rosaceae',
+  apricot: 'Rosaceae',
+  plum: 'Rosaceae',
+  peach: 'Rosaceae',
+  quince: 'Rosaceae',
+  almond: 'Rosaceae',
+  blackberry: 'Rosaceae',
+  raspberry: 'Rosaceae',
+  hawthorn: 'Rosaceae',
+  sorbus: 'Rosaceae',
+  amelanchier: 'Rosaceae',
+
+  // ─── RUTACÉES (agrumes) ───
+  orange: 'Rutaceae',
+  lemon: 'Rutaceae',
+  grapefruit: 'Rutaceae',
+  lime: 'Rutaceae',
+  mandarin: 'Rutaceae',
+  kumquat: 'Rutaceae',
+
+  // ─── JUGLANDACÉES (noix) ───
+  walnut: 'Juglandaceae',
+  hazelnut: 'Juglandaceae',
+  pecan: 'Juglandaceae',
+  chestnut: 'Juglandaceae',
+
+  // ─── FAGACÉES (forestiers) ───
+  oak: 'Fagaceae',
+  beech: 'Fagaceae',
+
+  // ─── BÉTULACÉES (forestiers) ───
+  birch: 'Betulaceae',
+  alder: 'Betulaceae',
+  hornbeam: 'Betulaceae',
+
+  // ─── SAPINDACÉES (érables) ───
+  maple: 'Sapindaceae',
+
+  // ─── PINACÉES (conifères) ───
+  pine: 'Pinaceae',
+  spruce: 'Pinaceae',
+  fir: 'Pinaceae',
+  cedar: 'Pinaceae',
+  larch: 'Pinaceae',
+
+  // ─── MAGNOLIACÉES ───
+  magnolia: 'Magnoliaceae',
+
+  // ─── MORACÉES ───
+  fig: 'Moraceae',
+
+  // ─── ÉLAAGNACÉES ───
+  eleagnus: 'Elaeagnaceae',
+
+  // ─── LAURACÉES ───
+  laurus: 'Lauraceae',
+  bay: 'Lauraceae',
+
+  // ─── CORNACÉES ───
+  cornus: 'Cornaceae',
+
+  // ─── GROSSULARIACÉES (groseilles/cassis) ───
+  blackcurrant: 'Grossulariaceae',
+  redcurrant: 'Grossulariaceae',
+  whitecurrant: 'Grossulariaceae',
+  gooseberry: 'Grossulariaceae',
+  casseille: 'Grossulariaceae',
+  josta: 'Grossulariaceae',
+
+  // ─── OLÉACÉES ───
+  olive: 'Oleaceae',
+
+  // ─── ÉricACÉES ───
+  arbousier: 'Ericaceae',
+  blueberry: 'Ericaceae',
+  cranberry: 'Ericaceae',
+
+  // ─── VITACÉES ───
+  grape: 'Vitaceae',
+  bacoNoir: 'Vitaceae',
+
+  // ─── LARDIZABALACÉES ───
+  akebia: 'Lardizabalaceae',
+
+  // ─── LYTHRACÉES ───
+  pomegranate: 'Lythraceae',
+
+  // ─── Polygonacées ───
+  rhubarb: 'Polygonaceae',
+
+  // ─── Asparagacées ───
+  asparagus: 'Asparagaceae',
+  onion: 'Amaryllidaceae',
+  garlic: 'Amaryllidaceae',
+  leek: 'Amaryllidaceae',
+  shallot: 'Amaryllidaceae',
+
+  // ─── Iridacées ───
+  iris: 'Iridaceae',
+
+  // ─── Rosmarinus ───
+  rosmarinus: 'Lamiaceae',
+
+  // ─── Cannabis ───
+  hemp: 'Cannabaceae',
+
+  // ─── Laurus nobilis ───
+  // (laurus already listed above)
+};
+
+function getPlantFamily(id: string): string {
+  return PLANT_FAMILY_MAP[id] ?? 'Unknown';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -162,6 +359,9 @@ export const STAGE_EMOJIS: Record<number, string> = {
   3: '🪴',
   4: '🌸',
   5: '🍅',
+};
+
+export const PLANT_DATA: Record<string, PlantData> = {
 'eleagnus': {
     id: 'eleagnus',
     tBase: 10,
@@ -188,7 +388,7 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Elaeagnaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -219,7 +419,7 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Lauraceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -250,7 +450,7 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Grossulariaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -281,7 +481,7 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Cornaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -312,7 +512,7 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Asteraceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -343,7 +543,7 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 110,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Solanaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -374,13 +574,230 @@ export const STAGE_EMOJIS: Record<number, string> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Amaranthaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
 'amaranth': {
     id: 'amaranth',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Amaranthaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'cabbage': {
+    id: 'cabbage',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Brassicaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'goji': {
+    id: 'goji',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Solanaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'lycium': {
+    id: 'lycium',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Solanaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'magnolia': {
+    id: 'magnolia',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Magnoliaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'cucumber': {
+    id: 'cucumber',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Cucurbitaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'radish': {
+    id: 'radish',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Brassicaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'zucchini': {
+    id: 'zucchini',
     tBase: 10,
     tCap: 30,
     stageGDD: [6, 15, 21, 18],
@@ -1300,7 +1717,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Lardizabalaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1331,7 +1748,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Grossulariaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1362,7 +1779,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Vitaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1393,7 +1810,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Oleaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1424,7 +1841,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Ericaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1455,7 +1872,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Rosaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1486,7 +1903,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Grossulariaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1517,7 +1934,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     optimalPlantMonths: [3, 4, 5],
     harvestSeason: ['summer'],
     totalDaysToHarvest: 60,
-    plantFamily: 'Cucurbitaceae',
+    plantFamily: 'Rosaceae',
     droughtResistance: 0.35,
     diseaseResistance: 0.45,
     pestResistance: 0.50,
@@ -1585,7 +2002,115 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.55,
     pestResistance: 0.60,
   },
+'apricot': {
+    id: 'apricot',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'plum': {
+    id: 'plum',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'fig': {
+    id: 'fig',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Moraceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
 };
+
+// ═══ Vérifier les plantFamily incorrects dans PLANT_DATA (safety net) ═══
+const _plantDataKeys = Object.keys(PLANT_DATA) as Array<keyof typeof PLANT_DATA>;
+const _corrections: string[] = [];
+for (const key of _plantDataKeys) {
+  const expected = getPlantFamily(key);
+  if (expected !== 'Unknown' && PLANT_DATA[key].plantFamily !== expected) {
+    _corrections.push(`  ${key}: '${PLANT_DATA[key].plantFamily}' → '${expected}'`);
+    (PLANT_DATA[key] as any).plantFamily = expected;
+  }
+}
+if (_corrections.length > 0) {
+  console.warn(`[BotanIA] plantFamily corrections (${_corrections.length}):`, '\n' + _corrections.join('\n'));
+}
+
 // ═══ FIN PLANT_CARDS ═══
 
 // ═══════════════════════════════════════════════════════════════
@@ -1629,7 +2154,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ['summer', 'autumn'],
-    totalDaysToHarvest: 5475,
+    totalDaysToHarvest: 1825,
     plantFamily: 'Rosaceae',
     droughtResistance: 0.55,
     diseaseResistance: 0.45,
@@ -1685,7 +2210,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ['autumn'],
-    totalDaysToHarvest: 5475,
+    totalDaysToHarvest: 1825,
     plantFamily: 'Rosaceae',
     droughtResistance: 0.55,
     diseaseResistance: 0.45,
@@ -1693,7 +2218,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     matureTreeHeight: 6,
     treeSpread: 5,
     treeLifespan: 80,
-    firstHarvestYears: 4,
+    firstHarvestYears: 5,
     annualYield: '40-100 kg/arbre',
     treeData: {
       pollinationType: 'Autofertile',
@@ -1741,7 +2266,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ['autumn'],
-    totalDaysToHarvest: 5110,
+    totalDaysToHarvest: 1825,
     plantFamily: 'Rosaceae',
     droughtResistance: 0.55,
     diseaseResistance: 0.45,
@@ -1749,7 +2274,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     matureTreeHeight: 5,
     treeSpread: 4,
     treeLifespan: 60,
-    firstHarvestYears: 4,
+    firstHarvestYears: 5,
     annualYield: '25-60 kg/arbre',
     treeData: {
       pollinationType: 'Autofertile',
@@ -1796,7 +2321,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ['summer', 'autumn'],
-    totalDaysToHarvest: 5475,
+    totalDaysToHarvest: 1825,
     plantFamily: 'Rosaceae',
     droughtResistance: 0.50,
     diseaseResistance: 0.40,
@@ -1823,7 +2348,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'fruit-tree',
     tBase: 8,
     tCap: 28,
-    stageGDD: [200, 400, 800, 1400],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 3.0,
     minSoilTempForSowing: 8,
@@ -1851,7 +2376,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ['summer'],
-    totalDaysToHarvest: 5475,
+    totalDaysToHarvest: 1460,
     plantFamily: 'Rosaceae',
     droughtResistance: 0.60,
     diseaseResistance: 0.40,
@@ -1859,7 +2384,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     matureTreeHeight: 12,
     treeSpread: 10,
     treeLifespan: 100,
-    firstHarvestYears: 5,
+    firstHarvestYears: 4,
     annualYield: '20-50 kg/arbre',
     treeData: {
       pollinationType: 'Autofertile (certaines variétés besoin pollinisateur)',
@@ -1872,19 +2397,80 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     },
   },
 
+  // ─── PÊCHER ───
+  peach: {
+    id: 'peach',
+    plantCategory: 'fruit-tree',
+    tBase: 7,
+    tCap: 35,
+    stageGDD: [200, 400, 800, 1500],
+    kc: 0.85,
+    waterNeedMmPerDay: 4.0,
+    minSoilTempForSowing: 10,
+    optimalSoilTemp: 20,
+    lightNeedHours: 8,
+    stageDurations: [45, 90, 180, 365],
+    companions: [
+      { plantId: 'garlic', type: 'beneficial', reason: 'Repousse pucerons' },
+      { plantId: 'chive', type: 'beneficial', reason: 'Piège à ravageurs' },
+      { plantId: 'nasturtium', type: 'beneficial', reason: 'Piège à pucerons' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Cloque',
+        emoji: '🧬',
+        triggerConditions: 'HR>80%, T15-20°C, printemps',
+        prevention: 'Traitement préventif cuivre, variété résistance',
+      },
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30°C',
+        prevention: 'Bonne aération, variété résistance',
+      },
+      {
+        name: 'Tordeuse',
+        emoji: '🦋',
+        triggerConditions: 'T douce, été',
+        prevention: 'Pièges à phéromones, bacillus thuringiensis',
+      },
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 1095,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.40,
+    diseaseResistance: 0.35,
+    pestResistance: 0.40,
+    matureTreeHeight: 4,
+    treeSpread: 3,
+    treeLifespan: 40,
+    firstHarvestYears: 3,
+    annualYield: '25-40kg',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: 0.50,
+      soilType: 'Profond, bien drainé, pH 6-7',
+      soilPH: '6.0-7.0',
+      pruningNotes: 'Taille de formation année 1-2, taille d\'entretien mars',
+      fruitEdible: true,
+    },
+  },
+
   // ─── NOISETIER ───
   hazelnut: {
     id: 'hazelnut',
     plantCategory: 'fruit-tree',
     tBase: 7,
     tCap: 30,
-    stageGDD: [150, 350, 700, 1200],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 3.0,
     minSoilTempForSowing: 8,
     optimalSoilTemp: 16,
     lightNeedHours: 6,
-    stageDurations: [30, 60, 120, 180],
+    stageDurations: [45, 90, 180, 365],
     companions: [
       { plantId: 'corn', type: 'beneficial', reason: 'Espace complémentaire' },
       { plantId: 'potato', type: 'harmful', reason: 'Compétition' },
@@ -1958,7 +2544,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ['autumn'],
-    totalDaysToHarvest: 6570,
+    totalDaysToHarvest: 2920,
     plantFamily: 'Juglandaceae',
     droughtResistance: 0.70,
     diseaseResistance: 0.45,
@@ -1985,13 +2571,13 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'fruit-tree',
     tBase: 10,
     tCap: 35,
-    stageGDD: [150, 350, 700, 1200],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 4.0,
     minSoilTempForSowing: 15,
     optimalSoilTemp: 25,
     lightNeedHours: 8,
-    stageDurations: [30, 60, 120, 360],
+    stageDurations: [45, 90, 180, 365],
     companions: [
       { plantId: 'basil', type: 'beneficial', reason: 'Repousse ravageurs' },
       { plantId: 'lavender', type: 'beneficial', reason: 'Repousse pucerons' },
@@ -2013,7 +2599,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [2, 3, 4, 9, 10],
     harvestSeason: ['winter', 'spring'],
-    totalDaysToHarvest: 4380,
+    totalDaysToHarvest: 1460,
     plantFamily: 'Rutaceae',
     droughtResistance: 0.50,
     diseaseResistance: 0.40,
@@ -2040,13 +2626,13 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'fruit-tree',
     tBase: 10,
     tCap: 35,
-    stageGDD: [150, 350, 700, 1200],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 4.0,
     minSoilTempForSowing: 15,
     optimalSoilTemp: 25,
     lightNeedHours: 8,
-    stageDurations: [30, 60, 120, 360],
+    stageDurations: [45, 90, 180, 365],
     companions: [
       { plantId: 'basil', type: 'beneficial', reason: 'Repousse ravageurs' },
       { plantId: 'lavender', type: 'beneficial', reason: 'Repousse pucerons' },
@@ -2067,7 +2653,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     ],
     optimalPlantMonths: [2, 3, 4, 9, 10],
     harvestSeason: ['summer', 'autumn', 'winter', 'spring'],
-    totalDaysToHarvest: 4380,
+    totalDaysToHarvest: 1460,
     plantFamily: 'Rutaceae',
     droughtResistance: 0.45,
     diseaseResistance: 0.40,
@@ -2147,7 +2733,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'forest-tree',
     tBase: 5,
     tCap: 30,
-    stageGDD: [150, 350, 700, 1800],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 3.0,
     minSoilTempForSowing: 5,
@@ -2175,7 +2761,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     matureTreeHeight: 20,
     treeSpread: 8,
     treeLifespan: 150,
-    firstHarvestYears: 15,
+    firstHarvestYears: 30,
     annualYield: 'Bois (non fruitier)',
     treeData: {
       pollinationType: 'Monoïque (anémophile)',
@@ -2194,7 +2780,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'forest-tree',
     tBase: 5,
     tCap: 30,
-    stageGDD: [150, 350, 700, 1600],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 3.0,
     minSoilTempForSowing: 5,
@@ -2228,7 +2814,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     matureTreeHeight: 25,
     treeSpread: 15,
     treeLifespan: 200,
-    firstHarvestYears: 20,
+    firstHarvestYears: 30,
     annualYield: 'Sirop (érable)',
     treeData: {
       pollinationType: 'Monoïque (anémophile)',
@@ -2247,7 +2833,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'forest-tree',
     tBase: 3,
     tCap: 35,
-    stageGDD: [150, 350, 700, 2000],
+    stageGDD: [200, 400, 800, 2000],
     kc: 0.75,
     waterNeedMmPerDay: 2.0,
     minSoilTempForSowing: 5,
@@ -2300,7 +2886,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     plantCategory: 'forest-tree',
     tBase: 8,
     tCap: 30,
-    stageGDD: [150, 350, 700, 1400],
+    stageGDD: [200, 400, 800, 1500],
     kc: 0.80,
     waterNeedMmPerDay: 4.0,
     minSoilTempForSowing: 10,
@@ -2334,7 +2920,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     matureTreeHeight: 10,
     treeSpread: 8,
     treeLifespan: 100,
-    firstHarvestYears: 10,
+    firstHarvestYears: 15,
     annualYield: 'Ornementale (fleurs)',
     treeData: {
       pollinationType: 'Entomophile (insectes)',
@@ -2774,12 +3360,12 @@ function getStageDescription(plantDefId: string, stageIndex: number): string {
       5: 'Montée en graine, fin cycle',
     },
     radish: {
-      0: 'Semis, graine germe',
+      0: 'Semis en sillons, graine en terre',
       1: 'Levée, cotylédons visibles',
-      2: 'Premières feuilles, racine gonfle',
-      3: 'Racine en formation',
-      4: 'Racine mature, prête',
-      5: 'Montée en graine',
+      2: 'Premières feuilles, racine se forme',
+      3: 'Racine en gonflement',
+      4: 'Racine mature, prête à récolter',
+      5: 'Montée en graine, fin de cycle',
     },
     cabbage: {
       0: 'Semis, germination',

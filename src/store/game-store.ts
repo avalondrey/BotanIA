@@ -106,7 +106,7 @@ export const PEPINIERE_STAGE_NAMES = [
 ];
 
 export function getStageImage(plantDefId: string, stage: number): string {
-  return `/stages/${plantDefId}/${Math.min(stage, 5)}.png`;
+  return `/plants/${plantDefId}-stage-${Math.min(stage, 5) + 1}.png`;
 }
 
 export const PEPINIERE_PLANT_THRESHOLDS: Record<string, number[]> = {

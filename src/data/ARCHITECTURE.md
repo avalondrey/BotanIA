@@ -1,7 +1,7 @@
 # BotanIA — Architecture Technique
 
 > Documentation de l'architecture technique pour les sessions IA.
-> Mis à jour : 2026-04-15 (v0.22.0)
+> Mis à jour : 2026-04-17 (v2.2.0)
 
 ---
 
@@ -148,6 +148,19 @@ interface PlantCard {
 ### Principe fondamental
 > **TOUT calcul agronomique doit passer par HologramEvolution.tsx**
 > Les composants UI ne font qu'AFFICHER les données calculées.
+
+### Règles de validation pour les arbres (TREE_CARDS)
+
+| Champ | Règle | Valeurs correctes |
+|-------|-------|-------------------|
+| `totalDaysToHarvest` | Fruitiers 3-6 ans, forestiers 15-30 ans | Fruitiers: 1095-2190, Forestiers: 5475-10950 |
+| `firstHarvestYears` | = totalDaysToHarvest / 365 | 3, 4, 5, 6, 8 ans |
+| `stageDurations` | Pour arbres uniquement | `[45, 90, 180, 365]` |
+| `stageGDD` | Pour arbres uniquement | `[200, 400, 800, 1500]` minimum |
+| `plantCategory` | Obligatoire | `'fruit-tree'` ou `'forest-tree'` |
+| `treeData` | Obligatoire pour arbres | Objet complet avec pollinationType, frostResistance, etc. |
+
+> ⚠️ **ERREURS COURANTES** : Ne jamais utiliser 5475 pour un fruitier (c'est pour les forestiers). Ne jamais utiliser des `stageGDD` de légume pour un arbre.
 
 ---
 

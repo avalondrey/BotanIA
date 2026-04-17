@@ -27,8 +27,8 @@ export interface PlantDefinition {
   realDaysToHarvest: number; // durée totale moyenne graine→récolte
 }
 
-export type GrowthRoute = 'jardin' | 'miniserre' | 'plantule';
-export type ContainerType = 'sachet' | 'mini-pot' | 'pot-serre' | 'sol-jardin' | 'miniserre-slot' | 'pepiniere-slot';
+export type GrowthRoute = 'jardin' | 'miniserre' | 'plantule' | 'semis-direct';
+export type ContainerType = 'sachet' | 'mini-pot' | 'pot-serre' | 'sol-jardin' | 'miniserre-slot' | 'pepiniere-slot' | 'sillons';
 
 export interface PlantState {
   plantDefId: string;
@@ -107,27 +107,27 @@ export const STAGE_EMOJIS = ["", "", "", "", "", ""];
 
 // Stage images per plant — manga cel-shaded cross-hatching illustrations (6 stades pepiniere)
 export const STAGE_IMAGES: Record<string, string[]> = {
-  tomato:      ["/stages/tomato/0.png",  "/stages/tomato/1.png",  "/stages/tomato/2.png",  "/stages/tomato/3.png",  "/stages/tomato/4.png",  "/stages/tomato/5.png"],
-  carrot:      ["/stages/carrot/0.png",  "/stages/carrot/1.png",  "/stages/carrot/2.png",  "/stages/carrot/3.png",  "/stages/carrot/4.png",  "/stages/carrot/5.png"],
-  strawberry:  ["/stages/strawberry/0.png",  "/stages/strawberry/1.png",  "/stages/strawberry/2.png",  "/stages/strawberry/3.png",  "/stages/strawberry/4.png",  "/stages/strawberry/5.png"],
-  lettuce:     ["/stages/lettuce/0.png", "/stages/lettuce/1.png", "/stages/lettuce/2.png", "/stages/lettuce/3.png", "/stages/lettuce/4.png", "/stages/lettuce/5.png"],
-  basil:       ["/stages/basil/0.png",   "/stages/basil/1.png",   "/stages/basil/2.png",   "/stages/basil/3.png",   "/stages/basil/4.png",   "/stages/basil/5.png"],
-  pepper:      ["/stages/pepper/0.png",  "/stages/pepper/1.png",  "/stages/pepper/2.png",  "/stages/pepper/3.png",  "/stages/pepper/4.png",  "/stages/pepper/5.png"],
-  goji:        ["/stages/goji/0.png",    "/stages/goji/1.png",    "/stages/goji/2.png",    "/stages/goji/3.png",    "/stages/goji/4.png",    "/stages/goji/5.png"],
-  lycium:      ["/stages/lycium/0.png",  "/stages/lycium/1.png",  "/stages/lycium/2.png",  "/stages/lycium/3.png",  "/stages/lycium/4.png",  "/stages/lycium/5.png"],
-  mirabellier: ["/stages/mirabellier/0.png", "/stages/mirabellier/1.png", "/stages/mirabellier/2.png", "/stages/mirabellier/3.png", "/stages/mirabellier/4.png", "/stages/mirabellier/5.png"],
-  photinia:    ["/stages/photinia/0.png", "/stages/photinia/1.png", "/stages/photinia/2.png", "/stages/photinia/3.png", "/stages/photinia/4.png", "/stages/photinia/5.png"],
-  eleagnus:    ["/stages/eleagnus/0.png", "/stages/eleagnus/1.png", "/stages/eleagnus/2.png", "/stages/eleagnus/3.png", "/stages/eleagnus/4.png", "/stages/eleagnus/5.png"],
-  laurus:      ["/stages/laurus/0.png",   "/stages/laurus/1.png",   "/stages/laurus/2.png",   "/stages/laurus/3.png",   "/stages/laurus/4.png",   "/stages/laurus/5.png"],
-  cornus:      ["/stages/cornus/0.png",   "/stages/cornus/1.png",   "/stages/cornus/2.png",   "/stages/cornus/3.png",   "/stages/cornus/4.png",   "/stages/cornus/5.png"],
-  casseille:   ["/stages/casseille/0.png", "/stages/casseille/1.png", "/stages/casseille/2.png", "/stages/casseille/3.png", "/stages/casseille/4.png", "/stages/casseille/5.png"],
-  bean:        ["/stages/bean/0.png", "/stages/bean/1.png", "/stages/bean/2.png", "/stages/bean/3.png", "/stages/bean/4.png", "/stages/bean/5.png"],
-  squash:      ["/stages/squash/0.png", "/stages/squash/1.png", "/stages/squash/2.png", "/stages/squash/3.png", "/stages/squash/4.png", "/stages/squash/5.png"],
-  sunflower:   ["/stages/sunflower/0.png", "/stages/sunflower/1.png", "/stages/sunflower/2.png", "/stages/sunflower/3.png", "/stages/sunflower/4.png", "/stages/sunflower/5.png"],
-  quinoa:      ["/stages/quinoa/0.png", "/stages/quinoa/1.png", "/stages/quinoa/2.png", "/stages/quinoa/3.png", "/stages/quinoa/4.png", "/stages/quinoa/5.png"],
-  amaranth:    ["/stages/amaranth/0.png", "/stages/amaranth/1.png", "/stages/amaranth/2.png", "/stages/amaranth/3.png", "/stages/amaranth/4.png", "/stages/amaranth/5.png"],
-  sorrel:      ["/stages/sorrel/0.png", "/stages/sorrel/1.png", "/stages/sorrel/2.png", "/stages/sorrel/3.png", "/stages/sorrel/4.png", "/stages/sorrel/5.png"],
-  corn:        ["/stages/corn/0.png", "/stages/corn/1.png", "/stages/corn/2.png", "/stages/corn/3.png", "/stages/corn/4.png", "/stages/corn/5.png"],
+  tomato:      ["/plants/tomato-stage-1.png",  "/plants/tomato-stage-2.png",  "/plants/tomato-stage-3.png",  "/plants/tomato-stage-4.png",  "/plants/tomato-stage-5.png",  "/plants/tomato-stage-6.png"],
+  carrot:      ["/plants/carrot-stage-1.png",  "/plants/carrot-stage-2.png",  "/plants/carrot-stage-3.png",  "/plants/carrot-stage-4.png",  "/plants/carrot-stage-5.png",  "/plants/carrot-stage-6.png"],
+  strawberry:  ["/plants/strawberry-stage-1.png",  "/plants/strawberry-stage-2.png",  "/plants/strawberry-stage-3.png",  "/plants/strawberry-stage-4.png",  "/plants/strawberry-stage-5.png",  "/plants/strawberry-stage-6.png"],
+  lettuce:     ["/plants/lettuce-stage-1.png", "/plants/lettuce-stage-2.png", "/plants/lettuce-stage-3.png", "/plants/lettuce-stage-4.png", "/plants/lettuce-stage-5.png", "/plants/lettuce-stage-6.png"],
+  basil:       ["/plants/basil-stage-1.png",   "/plants/basil-stage-2.png",   "/plants/basil-stage-3.png",   "/plants/basil-stage-4.png",   "/plants/basil-stage-5.png",   "/plants/basil-stage-6.png"],
+  pepper:      ["/plants/pepper-stage-1.png",  "/plants/pepper-stage-2.png",  "/plants/pepper-stage-3.png",  "/plants/pepper-stage-4.png",  "/plants/pepper-stage-5.png",  "/plants/pepper-stage-6.png"],
+  goji:        ["/plants/goji-stage-1.png",    "/plants/goji-stage-2.png",    "/plants/goji-stage-3.png",    "/plants/goji-stage-4.png",    "/plants/goji-stage-5.png",    "/plants/goji-stage-6.png"],
+  lycium:      ["/plants/lycium-stage-1.png",  "/plants/lycium-stage-2.png",  "/plants/lycium-stage-3.png",  "/plants/lycium-stage-4.png",  "/plants/lycium-stage-5.png",  "/plants/lycium-stage-6.png"],
+  mirabellier: ["/plants/mirabellier-stage-1.png", "/plants/mirabellier-stage-2.png", "/plants/mirabellier-stage-3.png", "/plants/mirabellier-stage-4.png", "/plants/mirabellier-stage-5.png", "/plants/mirabellier-stage-6.png"],
+  photinia:    ["/plants/photinia-stage-1.png", "/plants/photinia-stage-2.png", "/plants/photinia-stage-3.png", "/plants/photinia-stage-4.png", "/plants/photinia-stage-5.png", "/plants/photinia-stage-6.png"],
+  eleagnus:    ["/plants/eleagnus-stage-1.png", "/plants/eleagnus-stage-2.png", "/plants/eleagnus-stage-3.png", "/plants/eleagnus-stage-4.png", "/plants/eleagnus-stage-5.png", "/plants/eleagnus-stage-6.png"],
+  laurus:      ["/plants/laurus-stage-1.png",   "/plants/laurus-stage-2.png",   "/plants/laurus-stage-3.png",   "/plants/laurus-stage-4.png",   "/plants/laurus-stage-5.png",   "/plants/laurus-stage-6.png"],
+  cornus:      ["/plants/cornus-stage-1.png",   "/plants/cornus-stage-2.png",   "/plants/cornus-stage-3.png",   "/plants/cornus-stage-4.png",   "/plants/cornus-stage-5.png",   "/plants/cornus-stage-6.png"],
+  casseille:   ["/plants/casseille-stage-1.png", "/plants/casseille-stage-2.png", "/plants/casseille-stage-3.png", "/plants/casseille-stage-4.png", "/plants/casseille-stage-5.png", "/plants/casseille-stage-6.png"],
+  bean:        ["/plants/bean-stage-1.png", "/plants/bean-stage-2.png", "/plants/bean-stage-3.png", "/plants/bean-stage-4.png", "/plants/bean-stage-5.png", "/plants/bean-stage-6.png"],
+  squash:      ["/plants/squash-stage-1.png", "/plants/squash-stage-2.png", "/plants/squash-stage-3.png", "/plants/squash-stage-4.png", "/plants/squash-stage-5.png", "/plants/squash-stage-6.png"],
+  sunflower:   ["/plants/sunflower-stage-1.png", "/plants/sunflower-stage-2.png", "/plants/sunflower-stage-3.png", "/plants/sunflower-stage-4.png", "/plants/sunflower-stage-5.png", "/plants/sunflower-stage-6.png"],
+  quinoa:      ["/plants/quinoa-stage-1.png", "/plants/quinoa-stage-2.png", "/plants/quinoa-stage-3.png", "/plants/quinoa-stage-4.png", "/plants/quinoa-stage-5.png", "/plants/quinoa-stage-6.png"],
+  amaranth:    ["/plants/amaranth-stage-1.png", "/plants/amaranth-stage-2.png", "/plants/amaranth-stage-3.png", "/plants/amaranth-stage-4.png", "/plants/amaranth-stage-5.png", "/plants/amaranth-stage-6.png"],
+  sorrel:      ["/plants/sorrel-stage-1.png", "/plants/sorrel-stage-2.png", "/plants/sorrel-stage-3.png", "/plants/sorrel-stage-4.png", "/plants/sorrel-stage-5.png", "/plants/sorrel-stage-6.png"],
+  corn:        ["/plants/corn-stage-1.png", "/plants/corn-stage-2.png", "/plants/corn-stage-3.png", "/plants/corn-stage-4.png", "/plants/corn-stage-5.png", "/plants/corn-stage-6.png"],
 };
 
 export const ENVIRONMENTS: Record<
@@ -790,6 +790,25 @@ export function createMiniserreRouteState(plantDefId: string): PlantState {
     growthRoute: 'miniserre',
     containerType: 'miniserre-slot',
   };
+}
+
+// Plantes qui se sèment directement en terre (pas de repiquage)
+const SEMIS_DIRECT_PLANTS = new Set([
+  'radish', 'carrot', 'turnip', 'bean', 'pea', 'spinach', 'beet',
+  'lentil', 'chickpea', 'faba', 'parsley', 'dill', 'coriander',
+]);
+
+export function createSemisDirectState(plantDefId: string): PlantState {
+  return {
+    ...createInitialPlantState(plantDefId),
+    growthRoute: 'semis-direct',
+    containerType: 'sillons',
+  };
+}
+
+export function getDefaultGrowthRoute(plantDefId: string): GrowthRoute {
+  if (SEMIS_DIRECT_PLANTS.has(plantDefId)) return 'semis-direct';
+  return 'jardin';
 }
 
 // ── SEASONS & ENVIRONMENT — calendrier réel ──

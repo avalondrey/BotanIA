@@ -45,40 +45,39 @@ Trois routes distinctes selon le mode de culture :
 
 ### Route Jardin (6 stades) — semis en mini-serre → transvasements successifs → sol jardin
 
-| Stage | Description | Contenant |
-|-------|-------------|-----------|
-| 1 | Graines semées | Mini-serre (sachet/petit pot) |
-| 2 | Levée (petite plantule) | Mini-serre |
-| 3 | Croissance en mini-serre | Mini-serre ou petits pots individuels |
-| 4 | Repiquage dans serre jardin | Pots individuels en serre |
-| 5 | Après dernier gel → repiquage en sol | Sol jardin (pleine terre) |
-| 6 | Plante adulte productive | Sol jardin — récolte |
+| Stage | Label | Contenant | Description |
+|-------|-------|-----------|-------------|
+| 1 | Graines en mini-serre | Pot/sachet | Graines semées en chambre de culture |
+| 2 | Levée | Pot/sachet | Petite plantule, GDD commence |
+| 3 | Petits pots | Pots individuels | Cotylédons, photosynthèse active |
+| 4 | Serre jardin | Pots en serre | Vraies feuilles, croissance végétative |
+| 5 | Pleine terre (post-gel) | Sol jardin | Après dernier gel (début mai) |
+| 6 | Plante adulte productive | Sol jardin | Récolte |
 
-> **Note** : Stade 3 = les plantules sortent de la mini-serre pour aller en petits pots individuels. Stade 5 = on attend le dernier gel (début mai) avant de transplanter en pleine terre.
+### Route Mini-Serre (6 stades) — croissance en serre uniquement
 
-### Route Mini-Serre (5 stades) — croissance en serre uniquement, pas de transplantation en sol
+| Stage | Label | Contenant | Description |
+|-------|-------|-----------|-------------|
+| 1 | Graines en mini-serre | Mini-serre (chambre) | Chaleur, humidité |
+| 2 | Premières feuilles | Mini-serre | 1-2 premières feuilles |
+| 3 | 2-3 feuilles | Mini-serre | Développement foliaire |
+| 4 | 4-5 feuilles | Mini-serre | Plantule établie |
+| 5 | Croissance végétative | Mini-serre | Croissance rapide |
+| 6 | Plante mature, fleur visible | Mini-serre | Première fleur, prête |
 
-| Stage | Description | Contenant |
-|-------|-------------|-----------|
-| 1 | Graines semées en mini-serre | Mini-serre (chambre de culture) |
-| 2 | Premières feuilles | Mini-serre |
-| 3 | Croissance végétative | Mini-serre |
-| 4 | 2-3 feuilles, rempotage | Mini pots individuels dans mini-serre |
-| 5 | Plante mature, première fleur visible | Mini-serre — récolte en intérieur |
-
-> **Note** : La plante reste en serre. Au stade 4, passage en pots individuels pour attendre les conditions idéales. Pas de transplantation en sol jardin.
+> **Note** : La plante reste en serre. Stages 1-4 = miniserre-slot, stages 5-6 = mini-pot. Pas de transplantation en sol jardin.
 
 ### Route Plantules (5 stades) — achat local, skip les stades serre
 
-| Stage | Description | Contenant |
-|-------|-------------|-----------|
-| 1 | Plante mature en mini-serre (première fleur) | Mini-serre ou pot |
-| 2 | Jeunes fruits (ex: tomates vertes) | Pot / sol jardin |
-| 3 | Croissance des fruits (ex: tomates vertes développement) | Sol jardin |
-| 4 | Maturation (ex: tomates orange-rouge, véraison) | Sol jardin |
-| 5 | Plante adulte productive, fruit prêt à cueillir | Sol jardin — récolte |
+| Stage | Label | Contenant | Description |
+|-------|-------|-----------|-------------|
+| 1 | Mini-serre, fleur visible | Pot | Plant acheté, fleur, **bloque si reste en pot** |
+| 2 | Jeunes fruits (verts) | Pleine terre | Fruits en formation — **transplanter pour évoluer** |
+| 3 | Croissance fruits | Pleine terre | Fruits en développement |
+| 4 | Maturation (véraison) | Pleine terre | Fruits orange-rouge |
+| 5 | Fruit prêt à cueillir | Pleine terre | Récolte |
 
-> **Note** : Les plantules achetées localement (Pépinière Locale, Marché Producteurs) sautent les stades de semis et arrivent directement au stade mature. Elles sont prêtes à être repiquées en sol après le dernier gel.
+> **Règle clé** : Stage 1 = en pot (bloque si reste en serre). Stage 2+ = pleine terre, évolue automatiquement.
 
 ### Résumé visuel des 3 routes
 

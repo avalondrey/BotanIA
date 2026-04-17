@@ -1,5 +1,33 @@
 # BotanIA - Changelog
 
+## v2.2.0 - AI Sprite Editor, Plantule System, Melon Support (2026-04-17)
+
+### AI Microservice - Sprite Editor Dashboard
+
+- **Dashboard unifié** (`ai-microservice/src/dashboard.html`) : scan 8 points, Sprite Editor avec upload par drag-drop, génération de prompts IA
+- **Scan 8 points** : PlantCard, Sprites (6), CARD_DATA, SEED_VARIETIES, Plantules (10), Packet/Card, Plants entry, Companion data
+- **Upload images** : proxy `/scan/plants/register` avec support FormData et JSON
+- **Génération prompts** : `/generate-image-prompt` avec Ollama (qwen2.5:7b)
+
+### Plantule System Fix
+
+- **Problème résolu** : radis, carotte et autres plantes semées en direct n'ont plus de sprites plantule (10 images) — только bought-as-seedling plants obtiennent des plantules
+- **Catalogue source** : `catalogSource` properly distinguishes SEED_VARIETIES vs PLANTULES_LOCALES vs BOTH
+- **Plantule stages** maintenant conditionnels : только si `inPlantule = true` dans PLANTULES_LOCALES
+
+### French Localization - Plantule Modal
+
+- **Descriptions stages plantule** en français : 'Mature (fleur)', 'Jeunes fruits', 'Croissance', 'Maturation', 'Prête à cueillir'
+- **Descriptions maturité** en français : 'Plante mature en plein champ...', 'Jeunes fruits...', etc.
+- **Bouton Fermer** ajouté dans le modal plantule
+- **Refresh Sprite Editor** après upload d'image plantule
+
+### Melon & Missing CARD_DATA
+
+- **Melon sans CARD_DATA** : upload fonctionne maintenant (chemin déduit de plantDefId)
+- **`buildImagePrompt`** accepte `CardDataInfo | null` avec fallbacks ('Unknown Plant', '🌱', 'BotanIA')
+- **Prompt generation** pour melon marche même sans CARD_DATA
+
 ## v0.22.0 - EventBus, Notifications, Catalogue, Marché Dynamique (2026-04-15)
 
 ### Couche 2 — EventBus & Notifications

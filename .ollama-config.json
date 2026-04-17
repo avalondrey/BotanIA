@@ -1,0 +1,57 @@
+{
+  "ollama": {
+    "host": "http://localhost:11434",
+    "defaultService": "serve",
+    "models": {
+      "claude": {
+        "name": "qwen3.5",
+        "description": "Claude-compatible, IA généraliste bilingue",
+        "params": {
+          "temperature": 0.7,
+          "top_p": 0.9,
+          "top_k": 40
+        }
+      },
+      "gardening": {
+        "name": "qwen2.5:7b",
+        "description": "Expert en jardinage français",
+        "params": {
+          "temperature": 0.3,
+          "num_predict": 256
+        }
+      },
+      "vision": {
+        "name": "llava",
+        "description": "Modèle vision multimodal",
+        "params": {
+          "temperature": 0.5
+        }
+      },
+      "embeddings": {
+        "name": "nomic-embed-text",
+        "description": "Embeddings pour RAG Qdrant",
+        "params": {
+          "temperature": 0.0
+        }
+      },
+      "fast": {
+        "name": "llama3.2",
+        "description": "Généraliste rapide",
+        "params": {
+          "temperature": 0.6
+        }
+      }
+    },
+    "systemPrompts": {
+      "claude": "Tu es Claude, un assistant IA généraliste, compétent et bienveillant.",
+      "gardening": "Tu es BotanIA, expert en jardinage biologique français. Réponses courtes, pratiques, bienveillantes. Base-toi sur INRAE/FAO. Jamais de pesticides chimiques.",
+      "default": "Tu es un assistant IA helpful, harmless, and honest."
+    }
+  },
+  "environment": {
+    "OLLAMA_URL": "http://localhost:11434",
+    "OLLAMA_HOST": "http://localhost:11434",
+    "NEXT_PUBLIC_OLLAMA_URL": "http://localhost:11434",
+    "ENABLE_OLLAMA": "true"
+  }
+}

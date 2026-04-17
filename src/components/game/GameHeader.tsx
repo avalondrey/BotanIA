@@ -24,7 +24,7 @@ export function GameHeader({ weatherStatus, gpsCoords, onRefreshWeather }: GameH
             >
               🌱 BotanIA
             </motion.h1>
-            <span className="px-1.5 py-0.5 bg-white/20 font-bold uppercase rounded backdrop-blur-sm" style={{ fontSize: 'var(--ui-hud-font)' }}>v0.18.0</span>
+            <span className="px-1.5 py-0.5 bg-white/20 font-bold uppercase rounded backdrop-blur-sm" style={{ fontSize: 'var(--ui-hud-font)' }}>v2.2.0</span>
             <span className="hidden sm:inline-block px-1.5 py-0.5 bg-amber-500/30 font-bold uppercase rounded backdrop-blur-sm border border-amber-400/40" style={{ fontSize: 'var(--ui-hud-font)' }}>alpha</span>
             {weatherStatus === "ready" && (
               <span className="hidden md:inline-block px-1.5 py-0.5 bg-emerald-500/30 text-[8px] font-bold uppercase rounded backdrop-blur-sm border border-emerald-400/40">

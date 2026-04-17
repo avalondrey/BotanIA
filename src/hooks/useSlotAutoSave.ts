@@ -24,17 +24,38 @@ export function useSlotAutoSave() {
       timerRef.current = setInterval(async () => {
         try {
           const state = useGameStore.getState();
-          // Ne sauvegarder que si le jeu est actif
           if (!state.isPaused || state.speed > 0) {
             await autoSave({
               day: state.day,
               season: state.season,
               score: state.score,
               coins: state.coins,
+              ecoPoints: state.ecoPoints,
+              ecoLevel: state.ecoLevel,
+              bestScore: state.bestScore,
+              harvested: state.harvested,
+              gardenWidthCm: state.gardenWidthCm,
+              gardenHeightCm: state.gardenHeightCm,
               gardenPlants: state.gardenPlants,
+              gardenSerreZones: state.gardenSerreZones,
+              gardenZones: state.gardenZones,
+              gardenTrees: state.gardenTrees,
+              gardenHedges: state.gardenHedges,
+              gardenTanks: state.gardenTanks,
+              gardenSheds: state.gardenSheds,
+              gardenDrums: state.gardenDrums,
+              pepiniere: state.pepiniere,
               miniSerres: state.miniSerres,
+              etageres: state.etageres,
+              ownedChambres: state.ownedChambres,
+              activeChambreId: state.activeChambreId,
+              serreTiles: state.serreTiles,
+              seedCollection: state.seedCollection,
+              plantuleCollection: state.plantuleCollection,
+              seedVarieties: state.seedVarieties,
+              unlockedVarieties: state.unlockedVarieties,
+              discoveredPlants: state.discoveredPlants,
               weather: state.realWeather,
-              // ajouter d'autres données si nécessaire
             });
             console.log('[AutoSave] Sauvegarde auto effectuée');
           }

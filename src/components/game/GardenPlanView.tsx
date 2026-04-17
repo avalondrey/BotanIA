@@ -97,6 +97,185 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const setGridSnap = onGridSnapChange ?? setGridSnapLocal;
   const [hoverCoords, setHoverCoords] = useState<{ x: number; y: number } | null>(null);
 
+  // ── Alignment mode ──
+  const [alignMode, setAlignMode] = useState(false);
+  const [alignSelection, setAlignSelection] = useState<Array<{ type: string; id: string }>>([]);
+  type AlignAxis = 'x' | 'y';
+  type AlignType = 'left' | 'center' | 'right' | 'even';
+
+  const toggleAlignMode = () => {
+    setAlignMode(m => !m);
+    setAlignSelection([]);
+  };
+
+  const getElemsForAlign = () => {
+    const out: Array<{ type: string; id: string; x: number; y: number; w: number; h: number }> = [];
+    for (const s of alignSelection) {
+      if (s.type === 'plant') {
+        const gp = gardenPlants.find(g => g.id === s.id);
+        if (gp) out.push({ type: 'plant', id: gp.id, x: gp.x, y: gp.y, w: 80, h: 80 });
+      } else if (s.type === 'zone') {
+        const z = gardenZones.find(z => z.id === s.id);
+        if (z) out.push({ type: 'zone', id: z.id, x: z.x, y: z.y, w: z.width, h: z.height });
+      } else if (s.type === 'serre') {
+        const sr = gardenSerreZones.find(sr => sr.id === s.id);
+        if (sr) out.push({ type: 'serre', id: sr.id, x: sr.x, y: sr.y, w: sr.width, h: sr.height });
+      } else if (s.type === 'tree') {
+        const tr = gardenTrees.find(tr => tr.id === s.id);
+        if (tr) out.push({ type: 'tree', id: tr.id, x: tr.x - (tr.diameter ?? 75) / 2, y: tr.y - (tr.diameter ?? 75) / 2, w: tr.diameter ?? 75, h: tr.diameter ?? 75 });
+      } else if (s.type === 'tank') {
+        const t = gardenTanks.find(t => t.id === s.id);
+        if (t) out.push({ type: 'tank', id: t.id, x: t.x, y: t.y, w: t.width, h: t.height });
+      } else if (s.type === 'shed') {
+        const sh = gardenSheds.find(sh => sh.id === s.id);
+        if (sh) out.push({ type: 'shed', id: sh.id, x: sh.x, y: sh.y, w: sh.width, h: sh.height });
+      } else if (s.type === 'drum') {
+        const d = gardenDrums.find(d => d.id === s.id);
+        if (d) out.push({ type: 'drum', id: d.id, x: d.x, y: d.y, w: d.width, h: d.height });
+      } else if (s.type === 'hedge') {
+        const h = gardenHedges.find(h => h.id === s.id);
+        if (h) out.push({ type: 'hedge', id: h.id, x: h.x, y: h.y, w: h.width, h: h.height });
+      }
+    }
+    return out;
+  };
+
+  const applyAlign = (axis: AlignAxis, type: AlignType) => {
+    const elems = getElemsForAlign();
+    if (elems.length < 2) return;
+    if (axis === 'x') {
+      const sorted = [...elems].sort((a, b) => a.x - b.x);
+      if (type === 'left') {
+        const minX = sorted[0].x;
+        sorted.forEach(e => {
+          if (e.type === 'plant') moveGardenPlant?.(e.id, minX, e.y);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, minX, e.y);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, minX, e.y);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, minX + e.w / 2, e.y + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, minX, e.y);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, minX, e.y);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, minX, e.y);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, minX, e.y);
+        });
+      } else if (type === 'right') {
+        const maxX = Math.max(...sorted.map(e => e.x + e.w));
+        sorted.forEach(e => {
+          const nx = maxX - e.w;
+          if (e.type === 'plant') moveGardenPlant?.(e.id, nx, e.y);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, nx, e.y);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, nx, e.y);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, nx + e.w / 2, e.y + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, nx, e.y);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, nx, e.y);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, nx, e.y);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, nx, e.y);
+        });
+      } else if (type === 'center') {
+        const minX = sorted[0].x + sorted[0].w / 2;
+        const maxX = Math.max(...sorted.map(e => e.x + e.w / 2));
+        const span = maxX - minX;
+        sorted.forEach((e, i) => {
+          const nc = minX + (span * i) / (sorted.length - 1) - e.w / 2;
+          if (e.type === 'plant') moveGardenPlant?.(e.id, nc, e.y);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, nc, e.y);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, nc, e.y);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, nc + e.w / 2, e.y + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, nc, e.y);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, nc, e.y);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, nc, e.y);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, nc, e.y);
+        });
+      } else if (type === 'even') {
+        const minX = sorted[0].x;
+        const maxX = sorted[sorted.length - 1].x + sorted[sorted.length - 1].w;
+        const step = (maxX - minX) / (sorted.length - 1);
+        sorted.forEach((e, i) => {
+          const nx = i === sorted.length - 1 ? maxX - e.w : minX + Math.round(step * i);
+          if (e.type === 'plant') moveGardenPlant?.(e.id, nx, e.y);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, nx, e.y);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, nx, e.y);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, nx + e.w / 2, e.y + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, nx, e.y);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, nx, e.y);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, nx, e.y);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, nx, e.y);
+        });
+      }
+    } else {
+      // axis === 'y'
+      const sorted = [...elems].sort((a, b) => a.y - b.y);
+      if (type === 'left') {
+        const minY = sorted[0].y;
+        sorted.forEach(e => {
+          if (e.type === 'plant') moveGardenPlant?.(e.id, e.x, minY);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, e.x, minY);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, e.x, minY);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, e.x + e.w / 2, minY + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, e.x, minY);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, e.x, minY);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, e.x, minY);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, e.x, minY);
+        });
+      } else if (type === 'right') {
+        const maxY = Math.max(...sorted.map(e => e.y + e.h));
+        sorted.forEach(e => {
+          const ny = maxY - e.h;
+          if (e.type === 'plant') moveGardenPlant?.(e.id, e.x, ny);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, e.x, ny);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, e.x, ny);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, e.x + e.w / 2, ny + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, e.x, ny);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, e.x, ny);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, e.x, ny);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, e.x, ny);
+        });
+      } else if (type === 'center') {
+        const minY = sorted[0].y + sorted[0].h / 2;
+        const maxY = Math.max(...sorted.map(e => e.y + e.h / 2));
+        const span = maxY - minY;
+        sorted.forEach((e, i) => {
+          const nc = minY + (span * i) / (sorted.length - 1) - e.h / 2;
+          if (e.type === 'plant') moveGardenPlant?.(e.id, e.x, nc);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, e.x, nc);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, e.x, nc);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, e.x + e.w / 2, nc + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, e.x, nc);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, e.x, nc);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, e.x, nc);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, e.x, nc);
+        });
+      } else if (type === 'even') {
+        const minY = sorted[0].y;
+        const maxY = sorted[sorted.length - 1].y + sorted[sorted.length - 1].h;
+        const step = (maxY - minY) / (sorted.length - 1);
+        sorted.forEach((e, i) => {
+          const ny = i === sorted.length - 1 ? maxY - e.h : minY + Math.round(step * i);
+          if (e.type === 'plant') moveGardenPlant?.(e.id, e.x, ny);
+          else if (e.type === 'zone') moveGardenZone?.(e.id, e.x, ny);
+          else if (e.type === 'serre') moveSerreZone?.(e.id, e.x, ny);
+          else if (e.type === 'tree') moveGardenTree?.(e.id, e.x + e.w / 2, ny + e.h / 2);
+          else if (e.type === 'tank') moveGardenTank?.(e.id, e.x, ny);
+          else if (e.type === 'shed') moveGardenShed?.(e.id, e.x, ny);
+          else if (e.type === 'drum') moveGardenDrum?.(e.id, e.x, ny);
+          else if (e.type === 'hedge') moveGardenHedge?.(e.id, e.x, ny);
+        });
+      }
+    }
+    setAlignSelection([]);
+    setAlignMode(false);
+  };
+
+  const toggleAlignSelect = (type: string, id: string) => {
+    setAlignSelection(prev => {
+      const exists = prev.find(s => s.type === type && s.id === id);
+      if (exists) return prev.filter(s => !(s.type === type && s.id === id));
+      return [...prev, { type, id }];
+    });
+  };
+
+  const isAlignSelected = (type: string, id: string) =>
+    alignSelection.some(s => s.type === type && s.id === id);
+
   // Snap function
   const snapCm = (cm: number): number => {
     if (gridSnap === 'off') return cm;
@@ -371,6 +550,33 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             ✏️ Mode placement : {activeTool} — cliquez sur la grille
           </span>
         )}
+
+        {alignMode ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', background: '#f3e8ff', border: '1px solid #a855f7', padding: '2px 8px', borderRadius: 6 }}>
+              🎯 Aligner ({alignSelection.length} sélectionné{alignSelection.length > 1 ? 's' : ''})
+            </span>
+            <span style={{ fontSize: 10, color: '#6b7280' }}>Axe:</span>
+            <button onClick={() => applyAlign('x', 'left')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>← Gauche</button>
+            <button onClick={() => applyAlign('x', 'center')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>↔ Centre X</button>
+            <button onClick={() => applyAlign('x', 'right')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>Droite →</button>
+            <button onClick={() => applyAlign('x', 'even')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>⤓ Espacer X</button>
+            <span style={{ fontSize: 10, color: '#6b7280', marginLeft: 4 }}>|</span>
+            <button onClick={() => applyAlign('y', 'left')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>↑ Haut</button>
+            <button onClick={() => applyAlign('y', 'center')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>↕ Centre Y</button>
+            <button onClick={() => applyAlign('y', 'right')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>Bas ↓</button>
+            <button onClick={() => applyAlign('y', 'even')} disabled={alignSelection.length < 2} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: alignSelection.length < 2 ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 600, opacity: alignSelection.length < 2 ? 0.4 : 1 }}>⤓ Espacer Y</button>
+            <button onClick={toggleAlignMode} style={{ padding: '2px 8px', borderRadius: 6, border: '1px solid #ef4444', background: '#fef2f2', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#dc2626' }}>✕ Annuler</button>
+          </div>
+        ) : (
+          <button
+            onClick={toggleAlignMode}
+            style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 8, border: '1px solid #7c3aed', background: '#f3e8ff', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#7c3aed' }}
+            title="Aligner plusieurs éléments"
+          >
+            🎯 Aligner
+          </button>
+        )}
       </div>
 
       {/* Grille scrollable */}
@@ -513,17 +719,21 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                   userSelect: 'none',
                   backgroundImage: 'url(/greenhouse-sprite.png)',
                   backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
-                  border: isDragging ? '2px dashed #4caf50' : '2px solid rgba(76,175,80,0.5)',
+                  border: isDragging ? '2px dashed #4caf50' : isAlignSelected('serre', serre.id) ? '3px solid #a855f7' : '2px solid rgba(76,175,80,0.5)',
                   borderRadius: 8,
-                  boxShadow: isDragging ? '0 8px 24px rgba(76,175,80,0.6)' : undefined,
+                  boxShadow: isDragging ? '0 8px 24px rgba(76,175,80,0.6)' : isAlignSelected('serre', serre.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : undefined,
                   zIndex: isDragging ? 500 : 3,
                   opacity: isDragging ? 0.85 : 1,
                   transition: isDragging ? 'none' : 'box-shadow .2s',
                 }}
-                onMouseDown={(e) => startDrag(e, 'serre', serre.id, serre.x, serre.y)}
+                onMouseDown={(e) => {
+                  if (alignMode) { e.stopPropagation(); toggleAlignSelect('serre', serre.id); return; }
+                  startDrag(e, 'serre', serre.id, serre.x, serre.y);
+                }}
                 onClick={(e) => {
                   if (dragRef.current?.active) { e.stopPropagation(); return; }
                   e.stopPropagation();
+                  if (alignMode) { toggleAlignSelect('serre', serre.id); return; }
                   if (editMode === 'select') { setSelectedElement({ type: 'serre', id: serre.id }); onSelectElement?.('serre', serre.id); }
                   else setActiveTab('serre');
                 }}
@@ -550,8 +760,8 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* ZONES NON CULTIVÉES */}
           {gardenZones.map((zone: any) => (
             <div key={zone.id}
-              onMouseDown={(e) => { e.stopPropagation(); startDrag(e, 'zone', zone.id, zone.x, zone.y); }}
-              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'zone', id: zone.id }); onSelectElement?.('zone', zone.id); } }}
+              onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('zone', zone.id); return; } e.stopPropagation(); startDrag(e, 'zone', zone.id, zone.x, zone.y); }}
+              onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('zone', zone.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'zone', id: zone.id }); onSelectElement?.('zone', zone.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'zone', id: zone.id }); }}
               style={{
                 position: 'absolute',
@@ -568,10 +778,11 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                   : zone.type === 'fleur'
                   ? 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(244,114,182,.12) 8px, rgba(244,114,182,.12) 16px)'
                   : 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(139,195,74,.12) 8px, rgba(139,195,74,.12) 16px)',
-                border: selectedElement?.id === zone.id && selectedElement?.type === 'zone' ? '3px dashed #22c55e' : zone.type === 'water_recovery' ? '2px dashed rgba(100,116,139,.25)' : zone.type === 'hedge' ? '2px dashed rgba(45,80,22,.4)' : zone.type === 'grass' ? '2px dashed rgba(74,222,128,.4)' : zone.type === 'fleur' ? '2px dashed rgba(244,114,182,.4)' : '2px dashed rgba(139,195,74,.35)',
+                border: isAlignSelected('zone', zone.id) ? '3px solid #a855f7' : selectedElement?.id === zone.id && selectedElement?.type === 'zone' ? '3px dashed #22c55e' : zone.type === 'water_recovery' ? '2px dashed rgba(100,116,139,.25)' : zone.type === 'hedge' ? '2px dashed rgba(45,80,22,.4)' : zone.type === 'grass' ? '2px dashed rgba(74,222,128,.4)' : zone.type === 'fleur' ? '2px dashed rgba(244,114,182,.4)' : '2px dashed rgba(139,195,74,.35)',
                 borderRadius: 6,
                 zIndex: 1,
-                cursor: activeTool === 'none' ? 'grab' : 'default',
+                cursor: alignMode ? 'pointer' : activeTool === 'none' ? 'grab' : 'default',
+                boxShadow: isAlignSelected('zone', zone.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : undefined,
               }}
               title={zone.label || (zone.type === 'water_recovery' ? '💧 Zone récupération eau' : zone.type === 'hedge' ? '🌿 Zone haie' : zone.type === 'grass' ? '🌱 Zone herbe' : zone.type === 'fleur' ? '🌸 Zone fleur' : '🟢 Zone culture')}
             >
@@ -641,9 +852,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* HAIES */}
           {gardenHedges.map((hedge: any) => (
             <div key={hedge.id}
-              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'hedge', id: hedge.id }); onSelectElement?.('hedge', hedge.id); } }}
+              onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('hedge', hedge.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'hedge', id: hedge.id }); onSelectElement?.('hedge', hedge.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'hedge', id: hedge.id }); }}
-              onMouseDown={(e) => startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y)}
+              onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('hedge', hedge.id); return; } startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y); }}
               style={{
                 position: 'absolute',
                 left: hedge.x * displayScale,
@@ -651,10 +862,11 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 width: hedge.width * displayScale,
                 height: hedge.height * displayScale,
                 background: 'linear-gradient(135deg, #2d5016 0%, #4a7c2c 50%, #2d5016 100%)',
-                border: selectedElement?.id === hedge.id && selectedElement?.type === 'hedge' ? '3px dashed #22c55e' : '2px solid #1a3a0f',
+                border: isAlignSelected('hedge', hedge.id) ? '3px solid #a855f7' : selectedElement?.id === hedge.id && selectedElement?.type === 'hedge' ? '3px dashed #22c55e' : '2px solid #1a3a0f',
                 borderRadius: 4,
                 zIndex: 2,
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                boxShadow: isAlignSelected('hedge', hedge.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : '0 2px 4px rgba(0,0,0,0.3)',
+                cursor: alignMode ? 'pointer' : activeTool === 'none' ? 'grab' : 'default',
               }}
               title={`Haie ${hedge.id}`}
             >
@@ -689,9 +901,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             const isFull = fillPercent >= 0.7;
             return (
             <div key={tank.id}
-              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tank', id: tank.id }); onSelectElement?.('tank', tank.id); } }}
+              onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('tank', tank.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'tank', id: tank.id }); onSelectElement?.('tank', tank.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'tank', id: tank.id }); }}
-              onMouseDown={(e) => startDrag(e, 'tank', tank.id, tank.x, tank.y)}
+              onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('tank', tank.id); return; } startDrag(e, 'tank', tank.id, tank.x, tank.y); }}
               style={{
                 position: 'absolute',
                 left: tank.x * displayScale,
@@ -699,11 +911,12 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 width: tank.width * displayScale,
                 height: tank.height * displayScale,
                 background: 'linear-gradient(135deg, #374151 0%, #6b7280 50%, #374151 100%)',
-                border: selectedElement?.id === tank.id && selectedElement?.type === 'tank' ? '3px dashed #22c55e' : '3px solid #1f2937',
+                border: isAlignSelected('tank', tank.id) ? '3px solid #a855f7' : selectedElement?.id === tank.id && selectedElement?.type === 'tank' ? '3px dashed #22c55e' : '3px solid #1f2937',
                 borderRadius: 8,
                 zIndex: 2,
-                boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+                boxShadow: isAlignSelected('tank', tank.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : '0 4px 8px rgba(0,0,0,0.4)',
                 overflow: 'hidden',
+                cursor: alignMode ? 'pointer' : activeTool === 'none' ? 'grab' : 'default',
               }}
               title={`Cuve ${tank.capacity}L — ${Math.round(fillPercent * 100)}%`}
             >
@@ -776,9 +989,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* CABANES */}
           {gardenSheds.map((shed: any) => (
             <div key={shed.id}
-              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'shed', id: shed.id }); onSelectElement?.('shed', shed.id); } }}
+              onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('shed', shed.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'shed', id: shed.id }); onSelectElement?.('shed', shed.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'shed', id: shed.id }); }}
-              onMouseDown={(e) => startDrag(e, 'shed', shed.id, shed.x, shed.y)}
+              onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('shed', shed.id); return; } startDrag(e, 'shed', shed.id, shed.x, shed.y); }}
               style={{
                 position: 'absolute',
                 left: shed.x * displayScale,
@@ -786,10 +999,11 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 width: shed.width * displayScale,
                 height: shed.height * displayScale,
                 background: 'linear-gradient(135deg, #92400e 0%, #b45309 50%, #92400e 100%)',
-                border: selectedElement?.id === shed.id && selectedElement?.type === 'shed' ? '3px dashed #22c55e' : '3px solid #78350f',
+                border: isAlignSelected('shed', shed.id) ? '3px solid #a855f7' : selectedElement?.id === shed.id && selectedElement?.type === 'shed' ? '3px dashed #22c55e' : '3px solid #78350f',
                 borderRadius: 6,
                 zIndex: 2,
-                boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+                boxShadow: isAlignSelected('shed', shed.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : '0 4px 8px rgba(0,0,0,0.4)',
+                cursor: alignMode ? 'pointer' : activeTool === 'none' ? 'grab' : 'default',
               }}
               title={`Cabane ${shed.id}`}
             >
@@ -828,9 +1042,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* FÛTS PEHD 225L */}
           {gardenDrums.map((drum: any) => (
             <div key={drum.id}
-              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'drum', id: drum.id }); onSelectElement?.('drum', drum.id); } }}
+              onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('drum', drum.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'drum', id: drum.id }); onSelectElement?.('drum', drum.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'drum', id: drum.id }); }}
-              onMouseDown={(e) => startDrag(e, 'drum', drum.id, drum.x, drum.y)}
+              onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('drum', drum.id); return; } startDrag(e, 'drum', drum.id, drum.x, drum.y); }}
               style={{
                 position: 'absolute',
                 left: drum.x * displayScale,
@@ -838,13 +1052,14 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 width: drum.width * displayScale,
                 height: drum.height * displayScale,
                 background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e3a5f 100%)',
-                border: selectedElement?.id === drum.id && selectedElement?.type === 'drum' ? '3px dashed #22c55e' : '3px solid #1e40af',
+                border: isAlignSelected('drum', drum.id) ? '3px solid #a855f7' : selectedElement?.id === drum.id && selectedElement?.type === 'drum' ? '3px dashed #22c55e' : '3px solid #1e40af',
                 borderRadius: 6,
                 zIndex: 2,
-                boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+                boxShadow: isAlignSelected('drum', drum.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : '0 4px 8px rgba(0,0,0,0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                cursor: alignMode ? 'pointer' : activeTool === 'none' ? 'grab' : 'default',
               }}
               title={`Fût PEHD ${drum.capacity}L`}
             >
@@ -876,9 +1091,9 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
           {/* ARBRES */}
           {gardenTrees.map((tree: any) => (
             <div key={tree.id}
-              onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'tree', id: tree.id }); onSelectElement?.('tree', tree.id); } }}
+              onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('tree', tree.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'tree', id: tree.id }); onSelectElement?.('tree', tree.id); } }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'tree', id: tree.id }); }}
-              onMouseDown={(e) => startDrag(e, 'tree', tree.id, tree.x, tree.y)}
+              onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('tree', tree.id); return; } startDrag(e, 'tree', tree.id, tree.x, tree.y); }}
               style={{
                 position: 'absolute',
                 left: tree.x * displayScale - (tree.diameter ?? 75) * 0.5 * displayScale,
@@ -887,10 +1102,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 height: (tree.diameter ?? 75) * displayScale,
                 borderRadius: '50%',
                 background: 'radial-gradient(circle at 40% 35%, #4ade80 0%, #16a34a 60%, #14532d 100%)',
-                border: selectedElement?.id === tree.id && selectedElement?.type === 'tree' ? '3px dashed #22c55e' : '2px solid #166534',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                border: isAlignSelected('tree', tree.id) ? '3px solid #a855f7' : selectedElement?.id === tree.id && selectedElement?.type === 'tree' ? '3px dashed #22c55e' : '2px solid #166534',
+                boxShadow: isAlignSelected('tree', tree.id) ? '0 0 0 4px rgba(168,85,247,0.3)' : '0 4px 12px rgba(0,0,0,0.3)',
                 zIndex: 2,
-                cursor: activeTool === 'none' ? 'grab' : 'default',
+                cursor: alignMode ? 'pointer' : activeTool === 'none' ? 'grab' : 'default',
               }}
               title={`Arbre ${tree.type} — ${tree.age ?? 0}j`}
             >
@@ -937,13 +1152,14 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
             const plantDef = PLANTS[gp.plantDefId];
             const agroData = agro.plants.find(p => p.plantId === gp.id);
             const isDragging = dragPos?.id === gp.id;
+            const isAlignSel = isAlignSelected('plant', gp.id);
             const cx = isDragging ? dragPos!.x : gp.x;
             const cy = isDragging ? dragPos!.y : gp.y;
             const px = cx * displayScale;
             const py = cy * displayScale;
             const sz = Math.max(40, 80 * displayScale);
 
-            const ringColor = isDragging ? '#90caf9' :
+            const ringColor = isAlignSel ? '#a855f7' : isDragging ? '#90caf9' :
               agroData?.waterUrgency === 'critique' ? '#ef4444' :
               agroData?.waterUrgency === 'urgent'   ? '#f97316' :
               agroData?.diseaseAlert  === 'danger'  ? '#a855f7' :
@@ -953,13 +1169,14 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               <div key={gp.id} className="plant-sprite-container"
                 style={{
                   left: px, top: py, width: sz, height: sz + 30,
-                  cursor: activeTool === 'none' ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                  cursor: alignMode ? 'pointer' : activeTool === 'none' ? (isDragging ? 'grabbing' : 'grab') : 'default',
                   zIndex: isDragging ? 9999 : 4,
                   transform: isDragging ? 'scale(1.15)' : undefined,
                   transition: isDragging ? 'none' : 'transform .15s',
+                  boxShadow: isAlignSel ? '0 0 0 4px rgba(168,85,247,0.4)' : undefined,
                 }}
-                onMouseDown={(e) => startDrag(e, 'plant', gp.id, gp.x, gp.y)}
-                onClick={(e) => { e.stopPropagation(); if (editMode === 'select') { setSelectedElement({ type: 'plant', id: gp.id }); onSelectElement?.('plant', gp.id); } }}
+                onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('plant', gp.id); return; } startDrag(e, 'plant', gp.id, gp.x, gp.y); }}
+                onClick={(e) => { e.stopPropagation(); if (alignMode) { toggleAlignSelect('plant', gp.id); return; } if (editMode === 'select') { setSelectedElement({ type: 'plant', id: gp.id }); onSelectElement?.('plant', gp.id); } }}
                 onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'plant', id: gp.id }); }}
                 onMouseEnter={(e) => {
                   if (!agroData || dragRef.current) return;

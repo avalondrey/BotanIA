@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BotanIA — Agent IA Dashboard</title>
+  <title>BotanIA — Agent IA Dashboard v2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -257,7 +257,7 @@
   <div class="header">
     <div class="header-emoji">🤖</div>
     <div>
-      <div class="header-title">BotanIA — Agent IA</div>
+      <div class="header-title">BotanIA — Agent IA v2</div>
       <div class="header-sub">Co-pilote proactif & autonome • Ollama + Qdrant</div>
     </div>
   </div>
@@ -403,14 +403,15 @@ let liaOpen = false;
 let liaContext = null;
 
 // Stage names & descriptions
-const STAGE_NAMES_VEG = ['Graine','Levée','Plantule','Croissance','Floraison','Récolte'];
+// v2 — 2026-04-16
+const STAGE_NAMES_VEG = ['Graines','Premières feuilles','2-3 feuilles','4-5 feuilles','Croissance vég.','Mature (fleur)'];
 const STAGE_DESCS_VEG = [
-  'Graine germée — tiny sprout, just broke soil, cotyledon leaves barely visible, pale green',
-  'Petite plantule — 2-4 true leaves, delicate thin stem, fresh green, 3-5cm tall',
-  'Plantule établie — 6-10 leaves, stronger stem, bushy appearance, 8-12cm tall',
-  'Plante juvénile — full foliage, established root system, beginning of structural growth',
-  'Plante mature — flowering or early fruiting, full size, vibrant healthy leaves',
-  'Récolte prête — peak maturity, abundant fruit/vegetable visible, harvest-ready',
+  'Graines en mini-serre qui se pose dans chambre de culture',
+  'Premières feuilles — cotylédons, tige fine, vert frais',
+  '2-3 feuilles vraies, système racinaire établi, allure buissonnante',
+  '4-5 feuilles vraies, tige plus solide, feuillage développé',
+  'Croissance végétative — feuilles qui se développent, tige qui grossit',
+  'Plante mature en mini-serre, première fleur visible',
 ];
 const STAGE_NAMES_TREE = ['Scion','Jeune arbre','Arbre moyen','Arbre établi','Arbre mature'];
 const STAGE_DESCS_TREE = [
@@ -420,14 +421,13 @@ const STAGE_DESCS_TREE = [
   '~150cm semi-mature tree, flowering/fruits appearing, good canopy',
   '~200cm mature productive tree, full canopy, healthy appearance',
 ];
-const STAGE_NAMES_PEPINIERE = ['Monticule','Petite plantule','Plantule 2f','Plantule 4f','Plantule 5f','Floraison'];
+const STAGE_NAMES_PEPINIERE = ['Mature (fleur)','Jeunes fruits','Croissance','Maturation','Prête à cueillir'];
 const STAGE_DESCS_PEPINIERE = [
-  'Dirt mound, just planted seed barely visible',
-  'Small seedling, 2 cotyledon leaves, 3-5cm',
-  'Seedling with 2 true leaves, 5-10cm',
-  'Seedling with 4 leaves, 10-15cm',
-  'Seedling with 5+ leaves, 15-20cm, ready for transplant',
-  'Flowering stage, small white/pink flowers',
+  'Plante mature en petit pot, première fleur visible (bloque si reste en serre)',
+  'Jeune plant en pleine terre, vient d\'être transplanté, premières tomates vertes',
+  'Plant en pleine terre au jardin, croissance, fruits qui grossissent',
+  'Maturation — tomates orange-rouge (véraison), changement de couleur',
+  'Plante adulte productive en pleine terre, fruit prêt à cueillir, tomates mûres',
 ];
 
 let currentPlant = null;

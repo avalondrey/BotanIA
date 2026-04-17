@@ -113,6 +113,68 @@ interface PlantCard {
 }
 ```
 
+### Règles de Validation pour Arbres
+
+> ⚠️ **CRITIQUE** : Ces règles DOIVENT être respectées lors de la génération de PlantCard pour les arbres.
+
+#### `totalDaysToHarvest` — VALEURS CORRECTES
+
+| Type d'arbre | Valeur correcte | Équivalent | Erreur fréquente |
+|-------------|-----------------|------------|------------------|
+| Fruitiers à noyau (pêche, prune, cerise, abricot) | **1095-1460** | 3-4 ans | 5475, 5110 |
+| Fruitiers à pepins (pomme, poire, coing) | **1825** | 5 ans | 5475 |
+| Agrumes (orange, citron) | **1460** | 4 ans | 4380 |
+| Noisetier | **2190** | 6 ans | OK |
+| Noyer | **2920** | 8 ans | 6570 |
+| Arbres forestiers/ornement | **5475-10950** | 15-30 ans | OK |
+
+#### `firstHarvestYears` — RÈGLE
+
+```
+firstHarvestYears = totalDaysToHarvest / 365 (arrondi)
+
+Exemples :
+- 1825 / 365 = 5 → firstHarvestYears: 5
+- 1460 / 365 = 4 → firstHarvestYears: 4
+- 2920 / 365 = 8 → firstHarvestYears: 8
+```
+
+#### `stageDurations` — RÈGLE POUR ARBRES
+
+```
+Arbres (fruitiers et forestiers) : [45, 90, 180, 365]
+PAS : [30, 60, 120, 180] ou [6, 15, 21, 18]
+```
+
+#### `stageGDD` — RÈGLE POUR ARBRES
+
+```
+Arbres : [200, 400, 800, 1500] minimum
+PAS de valeurs type légume : [6, 15, 21, 18]
+```
+
+#### `plantCategory` — OBLIGATOIRE
+
+```
+Pour tous les arbres : plantCategory: 'fruit-tree' ou 'forest-tree'
+Pour les légumes : plantCategory: 'vegetable' ou absent
+```
+
+#### `treeData` — OBLIGATOIRE POUR ARBRES
+
+```
+treeData doit exister avec :
+{
+  pollinationType: string;
+  pollinator?: string | null;
+  frostResistance: number;  // température min en °C (ex: -25)
+  soilType: string;
+  soilPH: string;
+  pruningNotes: string;
+  fruitEdible: boolean;
+}
+```
+
 ### CARD_DATA (fichiers src/data/)
 
 Structure des fichiers semences:
@@ -235,18 +297,20 @@ git add . && git commit -m "description"
 
 ---
 
-## Codes Emoji par defaut pour stades
+## Codes Emoji par defaut pour stades (3 routes)
 
 ```typescript
-const STAGE_EMOJIS = {
-  0: '🌰',  // Graine
-  1: '🌱',  // Levee
-  2: '🌿',  // Plantule
-  3: '🪴',  // Croissance
-  4: '🌸',  // Floraison
-  5: '🍅',  // Recolte
-};
+// Route JARDIN (6 stades)
+jardin:    ['🌰', '🌱', '🪴', '🏡', '🌿', '🍅'],
+
+// Route MINI-SERRE (6 stades)
+miniserre: ['🌰', '🌱', '🌿', '🌱', '🌿', '🌸'],
+
+// Route PLANTULE (5 stades)
+plantule:  ['🌸', '🟢', '📈', '🟠', '🍅'],
 ```
+
+> **Règle** : `ROUTE_STAGE_LABELS` dans `growth-routes.ts` définit les labels — les emojis correspondent index par index.
 
 ---
 

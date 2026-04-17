@@ -544,7 +544,7 @@ async function checkImageAssets(cardData: CardDataInfo | null): Promise<ImageAss
   const isTree = category === 'fruit-tree';
 
   // Plant/tree stages
-  const stageCount = isTree ? 5 : 5;
+  const stageCount = isTree ? 5 : 6;
   for (let n = 1; n <= stageCount; n++) {
     const expected = isTree
       ? `/trees/${shopId}/${id}-stage-${n}.png`
@@ -875,6 +875,47 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
   let totalDays = 60;
   let plantFamily = 'Cucurbitaceae';
 
+  const FAMILY_MAP: Record<string, string> = {
+  // Solanaceae
+  tomato: "Solanaceae", pepper: "Solanaceae", eggplant: "Solanaceae", potato: "Solanaceae", goji: "Solanaceae", lycium: "Solanaceae",
+  // Cucurbitaceae
+  cucumber: "Cucurbitaceae", zucchini: "Cucurbitaceae", squash: "Cucurbitaceae", pumpkin: "Cucurbitaceae", melon: "Cucurbitaceae", watermelon: "Cucurbitaceae",
+  // Fabaceae
+  bean: "Fabaceae", pea: "Fabaceae", lentil: "Fabaceae", chickpea: "Fabaceae", faba: "Fabaceae",
+  // Brassicaceae
+  radish: "Brassicaceae", cabbage: "Brassicaceae", kale: "Brassicaceae", turnip: "Brassicaceae", broccoli: "Brassicaceae", cauliflower: "Brassicaceae",
+  // Asteraceae
+  lettuce: "Asteraceae", sunflower: "Asteraceae", artichoke: "Asteraceae", endive: "Asteraceae", chicory: "Asteraceae",
+  // Apiaceae
+  carrot: "Apiaceae", parsley: "Apiaceae", celery: "Apiaceae", dill: "Apiaceae", fennel: "Apiaceae", coriander: "Apiaceae",
+  // Amaranthaceae
+  spinach: "Amaranthaceae", chard: "Amaranthaceae", quinoa: "Amaranthaceae", amaranth: "Amaranthaceae", beet: "Amaranthaceae",
+  // Lamiaceae
+  basil: "Lamiaceae", mint: "Lamiaceae", thyme: "Lamiaceae", sage: "Lamiaceae", oregano: "Lamiaceae", rosemary: "Lamiaceae", lavender: "Lamiaceae",
+  // Rosaceae fruits
+  strawberry: "Rosaceae", apple: "Rosaceae", pear: "Rosaceae", cherry: "Rosaceae", apricot: "Rosaceae", plum: "Rosaceae", peach: "Rosaceae", quince: "Rosaceae", almond: "Rosaceae", blackberry: "Rosaceae", raspberry: "Rosaceae", hawthorn: "Rosaceae", sorbus: "Rosaceae", amelanchier: "Rosaceae",
+  // Rutaceae
+  orange: "Rutaceae", lemon: "Rutaceae", grapefruit: "Rutaceae", lime: "Rutaceae", mandarin: "Rutaceae", kumquat: "Rutaceae",
+  // Juglandaceae
+  walnut: "Juglandaceae", hazelnut: "Juglandaceae", pecan: "Juglandaceae", chestnut: "Juglandaceae",
+  // Fagaceae
+  oak: "Fagaceae", beech: "Fagaceae",
+  // Betulaceae
+  birch: "Betulaceae", alder: "Betulaceae", hornbeam: "Betulaceae",
+  // Sapindaceae
+  maple: "Sapindaceae",
+  // Pinaceae
+  pine: "Pinaceae", spruce: "Pinaceae", fir: "Pinaceae", cedar: "Pinaceae", larch: "Pinaceae",
+  // Autres
+  magnolia: "Magnoliaceae", fig: "Moraceae", eleagnus: "Elaeagnaceae", laurus: "Lauraceae", cornus: "Cornaceae",
+  blackcurrant: "Grossulariaceae", redcurrant: "Grossulariaceae", gooseberry: "Grossulariaceae", casseille: "Grossulariaceae", josta: "Grossulariaceae",
+  olive: "Oleaceae", arbousier: "Ericaceae", blueberry: "Ericaceae", grape: "Vitaceae", akebia: "Lardizabalaceae", pomegranate: "Lythraceae",
+  rhubarb: "Polygonaceae", asparagus: "Asparagaceae", onion: "Amaryllidaceae", garlic: "Amaryllidaceae", leek: "Amaryllidaceae",
+};
+  function guessFamily(id: string): string {
+    return FAMILY_MAP[id] ?? 'Unknown';
+  }
+
   if (cardDataContent) {
     // Extraire les données du CARD_DATA
     const tbaseMatch = cardDataContent.match(/base:\s*(\d+)/);
@@ -882,12 +923,21 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
     const kcMatch = cardDataContent.match(/kc:\s*([\d.]+)/);
     const waterMatch = cardDataContent.match(/waterNeed:\s*([\d.]+)/);
     const daysMatch = cardDataContent.match(/cycleDays:\s*(\d+)/);
+    const familyMatch = cardDataContent.match(/plantFamily:\s*['"]([^'"]+)['"]/);
 
     if (tbaseMatch) tBase = parseInt(tbaseMatch[1]);
     if (tcapMatch) tCap = parseInt(tcapMatch[1]);
     if (kcMatch) kc = parseFloat(kcMatch[1]);
     if (waterMatch) waterNeed = parseFloat(waterMatch[1]);
     if (daysMatch) totalDays = parseInt(daysMatch[1]);
+    if (familyMatch) plantFamily = familyMatch[1];
+  }
+
+  if (plantFamily === 'Cucurbitaceae' && plantDefId && guessFamily(plantDefId) !== 'Cucurbitaceae') {
+    plantFamily = guessFamily(plantDefId);
+  }
+  if (plantFamily === 'Unknown') {
+    plantFamily = guessFamily(plantDefId);
   }
 
   const stageGDD = [

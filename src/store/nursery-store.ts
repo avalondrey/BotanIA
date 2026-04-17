@@ -12,6 +12,7 @@ import {
   createInitialPlantState,
   createPlantuleState,
   createMiniserreRouteState,
+  getDefaultGrowthRoute,
   applyWatering,
   applyTreatment,
   applyFertilizer,
@@ -140,10 +141,12 @@ export const useNurseryStore = create<NurseryState>()(
         if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
         useShopStore.setState({ seedCollection: newCollection });
 
-        const route: GrowthRoute = growthRoute || 'jardin';
+        const route: GrowthRoute = growthRoute || getDefaultGrowthRoute(plantDefId);
         const newPlant: PlantState = route === 'miniserre'
           ? createMiniserreRouteState(plantDefId)
-          : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
+          : route === 'semis-direct'
+            ? { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sillons' }
+            : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
         const newPepiniere = [...state.pepiniere, newPlant];
 
         set({ pepiniere: newPepiniere });
@@ -220,10 +223,12 @@ export const useNurseryStore = create<NurseryState>()(
         const consumed = useShopStore.getState()._consumeSeed(plantDefId);
         if (!consumed) return false;
 
-        const route: GrowthRoute = growthRoute || 'jardin';
+        const route: GrowthRoute = growthRoute || getDefaultGrowthRoute(plantDefId);
         const newPlant: PlantState = route === 'miniserre'
           ? createMiniserreRouteState(plantDefId)
-          : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
+          : route === 'semis-direct'
+            ? { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sillons' }
+            : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
         const newMiniSerres = state.miniSerres.map((s, i) => {
           if (i !== serreIdx) return s;
           const newSlots = s.slots.map((r) => r.map((c) => c));

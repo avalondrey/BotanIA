@@ -32,15 +32,15 @@ Light:        8 heures/jour
 Total harvest: ~109 jours
 ```
 
-### Stades de croissance
+### Stades de croissance (Route Jardin)
 | Stade | Label | Jours | GDD cumulés |
 |---|---|---|---|
-| 0 | 🌰 Graine | 7j | 50 |
+| 0 | 🌰 Graines en mini-serre | 7j | 50 |
 | 1 | 🌱 Levée | 21j | 200 |
-| 2 | 🌿 Plantule | 28j | 400 |
-| 3 | 🪴 Croissance | 45j | 800 |
-| 4 | 🌸 Floraison | — | — |
-| 5 | 🍅 Récolte | — | — |
+| 2 | 🪴 Petits pots | 28j | 400 |
+| 3 | 🏡 Serre jardin | 45j | 800 |
+| 4 | 🌿 Pleine terre (post-gel) | — | — |
+| 5 | 🍅 Plante adulte productive | — | — |
 
 ### Companonnage
 **✅ Favorables :** Basilic, Carotte, Persil, Ciboulette
@@ -71,15 +71,15 @@ Light:        6 heures/jour
 Total harvest: ~114 jours
 ```
 
-### Stades de croissance
+### Stades de croissance (Route Jardin)
 | Stade | Label | Jours | GDD cumulés |
 |---|---|---|---|
-| 0 | 🌰 Graine | 14j | 80 |
+| 0 | 🌰 Graines en mini-serre | 14j | 80 |
 | 1 | 🌱 Levée | 18j | 250 |
-| 2 | 🌿 Plantule | 35j | 500 |
-| 3 | 🪴 Croissance | 45j | 900 |
-| 4 | 🌸 Floraison | — | — |
-| 5 | 🥕 Récolte | — | — |
+| 2 | 🪴 Petits pots | 35j | 500 |
+| 3 | 🏡 Serre jardin | 45j | 900 |
+| 4 | 🌿 Pleine terre (post-gel) | — | — |
+| 5 | 🥕 Plante adulte productive | — | — |
 
 ### Companonnage
 **✅ Favorables :** Oignon, Échalote, Laitue, Tomate

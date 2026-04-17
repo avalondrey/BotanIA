@@ -176,6 +176,76 @@ function parseTreeNum(str: string | null | undefined, fallback: number): number 
   return m ? parseFloat(m[1].replace(",", ".")) : fallback;
 }
 
+// ─── Validation des données d'arbres ────────────────────────────────────────
+
+interface ValidationRule {
+  min?: number;
+  max?: number;
+  valid?: number[];
+}
+
+const TREE_VALIDATION: Record<string, { totalDays: ValidationRule; firstHarvest: ValidationRule }> = {
+  // Fruitiers à noyau (pêche, cerise, prune, abricot)
+  stoneFruits: { totalDays: { min: 1095, max: 1460 }, firstHarvest: { valid: [3, 4] } },
+  // Fruitiers à pepins (pomme, poire, coing)
+  pomeFruits: { totalDays: { min: 1825, max: 1825 }, firstHarvest: { valid: [5] } },
+  // Agrumes
+  citrus: { totalDays: { min: 1460, max: 1460 }, firstHarvest: { valid: [4] } },
+  // Noisetier
+  hazelnut: { totalDays: { min: 2190, max: 2190 }, firstHarvest: { valid: [6] } },
+  // Noyer
+  walnut: { totalDays: { min: 2920, max: 2920 }, firstHarvest: { valid: [8] } },
+  // Arbres forestiers/ornement
+  forestTrees: { totalDays: { min: 5475, max: 10950 }, firstHarvest: { valid: [15, 20, 25, 30] } },
+};
+
+const STONE_FRUITS = ['peach', 'plum', 'cherry', 'apricot'];
+const POME_FRUITS = ['apple', 'pear', 'quince'];
+const CITRUS = ['orange', 'lemon', 'grapefruit', 'lime', 'mandarin', 'kumquat'];
+const HAZELNUT = ['hazelnut'];
+const WALNUT = ['walnut'];
+const FOREST_TREES = ['oak', 'pine', 'maple', 'birch', 'magnolia', 'spruce', 'fir', 'cedar', 'larch', 'beech'];
+
+function getTreeCategory(treeId: string): string {
+  if (STONE_FRUITS.includes(treeId)) return 'stoneFruits';
+  if (POME_FRUITS.includes(treeId)) return 'pomeFruits';
+  if (CITRUS.includes(treeId)) return 'citrus';
+  if (HAZELNUT.includes(treeId)) return 'hazelnut';
+  if (WALNUT.includes(treeId)) return 'walnut';
+  return 'forestTrees';
+}
+
+function validateAndFixTreeData(plantDefId: string, data: CardData, sd: number[], existingFirstHarvest: number): { totalDays: number; firstHarvestYears: number; warnings: string[] } {
+  const warnings: string[] = [];
+  const category = getTreeCategory(plantDefId);
+  const rules = TREE_VALIDATION[category];
+
+  // Calculer totalDays
+  let totalDays = data.gameData.realDaysToHarvest ?? Math.round(sd.reduce((a, b) => a + b, 0) * 4);
+
+  // Valider et corriger totalDays
+  if (rules) {
+    if (rules.totalDays.min !== undefined && rules.totalDays.max !== undefined) {
+      if (totalDays < rules.totalDays.min || totalDays > rules.totalDays.max) {
+        warnings.push(`totalDays ${totalDays} hors plage [${rules.totalDays.min}-${rules.totalDays.max}] pour ${category}, utilisé ${rules.totalDays.min}`);
+        totalDays = rules.totalDays.min;
+      }
+    }
+  }
+
+  // Calculer firstHarvestYears correct
+  let firstHarvestYears = existingFirstHarvest;
+  const expectedFirstHarvest = Math.round(totalDays / 365);
+  if (firstHarvestYears !== expectedFirstHarvest) {
+    warnings.push(`firstHarvestYears corrigé: ${firstHarvestYears} → ${expectedFirstHarvest} (totalDays/365)`);
+    firstHarvestYears = expectedFirstHarvest;
+  }
+
+  return { totalDays, firstHarvestYears, warnings };
+}
+
+// ─── Fin Validation ───────────────────────────────────────────────────────────
+
 function companionsToRelations(c: CardData["companions"], e: CardData["enemies"]) {
   const out: { plantId: string; type: "beneficial" | "harmful"; reason?: string }[] = [];
   for (const v of c ?? []) out.push({ plantId: v.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""), type: "beneficial", reason: "Associe naturellement" });
@@ -185,16 +255,41 @@ function companionsToRelations(c: CardData["companions"], e: CardData["enemies"]
 
 function guessFamily(id: string): string {
   const f: Record<string, string> = {
-    tomato: "Solanaceae", pepper: "Solanaceae", eggplant: "Solanaceae",
-    carrot: "Apiaceae", lettuce: "Asteraceae",
-    cucumber: "Cucurbitaceae", zucchini: "Cucurbitaceae", squash: "Cucurbitaceae",
-    bean: "Fabaceae", pea: "Fabaceae",
-    spinach: "Amaranthaceae", radish: "Brassicaceae", cabbage: "Brassicaceae",
-    strawberry: "Rosaceae", basil: "Lamiaceae",
-    apple: "Rosaceae", pear: "Rosaceae", cherry: "Rosaceae",
-    walnut: "Juglandaceae", orange: "Rutaceae", lemon: "Rutaceae",
-    oak: "Fagaceae", birch: "Betulaceae", maple: "Sapindaceae",
-    pine: "Pinaceae", magnolia: "Magnoliaceae",
+    // Solanaceae
+    tomato: "Solanaceae", pepper: "Solanaceae", eggplant: "Solanaceae", potato: "Solanaceae", goji: "Solanaceae", lycium: "Solanaceae",
+    // Cucurbitaceae
+    cucumber: "Cucurbitaceae", zucchini: "Cucurbitaceae", squash: "Cucurbitaceae", pumpkin: "Cucurbitaceae", melon: "Cucurbitaceae", watermelon: "Cucurbitaceae",
+    // Fabaceae
+    bean: "Fabaceae", pea: "Fabaceae", lentil: "Fabaceae", chickpea: "Fabaceae", faba: "Fabaceae",
+    // Brassicaceae
+    radish: "Brassicaceae", cabbage: "Brassicaceae", kale: "Brassicaceae", turnip: "Brassicaceae", broccoli: "Brassicaceae", cauliflower: "Brassicaceae",
+    // Asteraceae
+    lettuce: "Asteraceae", sunflower: "Asteraceae", artichoke: "Asteraceae", endive: "Asteraceae", chicory: "Asteraceae",
+    // Apiaceae
+    carrot: "Apiaceae", parsley: "Apiaceae", celery: "Apiaceae", dill: "Apiaceae", fennel: "Apiaceae", coriander: "Apiaceae",
+    // Amaranthaceae
+    spinach: "Amaranthaceae", chard: "Amaranthaceae", quinoa: "Amaranthaceae", amaranth: "Amaranthaceae", beet: "Amaranthaceae",
+    // Lamiaceae
+    basil: "Lamiaceae", mint: "Lamiaceae", thyme: "Lamiaceae", sage: "Lamiaceae", oregano: "Lamiaceae", rosemary: "Lamiaceae", lavender: "Lamiaceae",
+    // Rosaceae fruits
+    strawberry: "Rosaceae", apple: "Rosaceae", pear: "Rosaceae", cherry: "Rosaceae", apricot: "Rosaceae", plum: "Rosaceae", peach: "Rosaceae", quince: "Rosaceae", almond: "Rosaceae", blackberry: "Rosaceae", raspberry: "Rosaceae", hawthorn: "Rosaceae", sorbus: "Rosaceae", amelanchier: "Rosaceae",
+    // Rutaceae
+    orange: "Rutaceae", lemon: "Rutaceae", grapefruit: "Rutaceae", lime: "Rutaceae", mandarin: "Rutaceae", kumquat: "Rutaceae",
+    // Juglandaceae
+    walnut: "Juglandaceae", hazelnut: "Juglandaceae", pecan: "Juglandaceae", chestnut: "Juglandaceae",
+    // Fagaceae
+    oak: "Fagaceae", beech: "Fagaceae",
+    // Betulaceae
+    birch: "Betulaceae", alder: "Betulaceae", hornbeam: "Betulaceae",
+    // Sapindaceae
+    maple: "Sapindaceae",
+    // Pinaceae
+    pine: "Pinaceae", spruce: "Pinaceae", fir: "Pinaceae", cedar: "Pinaceae", larch: "Pinaceae",
+    // Autres arbres/arbustes
+    magnolia: "Magnoliaceae", fig: "Moraceae", eleagnus: "Elaeagnaceae", laurus: "Lauraceae", cornus: "Cornaceae",
+    blackcurrant: "Grossulariaceae", redcurrant: "Grossulariaceae", gooseberry: "Grossulariaceae", casseille: "Grossulariaceae", josta: "Grossulariaceae",
+    olive: "Oleaceae", arbousier: "Ericaceae", blueberry: "Ericaceae", grape: "Vitaceae", akebia: "Lardizabalaceae", pomegranate: "Lythraceae",
+    rhubarb: "Polygonaceae", asparagus: "Asparagaceae", onion: "Amaryllidaceae", garlic: "Amaryllidaceae", leek: "Amaryllidaceae",
   };
   return f[id] ?? "Unknown";
 }
@@ -297,6 +392,12 @@ function buildTreeEntry(data: CardData): string {
   const soilType = data.conditions?.soil?.type ?? data.conditions?.soilType ?? "Tous types";
   const soilPH = data.conditions?.soil?.ph ?? data.conditions?.soilPH ?? "6.0-7.0";
 
+  // Valider et corriger les données d'arbre
+  const { totalDays, firstHarvestYears, warnings } = validateAndFixTreeData(data.plantDefId, data, sd, firstHarvest);
+  if (warnings.length > 0) {
+    console.log(`  ⚠️ ${data.plantDefId}: ${warnings.join(", ")}`);
+  }
+
   const compStr = comps.map(c =>
     `      { plantId: '${c.plantId}', type: '${c.type}'${c.reason ? `, reason: '${c.reason}'` : "" }`
   ).join(",\n");
@@ -324,7 +425,7 @@ ${diseaseStr}
     ],
     optimalPlantMonths: [10, 11, 2, 3],
     harvestSeason: ${getHarvestSeason(data)},
-    totalDaysToHarvest: ${data.gameData.realDaysToHarvest ?? Math.round(sd.reduce((a, b) => a + b, 0) * 4)},
+    totalDaysToHarvest: ${totalDays},
     plantFamily: '${guessFamily(data.plantDefId)}',
     droughtResistance: ${(0.5 + frostRes / 50).toFixed(2)},
     diseaseResistance: 0.50,
@@ -332,7 +433,7 @@ ${diseaseStr}
     matureTreeHeight: ${height},
     treeSpread: ${spread},
     treeLifespan: ${lifespan},
-    firstHarvestYears: ${firstHarvest},
+    firstHarvestYears: ${firstHarvestYears},
     annualYield: '${data.yield?.amount ?? "Variable"}',
     treeData: {
       pollinationType: '${data.pollination?.type ?? "Autofertile"}',
