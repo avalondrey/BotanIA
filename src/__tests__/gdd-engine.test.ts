@@ -12,24 +12,24 @@ import { calcDailyGDD, getStageGDDTarget, getGDDConfig, PLANT_GDD } from '../lib
 describe('gdd-engine', () => {
   describe('calcDailyGDD', () => {
     it('retourne 0 quand la température est en dessous de tBase', () => {
-      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as const };
+      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as [number, number, number, number] };
       expect(calcDailyGDD(5, 2, 8, config)).toBe(0); // Tmean < tBase
     });
 
     it('accumule correctement les GDD dans la zone optimale', () => {
-      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as const };
+      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as [number, number, number, number] };
       // Tmean = 20°C, tBase = 10°C → GDD = 10
       expect(calcDailyGDD(20, 15, 25, config)).toBe(10);
     });
 
     it('plafonne les GDD à tCap', () => {
-      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as const };
+      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as [number, number, number, number] };
       // Tmean = 35°C, clamp à tCap=30 → GDD = 30-10 = 20
       expect(calcDailyGDD(35, 25, 40, config)).toBe(20);
     });
 
     it('retourne exactement tCap-tBase quand la température est au plafond', () => {
-      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as const };
+      const config = { tBase: 10, tCap: 30, stageGDD: [50, 200, 400, 800] as [number, number, number, number] };
       expect(calcDailyGDD(30, 25, 35, config)).toBe(20);
     });
   });

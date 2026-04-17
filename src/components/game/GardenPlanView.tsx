@@ -115,25 +115,25 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
         const gp = gardenPlants.find(g => g.id === s.id);
         if (gp) out.push({ type: 'plant', id: gp.id, x: gp.x, y: gp.y, w: 80, h: 80 });
       } else if (s.type === 'zone') {
-        const z = gardenZones.find(z => z.id === s.id);
+        const z = gardenZones.find((z: { id: string }) => z.id === s.id);
         if (z) out.push({ type: 'zone', id: z.id, x: z.x, y: z.y, w: z.width, h: z.height });
       } else if (s.type === 'serre') {
-        const sr = gardenSerreZones.find(sr => sr.id === s.id);
+        const sr = gardenSerreZones.find((sr: { id: string }) => sr.id === s.id);
         if (sr) out.push({ type: 'serre', id: sr.id, x: sr.x, y: sr.y, w: sr.width, h: sr.height });
       } else if (s.type === 'tree') {
-        const tr = gardenTrees.find(tr => tr.id === s.id);
+        const tr = gardenTrees.find((tr: { id: string }) => tr.id === s.id);
         if (tr) out.push({ type: 'tree', id: tr.id, x: tr.x - (tr.diameter ?? 75) / 2, y: tr.y - (tr.diameter ?? 75) / 2, w: tr.diameter ?? 75, h: tr.diameter ?? 75 });
       } else if (s.type === 'tank') {
-        const t = gardenTanks.find(t => t.id === s.id);
+        const t = gardenTanks.find((t: { id: string }) => t.id === s.id);
         if (t) out.push({ type: 'tank', id: t.id, x: t.x, y: t.y, w: t.width, h: t.height });
       } else if (s.type === 'shed') {
-        const sh = gardenSheds.find(sh => sh.id === s.id);
+        const sh = gardenSheds.find((sh: { id: string }) => sh.id === s.id);
         if (sh) out.push({ type: 'shed', id: sh.id, x: sh.x, y: sh.y, w: sh.width, h: sh.height });
       } else if (s.type === 'drum') {
-        const d = gardenDrums.find(d => d.id === s.id);
+        const d = gardenDrums.find((d: { id: string }) => d.id === s.id);
         if (d) out.push({ type: 'drum', id: d.id, x: d.x, y: d.y, w: d.width, h: d.height });
       } else if (s.type === 'hedge') {
-        const h = gardenHedges.find(h => h.id === s.id);
+        const h = gardenHedges.find((h: { id: string }) => h.id === s.id);
         if (h) out.push({ type: 'hedge', id: h.id, x: h.x, y: h.y, w: h.width, h: h.height });
       }
     }

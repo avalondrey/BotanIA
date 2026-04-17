@@ -75,7 +75,7 @@ export interface PlantCard {
   annualYield?: string;           // Rendement annuel
   treeData?: {
     pollinationType: string;
-    pollinator?: string;
+    pollinator?: string | null;
     frostResistance?: number;
     soilType: string;
     soilPH: string;
