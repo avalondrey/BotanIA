@@ -1062,7 +1062,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     companions: [
       { plantId: 'tomato', type: 'beneficial', reason: 'Même famille, bons voisins' },
       { plantId: 'basil', type: 'beneficial', reason: 'Repousse ravageurs' },
-      { plantId: 'carrot', type: 'beneficial', reason: 'Espace互补' },
+      { plantId: 'carrot', type: 'beneficial', reason: 'Espace complémentaire' },
       { plantId: 'fennel', type: 'harmful', reason: 'Incompatible' },
     ],
     diseaseRisks: [
@@ -1691,7 +1691,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.60,
     pestResistance: 0.45,
   },
-'akebia': {
+  akebia: {
     id: 'akebia',
     tBase: 10,
     tCap: 30,
@@ -1722,7 +1722,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'josta': {
+  josta: {
     id: 'josta',
     tBase: 10,
     tCap: 30,
@@ -1753,7 +1753,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'baco-noir': {
+  'baco-noir': {
     id: 'baco-noir',
     tBase: 10,
     tCap: 30,
@@ -1784,7 +1784,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'olive': {
+  olive: {
     id: 'olive',
     tBase: 10,
     tCap: 30,
@@ -1815,7 +1815,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'arbousier': {
+  arbousier: {
     id: 'arbousier',
     tBase: 10,
     tCap: 30,
@@ -1846,7 +1846,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'amelanchier': {
+  amelanchier: {
     id: 'amelanchier',
     tBase: 10,
     tCap: 30,
@@ -1877,7 +1877,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'blackcurrant': {
+  blackcurrant: {
     id: 'blackcurrant',
     tBase: 10,
     tCap: 30,
@@ -1908,7 +1908,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'blackberry': {
+  blackberry: {
     id: 'blackberry',
     tBase: 10,
     tCap: 30,
@@ -1939,7 +1939,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'melon': {
+  melon: {
     id: 'melon',
     tBase: 10,
     tCap: 30,
@@ -2002,7 +2002,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.55,
     pestResistance: 0.60,
   },
-'apricot': {
+  apricot: {
     id: 'apricot',
     tBase: 10,
     tCap: 30,
@@ -2033,7 +2033,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'plum': {
+  plum: {
     id: 'plum',
     tBase: 10,
     tCap: 30,
@@ -2064,7 +2064,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
-'fig': {
+  fig: {
     id: 'fig',
     tBase: 10,
     tCap: 30,
@@ -2095,6 +2095,277 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     diseaseResistance: 0.45,
     pestResistance: 0.50,
   },
+'apple': {
+    id: 'apple',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+'pear': {
+    id: 'pear',
+    tBase: 10,
+    tCap: 30,
+    stageGDD: [6, 15, 21, 18],
+    kc: 0.95,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [6, 15, 14, 20],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Beneficial companion' },
+      { plantId: 'bean', type: 'beneficial', reason: 'Fixes nitrogen' },
+    ],
+    diseaseRisks: [
+      {
+        name: 'Oidium',
+        emoji: '🌞',
+        triggerConditions: 'HR 60-80%, T20-30C',
+        prevention: 'Good air circulation',
+      },
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 60,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.35,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
+
+  // ─── HEDGES / SHRUBS (manquants) ───
+  thuya: {
+    id: 'thuya',
+    plantCategory: 'hedge',
+    tBase: 5,
+    tCap: 35,
+    stageGDD: [150, 300, 500, 800],
+    kc: 0.80,
+    waterNeedMmPerDay: 3.0,
+    minSoilTempForSowing: 5,
+    optimalSoilTemp: 18,
+    lightNeedHours: 6,
+    stageDurations: [30, 60, 90, 200],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: [],
+    totalDaysToHarvest: 380,
+    plantFamily: 'Cupressaceae',
+    droughtResistance: 0.60,
+    diseaseResistance: 0.55,
+    pestResistance: 0.50,
+  },
+
+  escallonia: {
+    id: 'escallonia',
+    plantCategory: 'hedge',
+    tBase: 8,
+    tCap: 28,
+    stageGDD: [100, 200, 350, 600],
+    kc: 0.75,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 8,
+    optimalSoilTemp: 20,
+    lightNeedHours: 7,
+    stageDurations: [18, 35, 55, 90],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [3, 4, 5, 9, 10],
+    harvestSeason: [],
+    totalDaysToHarvest: 198,
+    plantFamily: 'Escalloniaceae',
+    droughtResistance: 0.55,
+    diseaseResistance: 0.50,
+    pestResistance: 0.55,
+  },
+
+  // ─── MANQUANTS ( Références catalog.ts ) ───
+  amaranth: {
+    id: 'amaranth',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 35,
+    stageGDD: [60, 120, 200, 300],
+    kc: 0.80,
+    waterNeedMmPerDay: 4.0,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 22,
+    lightNeedHours: 8,
+    stageDurations: [14, 21, 28, 35],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [4, 5, 6],
+    harvestSeason: ['summer', 'autumn'],
+    totalDaysToHarvest: 98,
+    plantFamily: 'Amaranthaceae',
+    droughtResistance: 0.45,
+    diseaseResistance: 0.55,
+    pestResistance: 0.50,
+  },
+
+  corn: {
+    id: 'corn',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 35,
+    stageGDD: [100, 200, 400, 600],
+    kc: 0.85,
+    waterNeedMmPerDay: 5.0,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 25,
+    lightNeedHours: 8,
+    stageDurations: [18, 30, 45, 60],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [4, 5],
+    harvestSeason: ['summer', 'autumn'],
+    totalDaysToHarvest: 153,
+    plantFamily: 'Poaceae',
+    droughtResistance: 0.40,
+    diseaseResistance: 0.45,
+    pestResistance: 0.40,
+  },
+
+  currant: {
+    id: 'currant',
+    plantCategory: 'hedge',
+    tBase: 7,
+    tCap: 28,
+    stageGDD: [80, 180, 300, 500],
+    kc: 0.75,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 7,
+    optimalSoilTemp: 18,
+    lightNeedHours: 6,
+    stageDurations: [20, 40, 60, 100],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['summer'],
+    totalDaysToHarvest: 220,
+    plantFamily: 'Grossulariaceae',
+    droughtResistance: 0.55,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  quinoa: {
+    id: 'quinoa',
+    plantCategory: 'vegetable',
+    tBase: 8,
+    tCap: 30,
+    stageGDD: [80, 160, 280, 400],
+    kc: 0.78,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 12,
+    optimalSoilTemp: 20,
+    lightNeedHours: 8,
+    stageDurations: [12, 25, 35, 45],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [4, 5],
+    harvestSeason: ['summer', 'autumn'],
+    totalDaysToHarvest: 117,
+    plantFamily: 'Amaranthaceae',
+    droughtResistance: 0.50,
+    diseaseResistance: 0.55,
+    pestResistance: 0.50,
+  },
+
+  sorrel: {
+    id: 'sorrel',
+    plantCategory: 'vegetable',
+    tBase: 7,
+    tCap: 28,
+    stageGDD: [60, 120, 200, 300],
+    kc: 0.75,
+    waterNeedMmPerDay: 4.0,
+    minSoilTempForSowing: 10,
+    optimalSoilTemp: 18,
+    lightNeedHours: 6,
+    stageDurations: [14, 21, 28, 35],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['spring', 'summer'],
+    totalDaysToHarvest: 98,
+    plantFamily: 'Polygonaceae',
+    droughtResistance: 0.45,
+    diseaseResistance: 0.55,
+    pestResistance: 0.50,
+  },
+
+  sunflower: {
+    id: 'sunflower',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 35,
+    stageGDD: [100, 200, 350, 500],
+    kc: 0.82,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 25,
+    lightNeedHours: 8,
+    stageDurations: [14, 25, 35, 45],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [4, 5],
+    harvestSeason: ['summer', 'autumn'],
+    totalDaysToHarvest: 119,
+    plantFamily: 'Asteraceae',
+    droughtResistance: 0.45,
+    diseaseResistance: 0.45,
+    pestResistance: 0.40,
+  },
+
+  quince: {
+    id: 'quince',
+    plantCategory: 'hedge',
+    tBase: 7,
+    tCap: 30,
+    stageGDD: [150, 300, 500, 800],
+    kc: 0.80,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 7,
+    optimalSoilTemp: 18,
+    lightNeedHours: 7,
+    stageDurations: [30, 60, 90, 180],
+    companions: [],
+    diseaseRisks: [],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 360,
+    plantFamily: 'Rosaceae',
+    droughtResistance: 0.55,
+    diseaseResistance: 0.45,
+    pestResistance: 0.50,
+  },
 };
 
 // ═══ Vérifier les plantFamily incorrects dans PLANT_DATA (safety net) ═══
@@ -2110,6 +2381,364 @@ for (const key of _plantDataKeys) {
 if (_corrections.length > 0) {
   console.warn(`[BotanIA] plantFamily corrections (${_corrections.length}):`, '\n' + _corrections.join('\n'));
 }
+
+  // ─── MAÏS DOUX MIEL ───
+  corn: {
+    id: 'corn',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 32,
+    stageGDD: [85, 85, 85, 95],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 13,
+    optimalSoilTemp: 13,
+    lightNeedHours: 7,
+    stageDurations: [17, 17, 17, 19],
+    companions: [
+      { plantId: 'persil', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'fenouil', type: 'harmful', reason: 'Incompatible',
+      { plantId: 'ail', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['spring', 'autumn'],
+    totalDaysToHarvest: 70,
+    plantFamily: 'Unknown',
+    droughtResistance: 0.63,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── OSEILLE COMMUNE ───
+  sorrel: {
+    id: 'sorrel',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 32,
+    stageGDD: [85, 85, 85, 95],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 13,
+    optimalSoilTemp: 13,
+    lightNeedHours: 7,
+    stageDurations: [17, 17, 17, 19],
+    companions: [
+      { plantId: 'persil', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'fenouil', type: 'harmful', reason: 'Incompatible',
+      { plantId: 'ail', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['spring', 'autumn'],
+    totalDaysToHarvest: 70,
+    plantFamily: 'Unknown',
+    droughtResistance: 0.63,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── COURGE BUTTERNUT COCO ───
+  squash: {
+    id: 'squash',
+    plantCategory: 'vegetable',
+    tBase: 12,
+    tCap: 35,
+    stageGDD: [40, 125, 150, 335],
+    kc: 1.00,
+    waterNeedMmPerDay: 4,
+    minSoilTempForSowing: 15,
+    optimalSoilTemp: 15,
+    lightNeedHours: 7,
+    stageDurations: [8, 25, 30, 67],
+    companions: [
+      { plantId: 'mais', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'haricot', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'capucine', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'pomme-de-terre', type: 'harmful', reason: 'Incompatible',
+      { plantId: 'autres-courges', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [1, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 130,
+    plantFamily: 'Cucurbitaceae',
+    droughtResistance: 0.63,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── PHOTINIA PANACHÉ  ───
+  photinia: {
+    id: 'photinia',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 32,
+    stageGDD: [85, 85, 85, 95],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 13,
+    optimalSoilTemp: 13,
+    lightNeedHours: 7,
+    stageDurations: [17, 17, 17, 19],
+    companions: [
+      { plantId: 'persil', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'fenouil', type: 'harmful', reason: 'Incompatible',
+      { plantId: 'ail', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Cochenille', emoji: '🐛', triggerConditions: 'Temps sec, stress', prevention: 'Inspection, savon noir' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR moderee, T15-25C', prevention: 'Bonne aeration' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['spring', 'autumn'],
+    totalDaysToHarvest: 70,
+    plantFamily: 'Unknown',
+    droughtResistance: 0.63,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── GOURGE STRIPED CUSHAW ───
+  squash: {
+    id: 'squash',
+    plantCategory: 'vegetable',
+    tBase: 15,
+    tCap: 35,
+    stageGDD: [40, 110, 150, 325],
+    kc: 1.20,
+    waterNeedMmPerDay: 5.5,
+    minSoilTempForSowing: 18,
+    optimalSoilTemp: 18,
+    lightNeedHours: 8,
+    stageDurations: [8, 22, 30, 65],
+    companions: [
+      { plantId: 'mais', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'haricot', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'capucine', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'pomme-de-terre', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [1, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 125,
+    plantFamily: 'Cucurbitaceae',
+    droughtResistance: 0.63,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── AKEBIA SHIROBANA ───
+  akebia: {
+    id: 'akebia',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 33,
+    stageGDD: [70, 140, 200, 300],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 13,
+    optimalSoilTemp: 10,
+    lightNeedHours: 6,
+    stageDurations: [14, 28, 40, 60],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'bean', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [1, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 142,
+    plantFamily: 'Lardizabalaceae',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── BACO NOIR ───
+  baco-noir: {
+    id: 'baco-noir',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 33,
+    stageGDD: [70, 150, 250, 450],
+    kc: 1.00,
+    waterNeedMmPerDay: 4,
+    minSoilTempForSowing: 13,
+    optimalSoilTemp: 12,
+    lightNeedHours: 8,
+    stageDurations: [14, 30, 50, 90],
+    companions: [
+      { plantId: 'corn', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'bean', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'cabbage', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [1, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 184,
+    plantFamily: 'Unknown',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── GOJI 'AMBER SWEET' ───
+  goji: {
+    id: 'goji',
+    plantCategory: 'vegetable',
+    tBase: 8,
+    tCap: 33,
+    stageGDD: [50, 120, 150, 225],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 11,
+    optimalSoilTemp: 15,
+    lightNeedHours: 7,
+    stageDurations: [10, 24, 30, 45],
+    companions: [
+      { plantId: 'lycium', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'basil', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'fennel', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 109,
+    plantFamily: 'Solanaceae',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── CASSELIER JOSTA ───
+  josta: {
+    id: 'josta',
+    plantCategory: 'vegetable',
+    tBase: 5,
+    tCap: 30,
+    stageGDD: [50, 110, 150, 250],
+    kc: 1.00,
+    waterNeedMmPerDay: 4,
+    minSoilTempForSowing: 8,
+    optimalSoilTemp: 10,
+    lightNeedHours: 6,
+    stageDurations: [10, 22, 30, 50],
+    companions: [
+      { plantId: 'blackcurrant', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'currant', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 112,
+    plantFamily: 'Grossulariaceae',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── LYCIET ROUGE ───
+  lycium: {
+    id: 'lycium',
+    plantCategory: 'vegetable',
+    tBase: 6,
+    tCap: 35,
+    stageGDD: [40, 110, 130, 200],
+    kc: 0.75,
+    waterNeedMmPerDay: 3,
+    minSoilTempForSowing: 9,
+    optimalSoilTemp: 12,
+    lightNeedHours: 6,
+    stageDurations: [8, 22, 26, 40],
+    companions: [
+      { plantId: 'goji', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 96,
+    plantFamily: 'Solanaceae',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
+
+  // ─── PERSIL LION ───
+  parsley: {
+    id: 'parsley',
+    plantCategory: 'vegetable',
+    tBase: 10,
+    tCap: 32,
+    stageGDD: [85, 85, 85, 95],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 13,
+    optimalSoilTemp: 13,
+    lightNeedHours: 7,
+    stageDurations: [17, 17, 17, 19],
+    companions: [
+      { plantId: 'persil', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'fenouil', type: 'harmful', reason: 'Incompatible',
+      { plantId: 'ail', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Mildiou', emoji: '🌧️', triggerConditions: 'HR>90%, T10-25C, humidite', prevention: 'Aerer, eviter irrigation foliaire' },
+      { name: 'Oidum', emoji: '🌞', triggerConditions: 'HR 60-80%, T15-25C', prevention: 'Bonne aeration, eviter exces azote' },
+      { name: 'Botrytis', emoji: '🦠', triggerConditions: 'HR>85%, temp douce', prevention: 'Aerer, drainage' }
+    ],
+    optimalPlantMonths: [3, 4, 5],
+    harvestSeason: ['spring', 'autumn'],
+    totalDaysToHarvest: 70,
+    plantFamily: 'Apiaceae',
+    droughtResistance: 0.63,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+  },
 
 // ═══ FIN PLANT_CARDS ═══
 
@@ -2149,7 +2778,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
         name: 'Feu bacterien',
         emoji: '🔥',
         triggerConditions: 'T° douce, humidité, fleurs',
-        prevention: 'Élagage,消毒 outils',
+        prevention: 'Élagage, désinfection outils',
       },
     ],
     optimalPlantMonths: [10, 11, 2, 3],
@@ -2358,7 +2987,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     companions: [
       { plantId: 'chive', type: 'beneficial', reason: 'Repousse pucerons' },
       { plantId: 'corn', type: 'beneficial', reason: 'Bon voisinage' },
-      { plantId: 'potato', type: 'harmful', reason: 'Risque болезни partages' },
+      { plantId: 'potato', type: 'harmful', reason: 'Risque maladies partagées' },
     ],
     diseaseRisks: [
       {
@@ -2450,7 +3079,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
     treeData: {
       pollinationType: 'Autofertile',
       pollinator: null,
-      frostResistance: 0.50,
+      frostResistance: -20,
       soilType: 'Profond, bien drainé, pH 6-7',
       soilPH: '6.0-7.0',
       pruningNotes: 'Taille de formation année 1-2, taille d\'entretien mars',
@@ -2560,7 +3189,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
       frostResistance: -20,
       soilType: 'Profond, bien drainé, riche',
       soilPH: '6.5-7.5',
-      pruningNotes: 'Taille minimale, только удаление branches mortes',
+      pruningNotes: 'Taille minimale, suppression branches mortes',
       fruitEdible: true,
     },
   },
@@ -2934,6 +3563,280 @@ export const TREE_CARDS: Record<string, PlantCard> = {
   },
 
 };
+
+  // ─── AMELANCHIER THIESSEN ───
+  amelanchier: {
+    id: 'amelanchier',
+    plantCategory: 'fruit-tree',
+    tBase: 5,
+    tCap: 30,
+    stageGDD: [60, 125, 200, 350],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 8,
+    optimalSoilTemp: 5,
+    lightNeedHours: 7,
+    stageDurations: [12, 25, 40, 70],
+    companions: [
+      { plantId: 'strawberry', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'blueberry', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25C, printemps', prevention: 'Taille aeree, varietes resistantes' },
+      { name: 'Feu bacterien', emoji: '🔥', triggerConditions: 'T douce, humidite', prevention: 'Elagage urgent, steriliser outils' },
+      { name: 'Moniliose', emoji: '🍒', triggerConditions: 'Humidite elevee apres fleur', prevention: 'Taille, elimination fruits atteints' }
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 5475,
+    plantFamily: 'Rosaceae',
+    droughtResistance: -0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+    matureTreeHeight: 8,
+    treeSpread: 6,
+    treeLifespan: 100,
+    firstHarvestYears: 15,
+    annualYield: '3-5kg/arbuste',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: -40,
+      soilType: 'Acide à neutre, frais, bien drainé',
+      soilPH: '5.5-7.0',
+      pruningNotes: 'Amelanchier alnifolia - Myrtille en arbre, gros fruits sucrés, rusticité -40°C',
+      fruitEdible: true,
+    },
+  },
+
+  // ─── ARBOUSIER RUBRA ───
+  arbousier: {
+    id: 'arbousier',
+    plantCategory: 'fruit-tree',
+    tBase: 8,
+    tCap: 33,
+    stageGDD: [70, 150, 250, 400],
+    kc: 0.75,
+    waterNeedMmPerDay: 3,
+    minSoilTempForSowing: 11,
+    optimalSoilTemp: 8,
+    lightNeedHours: 7,
+    stageDurations: [14, 30, 50, 80],
+    companions: [
+      { plantId: 'lavender', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'rosemary', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25C, printemps', prevention: 'Taille aeree, varietes resistantes' },
+      { name: 'Feu bacterien', emoji: '🔥', triggerConditions: 'T douce, humidite', prevention: 'Elagage urgent, steriliser outils' },
+      { name: 'Moniliose', emoji: '🍒', triggerConditions: 'Humidite elevee apres fleur', prevention: 'Taille, elimination fruits atteints' }
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 5475,
+    plantFamily: 'Ericaceae',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+    matureTreeHeight: 8,
+    treeSpread: 6,
+    treeLifespan: 100,
+    firstHarvestYears: 15,
+    annualYield: '5-10kg/arbre',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: -10,
+      soilType: 'Acide, bien drainé, sableux',
+      soilPH: '5.0-7.0',
+      pruningNotes: 'Arbutus unedo Rubra - Fleurs roses, fruits rouges comestibles, persistant méditerranéen',
+      fruitEdible: true,
+    },
+  },
+
+  // ─── CASSIS BLANC OJEBLANC ───
+  blackcurrant: {
+    id: 'blackcurrant',
+    plantCategory: 'fruit-tree',
+    tBase: 5,
+    tCap: 27,
+    stageGDD: [50, 110, 150, 275],
+    kc: 1.00,
+    waterNeedMmPerDay: 4,
+    minSoilTempForSowing: 8,
+    optimalSoilTemp: 10,
+    lightNeedHours: 6,
+    stageDurations: [10, 22, 30, 55],
+    companions: [
+      { plantId: 'currant', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'josta', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'strawberry', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25C, printemps', prevention: 'Taille aeree, varietes resistantes' },
+      { name: 'Feu bacterien', emoji: '🔥', triggerConditions: 'T douce, humidite', prevention: 'Elagage urgent, steriliser outils' },
+      { name: 'Moniliose', emoji: '🍒', triggerConditions: 'Humidite elevee apres fleur', prevention: 'Taille, elimination fruits atteints' }
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 5475,
+    plantFamily: 'Grossulariaceae',
+    droughtResistance: 0.00,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+    matureTreeHeight: 8,
+    treeSpread: 6,
+    treeLifespan: 100,
+    firstHarvestYears: 15,
+    annualYield: '3-5kg/arbuste',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: -25,
+      soilType: 'Riche, frais, profond',
+      soilPH: '6.0-7.5',
+      pruningNotes: 'Ribes nigrum - Cassis blanc, baies jaune pâle douces et parfumées, rare et original',
+      fruitEdible: true,
+    },
+  },
+
+  // ─── GROSEILLIER ROUGE ───
+  currant: {
+    id: 'currant',
+    plantCategory: 'fruit-tree',
+    tBase: 5,
+    tCap: 25,
+    stageGDD: [75, 150, 300, 900],
+    kc: 0.88,
+    waterNeedMmPerDay: 3.5,
+    minSoilTempForSowing: 8,
+    optimalSoilTemp: 10,
+    lightNeedHours: 6,
+    stageDurations: [15, 30, 60, 180],
+    companions: [
+      { plantId: 'blackcurrant', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'josta', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'strawberry', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25C, printemps', prevention: 'Taille aeree, varietes resistantes' },
+      { name: 'Feu bacterien', emoji: '🔥', triggerConditions: 'T douce, humidite', prevention: 'Elagage urgent, steriliser outils' },
+      { name: 'Moniliose', emoji: '🍒', triggerConditions: 'Humidite elevee apres fleur', prevention: 'Taille, elimination fruits atteints' }
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 5475,
+    plantFamily: 'Unknown',
+    droughtResistance: 0.10,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+    matureTreeHeight: 8,
+    treeSpread: 6,
+    treeLifespan: 100,
+    firstHarvestYears: 15,
+    annualYield: '4-6kg/arbuste',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: -20,
+      soilType: 'Riche, frais, bien drainé',
+      soilPH: '6.0-7.5',
+      pruningNotes: 'Arbuste local - Petits fruits acidulés, idéals pour confiture',
+      fruitEdible: true,
+    },
+  },
+
+  // ─── OLIVIER CAILLETIER ───
+  olive: {
+    id: 'olive',
+    plantCategory: 'fruit-tree',
+    tBase: 8,
+    tCap: 35,
+    stageGDD: [150, 300, 600, 1825],
+    kc: 0.75,
+    waterNeedMmPerDay: 3,
+    minSoilTempForSowing: 11,
+    optimalSoilTemp: 8,
+    lightNeedHours: 8,
+    stageDurations: [30, 60, 120, 365],
+    companions: [
+      { plantId: 'lavender', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'rosemary', type: 'beneficial', reason: 'Associe naturellement'
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25C, printemps', prevention: 'Taille aeree, varietes resistantes' },
+      { name: 'Feu bacterien', emoji: '🔥', triggerConditions: 'T douce, humidite', prevention: 'Elagage urgent, steriliser outils' },
+      { name: 'Moniliose', emoji: '🍒', triggerConditions: 'Humidite elevee apres fleur', prevention: 'Taille, elimination fruits atteints' }
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 5475,
+    plantFamily: 'Oleaceae',
+    droughtResistance: 0.30,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+    matureTreeHeight: 8,
+    treeSpread: 6,
+    treeLifespan: 100,
+    firstHarvestYears: 15,
+    annualYield: '20-40kg/arbre',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: -10,
+      soilType: 'Calcaire, bien drainé, sec en été',
+      soilPH: '6.0-8.5',
+      pruningNotes: 'Olea europaea - Variété niçoise, olives de table et huile, rustique en Méditerranée',
+      fruitEdible: true,
+    },
+  },
+
+  // ─── MIRABELLIER DE NANCY ───
+  mirabellier: {
+    id: 'mirabellier',
+    plantCategory: 'fruit-tree',
+    tBase: 7,
+    tCap: 30,
+    stageGDD: [90, 175, 275, 400],
+    kc: 1.13,
+    waterNeedMmPerDay: 4.5,
+    minSoilTempForSowing: 10,
+    optimalSoilTemp: 10,
+    lightNeedHours: 7,
+    stageDurations: [18, 35, 55, 80],
+    companions: [
+      { plantId: 'basilic', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'carotte', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'cresson', type: 'beneficial', reason: 'Associe naturellement',
+      { plantId: 'aucun', type: 'harmful', reason: 'Incompatible'
+    ],
+    diseaseRisks: [
+      { name: 'Tavelure', emoji: '🍂', triggerConditions: 'HR>85%, T15-25C, printemps', prevention: 'Taille aeree, varietes resistantes' },
+      { name: 'Feu bacterien', emoji: '🔥', triggerConditions: 'T douce, humidite', prevention: 'Elagage urgent, steriliser outils' },
+      { name: 'Moniliose', emoji: '🍒', triggerConditions: 'Humidite elevee apres fleur', prevention: 'Taille, elimination fruits atteints' }
+    ],
+    optimalPlantMonths: [10, 11, 2, 3],
+    harvestSeason: ['autumn'],
+    totalDaysToHarvest: 5475,
+    plantFamily: 'Unknown',
+    droughtResistance: 0.10,
+    diseaseResistance: 0.50,
+    pestResistance: 0.50,
+    matureTreeHeight: 8,
+    treeSpread: 6,
+    treeLifespan: 100,
+    firstHarvestYears: 15,
+    annualYield: '15-25kg/arbuste',
+    treeData: {
+      pollinationType: 'Autofertile',
+      pollinator: null,
+      frostResistance: -20,
+      soilType: 'Sol profond, frais et bien drainé, riche en matière organique',
+      soilPH: '6.0-7.5',
+      pruningNotes: 'Variété de Varmonzey rustique et productive. Chair fine et sucrée. Autofertile mais meilleurs rendem',
+      fruitEdible: true,
+    },
+  },
 
 // ═══ FIN TREE_CARDS ═══
 
