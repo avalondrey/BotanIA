@@ -31,7 +31,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerPlantDefId, setDatePickerPlantDefId] = useState<string | null>(null);
   const [daysAgoInput, setDaysAgoInput] = useState(10);
-  const [selectedRoute, setSelectedRoute] = useState<GrowthRoute>('jardin');
+  const [selectedRoute, setSelectedRoute] = useState<GrowthRoute>('miniserre');
 
   let plantCount = 0;
   let readyCount = 0;

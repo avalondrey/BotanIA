@@ -12,7 +12,6 @@ import {
   createInitialPlantState,
   createPlantuleState,
   createMiniserreRouteState,
-  getDefaultGrowthRoute,
   applyWatering,
   applyTreatment,
   applyFertilizer,
@@ -141,7 +140,9 @@ export const useNurseryStore = create<NurseryState>()(
         if (newCollection[plantDefId] <= 0) delete newCollection[plantDefId];
         useShopStore.setState({ seedCollection: newCollection });
 
-        const route: GrowthRoute = growthRoute || getDefaultGrowthRoute(plantDefId);
+        // Pépinière is an indoor environment — seeds here always use 'miniserre' route
+        // so images come from /plantules/ instead of /plants/
+        const route: GrowthRoute = growthRoute || 'miniserre';
         const newPlant: PlantState = route === 'miniserre'
           ? createMiniserreRouteState(plantDefId)
           : route === 'semis-direct'
@@ -645,7 +646,7 @@ export const useNurseryStore = create<NurseryState>()(
     }),
     {
       name: 'botania-nursery',
-      version: 4,
+      version: 5,
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
           const state = persistedState as NurseryState;
@@ -679,7 +680,8 @@ export const useNurseryStore = create<NurseryState>()(
           (state as any).etageres = (state as any).etageres || [];
         }
         if (version < 4) {
-          // Migrate mini-serre plants: set growthRoute='miniserre' for miniserre-slot containerType
+          // Migrate mini-serre plants: set growthRoute='miniserre' and containerType='miniserre-slot'
+          // for ALL plants in miniSerre slots (they were created with createInitialPlantState which sets 'sachet')
           const state = persistedState as NurseryState;
           if (state.miniSerres) {
             state.miniSerres = state.miniSerres.map((s: any) => ({
@@ -689,7 +691,8 @@ export const useNurseryStore = create<NurseryState>()(
                   plant
                     ? {
                         ...plant,
-                        growthRoute: plant.containerType === 'miniserre-slot' ? 'miniserre' : (plant.growthRoute || 'jardin'),
+                        growthRoute: 'miniserre',
+                        containerType: 'miniserre-slot',
                       }
                     : null
                 )
