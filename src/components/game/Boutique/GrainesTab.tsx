@@ -557,8 +557,8 @@ export function GrainesTab({
                     <Image
                       src={item.packetImage}
                       alt={item.name}
-                      width={85}
-                      height={100}
+                      fill
+                      sizes="100px"
                       className="object-contain drop-shadow-lg"
                     />
                   ) : (
