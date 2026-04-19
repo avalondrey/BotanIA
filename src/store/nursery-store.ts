@@ -223,12 +223,8 @@ export const useNurseryStore = create<NurseryState>()(
         const consumed = useShopStore.getState()._consumeSeed(plantDefId);
         if (!consumed) return false;
 
-        const route: GrowthRoute = growthRoute || getDefaultGrowthRoute(plantDefId);
-        const newPlant: PlantState = route === 'miniserre'
-          ? createMiniserreRouteState(plantDefId)
-          : route === 'semis-direct'
-            ? { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sillons' }
-            : { ...createInitialPlantState(plantDefId), growthRoute: route, containerType: 'sachet' };
+        // Mini-serre plants always use 'miniserre' route for /plantules/ images
+        const newPlant: PlantState = createMiniserreRouteState(plantDefId);
         const newMiniSerres = state.miniSerres.map((s, i) => {
           if (i !== serreIdx) return s;
           const newSlots = s.slots.map((r) => r.map((c) => c));
