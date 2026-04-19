@@ -649,7 +649,7 @@ export const useNurseryStore = create<NurseryState>()(
     }),
     {
       name: 'botania-nursery',
-      version: 3,
+      version: 4,
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
           const state = persistedState as NurseryState;
@@ -669,7 +669,8 @@ export const useNurseryStore = create<NurseryState>()(
                 row.map((plant: any) =>
                   plant ? {
                     ...plant,
-                    growthRoute: plant.growthRoute || 'jardin',
+                    // mini-serre plants use growthRoute 'miniserre' for /plantules/ images
+                    growthRoute: plant.containerType === 'miniserre-slot' ? 'miniserre' : (plant.growthRoute || 'jardin'),
                     containerType: plant.containerType || 'miniserre-slot',
                   } : null
                 )
@@ -680,6 +681,25 @@ export const useNurseryStore = create<NurseryState>()(
         if (version < 3) {
           const state = persistedState as NurseryState;
           (state as any).etageres = (state as any).etageres || [];
+        }
+        if (version < 4) {
+          // Migrate mini-serre plants: set growthRoute='miniserre' for miniserre-slot containerType
+          const state = persistedState as NurseryState;
+          if (state.miniSerres) {
+            state.miniSerres = state.miniSerres.map((s: any) => ({
+              ...s,
+              slots: (s.slots || []).map((row: any[]) =>
+                row.map((plant: any) =>
+                  plant
+                    ? {
+                        ...plant,
+                        growthRoute: plant.containerType === 'miniserre-slot' ? 'miniserre' : (plant.growthRoute || 'jardin'),
+                      }
+                    : null
+                )
+              ),
+            }));
+          }
         }
         return persistedState;
       },
