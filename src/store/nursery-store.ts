@@ -646,7 +646,7 @@ export const useNurseryStore = create<NurseryState>()(
     }),
     {
       name: 'botania-nursery',
-      version: 5,
+      version: 6,
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
           const state = persistedState as NurseryState;
@@ -697,6 +697,22 @@ export const useNurseryStore = create<NurseryState>()(
                     : null
                 )
               ),
+            }));
+          }
+        }
+        if (version < 6) {
+          // Fix pepiniere plants: those without an explicit route or with 'jardin'
+          // should be 'miniserre' since pepiniere is an indoor environment
+          const state = persistedState as NurseryState;
+          if (state.pepiniere) {
+            state.pepiniere = state.pepiniere.map((p: any) => ({
+              ...p,
+              growthRoute: (!p.growthRoute || p.growthRoute === 'jardin')
+                ? 'miniserre'
+                : p.growthRoute,
+              containerType: (!p.containerType || p.containerType === 'sachet')
+                ? 'miniserre-slot'
+                : p.containerType,
             }));
           }
         }

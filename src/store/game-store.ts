@@ -108,7 +108,7 @@ export const PEPINIERE_STAGE_NAMES = [
 export function getStageImage(plantDefId: string, stage: number, route?: string): string {
   // Graines en mini-serre → /plantules/ (6 stades: 1-6)
   // Plantules du shop → /plantules/ (5 stades: 1-5)
-  // Jardin / semis-direct → /plants/ (6 stades: 1-6)
+  // Jardin / semis-direct → /plants/ (5 stades: 1-5)
   // Arbres → /trees/ (5 stades: 1-5)
   if (route === 'miniserre') {
     // Mini-serre: stage 0-5 → filenames 1-6
@@ -122,8 +122,8 @@ export function getStageImage(plantDefId: string, stage: number, route?: string)
     // Arbres: stage 0-4 → filenames 1-5
     return `/trees/${plantDefId}-stage-${Math.min(stage, 4) + 1}.png`;
   }
-  // Jardin / semis-direct: stage 0-5 → filenames 1-6
-  return `/plants/${plantDefId}-stage-${Math.min(stage, 5) + 1}.png`;
+  // Jardin / semis-direct: stage 0-5 → filenames 1-5 (capped at 5)
+  return `/plants/${plantDefId}-stage-${Math.min(stage, 4) + 1}.png`;
 }
 
 export const PEPINIERE_PLANT_THRESHOLDS: Record<string, number[]> = {
