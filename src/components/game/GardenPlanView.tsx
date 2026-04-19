@@ -857,10 +857,10 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
               onMouseDown={(e) => { if (alignMode) { e.stopPropagation(); toggleAlignSelect('hedge', hedge.id); return; } startDrag(e, 'hedge', hedge.id, hedge.x, hedge.y); }}
               style={{
                 position: 'absolute',
-                left: hedge.x * displayScale,
-                top: hedge.y * displayScale,
-                width: hedge.width * displayScale,
-                height: hedge.height * displayScale,
+                left: (hedge.x || 0) * displayScale,
+                top: (hedge.y || 0) * displayScale,
+                width: (hedge.width || 100) * displayScale,
+                height: (hedge.height || 20) * displayScale,
                 background: 'linear-gradient(135deg, #2d5016 0%, #4a7c2c 50%, #2d5016 100%)',
                 border: isAlignSelected('hedge', hedge.id) ? '3px solid #a855f7' : selectedElement?.id === hedge.id && selectedElement?.type === 'hedge' ? '3px dashed #22c55e' : '2px solid #1a3a0f',
                 borderRadius: 4,

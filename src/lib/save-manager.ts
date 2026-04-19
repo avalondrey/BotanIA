@@ -8,8 +8,11 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
 const DB_NAME = 'botania-saves';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'save-slots';
+const BACKUP_STORE_NAME = 'save-backups';
+const MAX_BACKUP_AGE_DAYS = 30;
+const BACKUP_CHECK_KEY = 'botania-last-backup-date';
 
 export interface SlotId {
   slotId: string;
@@ -29,13 +32,18 @@ interface SaveDB {
     key: string;
     value: SaveSlot;
   };
+  'save-backups': {
+    key: string;
+    value: SaveSlot;
+    indexes: { 'by-date': string };
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  APP VERSION
 // ═══════════════════════════════════════════════════════════════
 
-export const APP_VERSION = '0.18.0';
+export const APP_VERSION = '2.4';
 
 // ═══════════════════════════════════════════════════════════════
 //  DB CONNECTION
@@ -46,11 +54,18 @@ let dbPromise: Promise<IDBPDatabase<SaveDB>> | null = null;
 function getDB(): Promise<IDBPDatabase<SaveDB>> {
   if (!dbPromise) {
     dbPromise = openDB<SaveDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      upgrade(db, oldVersion) {
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           db.createObjectStore(STORE_NAME);
         }
+        if (!db.objectStoreNames.contains(BACKUP_STORE_NAME)) {
+          const backupStore = db.createObjectStore(BACKUP_STORE_NAME);
+          backupStore.createIndex('by-date', 'savedAt');
+        }
       },
+      blocked() {},
+      blocking() {},
+      terminated() {},
     });
   }
   return dbPromise;
@@ -146,6 +161,126 @@ export async function loadAutoSave(): Promise<SaveSlot | undefined> {
 export async function hasAutoSave(): Promise<boolean> {
   const slot = await loadAutoSave();
   return !!slot;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DAILY BACKUP SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+export interface BackupInfo {
+  id: string;
+  slotId: string;
+  slotName: string;
+  savedAt: string;
+  version: string;
+  sizeKB: number;
+}
+
+/**
+ * Creates a backup snapshot of a save slot.
+ * Called automatically by checkAndCreateDailyBackup().
+ */
+export async function createBackup(slotId: string): Promise<BackupInfo | null> {
+  const slot = await loadFromSlot(slotId);
+  if (!slot) return null;
+
+  const db = await getDB();
+  const backupId = `backup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const backup: SaveSlot = { ...slot, slotId: backupId, slotName: `${slot.slotName} (backup)` };
+
+  await db.put(BACKUP_STORE_NAME, backup, backupId);
+
+  const sizeKB = Math.round(JSON.stringify(slot).length / 1024);
+  return { id: backupId, slotId: slot.slotId, slotName: slot.slotName, savedAt: slot.savedAt, version: slot.version, sizeKB };
+}
+
+/**
+ * Checks if a backup was already created today and creates one if not.
+ * Safe to call on every app start — only creates one backup per calendar day.
+ */
+export async function checkAndCreateDailyBackup(): Promise<BackupInfo | null> {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastBackup = localStorage.getItem(BACKUP_CHECK_KEY);
+
+    if (lastBackup === today) return null; // Already backed up today
+
+    // Find the most recent save slot (or auto-save)
+    const slots = await getAllSlots();
+    if (slots.length === 0) return null;
+
+    // Prefer auto-save, then most recent slot
+    const autoSave = slots.find(s => s.slotId === 'auto-save' && s.autoSaveEnabled);
+    const target = autoSave ?? slots.sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())[0];
+
+    const backup = await createBackup(target.slotId);
+    if (backup) {
+      localStorage.setItem(BACKUP_CHECK_KEY, today);
+    }
+    return backup;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lists all available backups, newest first.
+ */
+export async function listBackups(): Promise<BackupInfo[]> {
+  const db = await getDB();
+  const all: SaveSlot[] = await db.getAll(BACKUP_STORE_NAME);
+  return all
+    .map(b => ({
+      id: b.slotId,
+      slotId: b.slotId.replace(/^backup-\d+-/, ''),
+      slotName: b.slotName,
+      savedAt: b.savedAt,
+      version: b.version,
+      sizeKB: Math.round(JSON.stringify(b).length / 1024),
+    }))
+    .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+}
+
+/**
+ * Restores a save from a backup.
+ */
+export async function restoreFromBackup(backupId: string, targetSlotId: string): Promise<boolean> {
+  const db = await getDB();
+  const backup = await db.get(BACKUP_STORE_NAME, backupId);
+  if (!backup) return false;
+
+  await saveToSlot(targetSlotId, backup.slotName.replace(' (backup)', ''), backup.gameState, false);
+  return true;
+}
+
+/**
+ * Deletes old backups (older than MAX_BACKUP_AGE_DAYS).
+ * Called automatically by cleanupOldBackups().
+ */
+export async function cleanupOldBackups(): Promise<number> {
+  const db = await getDB();
+  const all: SaveSlot[] = await db.getAll(BACKUP_STORE_NAME);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - MAX_BACKUP_AGE_DAYS);
+
+  let deleted = 0;
+  for (const backup of all) {
+    if (new Date(backup.savedAt) < cutoff) {
+      await db.delete(BACKUP_STORE_NAME, backup.slotId);
+      deleted++;
+    }
+  }
+  return deleted;
+}
+
+/**
+ * Returns how many backups exist.
+ */
+export async function getBackupCount(): Promise<number> {
+  const db = await getDB();
+  return db.count(BACKUP_STORE_NAME);
 }
 
 // ═══════════════════════════════════════════════════════════════

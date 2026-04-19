@@ -142,14 +142,30 @@ function loadAllCardData(): { vegetables: CardData[]; trees: CardData[] } {
   const vegetables: CardData[] = [];
   const trees: CardData[] = [];
 
+  const TREE_CATEGORIES = ['fruit-tree', 'forest-tree', 'ornamental-tree', 'ornamental-hedge', 'hedge'];
+
   for (const f of seedFiles) {
     const data = parseFile(path.join(DATA_ROOT, "graines", f));
-    if (data) vegetables.push(data);
+    if (data) {
+      // Use category from CARD_DATA to determine if it's a tree
+      if (TREE_CATEGORIES.includes(data.category)) {
+        trees.push(data);
+      } else {
+        vegetables.push(data);
+      }
+    }
   }
 
   for (const f of treeFiles) {
     const data = parseFile(path.join(DATA_ROOT, "arbres", f));
-    if (data) trees.push(data);
+    if (data) {
+      // Use category from CARD_DATA - all arbres are trees by default
+      if (TREE_CATEGORIES.includes(data.category) || data.category === 'fruit-tree' || data.category === 'forest-tree') {
+        trees.push(data);
+      } else {
+        vegetables.push(data);
+      }
+    }
   }
 
   return { vegetables, trees };
@@ -195,6 +211,8 @@ const TREE_VALIDATION: Record<string, { totalDays: ValidationRule; firstHarvest:
   hazelnut: { totalDays: { min: 2190, max: 2190 }, firstHarvest: { valid: [6] } },
   // Noyer
   walnut: { totalDays: { min: 2920, max: 2920 }, firstHarvest: { valid: [8] } },
+  // Petits fruits / arbustes à fruits (groseille, cassis, caseille, josta, myrtille)
+  berryShrubs: { totalDays: { min: 117, max: 365 }, firstHarvest: { valid: [1, 2] } },
   // Arbres forestiers/ornement
   forestTrees: { totalDays: { min: 5475, max: 10950 }, firstHarvest: { valid: [15, 20, 25, 30] } },
 };
@@ -204,6 +222,8 @@ const POME_FRUITS = ['apple', 'pear', 'quince'];
 const CITRUS = ['orange', 'lemon', 'grapefruit', 'lime', 'mandarin', 'kumquat'];
 const HAZELNUT = ['hazelnut'];
 const WALNUT = ['walnut'];
+const BERRY_SHRUBS = ['blackcurrant', 'redcurrant', 'whitecurrant', 'currant', 'gooseberry', 'casseille', 'josta', 'blueberry', 'cranberry', 'raspberry', 'blackberry'];
+const HEDGE_SHRUBS = ['photinia', 'eleagnus', 'laurus', 'cypress', 'thuya', 'ivy', 'escallonia', 'cortland', 'cupressus'];
 const FOREST_TREES = ['oak', 'pine', 'maple', 'birch', 'magnolia', 'spruce', 'fir', 'cedar', 'larch', 'beech'];
 
 function getTreeCategory(treeId: string): string {
@@ -212,6 +232,8 @@ function getTreeCategory(treeId: string): string {
   if (CITRUS.includes(treeId)) return 'citrus';
   if (HAZELNUT.includes(treeId)) return 'hazelnut';
   if (WALNUT.includes(treeId)) return 'walnut';
+  if (BERRY_SHRUBS.includes(treeId)) return 'berryShrubs';
+  if (HEDGE_SHRUBS.includes(treeId)) return 'berryShrubs';  // Utilise même règle pour les haies
   return 'forestTrees';
 }
 
@@ -289,6 +311,7 @@ function guessFamily(id: string): string {
     magnolia: "Magnoliaceae", fig: "Moraceae", eleagnus: "Elaeagnaceae", laurus: "Lauraceae", cornus: "Cornaceae",
     blackcurrant: "Grossulariaceae", redcurrant: "Grossulariaceae", gooseberry: "Grossulariaceae", casseille: "Grossulariaceae", josta: "Grossulariaceae",
     olive: "Oleaceae", arbousier: "Ericaceae", blueberry: "Ericaceae", grape: "Vitaceae", akebia: "Lardizabalaceae", pomegranate: "Lythraceae",
+    escallonia: "Escalloniaceae", cupressus: "Cupressaceae", cortland: "Rosaceae",
     rhubarb: "Polygonaceae", asparagus: "Asparagaceae", onion: "Amaryllidaceae", garlic: "Amaryllidaceae", leek: "Amaryllidaceae",
   };
   return f[id] ?? "Unknown";
@@ -332,6 +355,16 @@ function buildDiseaseRisks(data: CardData): string {
   ).join(",\n");
 }
 
+function getCategoryFromData(data: CardData): string {
+  const cat = data.category;
+  // Map CARD_DATA categories to PlantCard categories
+  if (cat === 'hedge' || cat === 'ornamental-hedge') return 'hedge';
+  if (cat === 'forest-tree' || cat === 'ornamental-tree') return 'forest-tree';
+  if (cat === 'fruit-tree') return 'fruit-tree';
+  if (cat === 'vegetable') return 'vegetable';
+  return 'vegetable';  // default
+}
+
 function buildVegetableEntry(data: CardData): string {
   const opt = getOptimalTemp(data);
   const base = getBaseTemp(data);
@@ -347,11 +380,12 @@ function buildVegetableEntry(data: CardData): string {
   ).join(",\n");
 
   const diseaseStr = buildDiseaseRisks(data);
+  const plantCategory = getCategoryFromData(data);
 
   return `  // ─── ${data.name.toUpperCase()} ───
   ${data.plantDefId}: {
     id: '${data.plantDefId}',
-    plantCategory: 'vegetable',
+    plantCategory: '${plantCategory}',
     tBase: ${base},
     tCap: ${opt[1] + 5},
     stageGDD: [${Math.round(sd[0] * 5)}, ${Math.round(sd[1] * 5)}, ${Math.round(sd[2] * 5)}, ${Math.round(sd[3] * 5)}],
@@ -383,8 +417,22 @@ function buildTreeEntry(data: CardData): string {
   const comps = companionsToRelations(data.companions, data.enemies);
   const sd = data.gameData.stageDurations;
   const frostRes = data.conditions?.temperature?.frostResistance ?? -10;
-  const isOrnamental = data.category === "ornamental-tree";
-  const fruitEdible = !isOrnamental;
+
+  // Determine plantCategory from CARD_DATA category
+  const cat = data.category;
+  let plantCategory: string;
+  let fruitEdible: boolean;
+  if (cat === 'hedge' || cat === 'ornamental-hedge') {
+    plantCategory = 'hedge';
+    fruitEdible = false;
+  } else if (cat === 'ornamental-tree' || cat === 'forest-tree') {
+    plantCategory = 'forest-tree';
+    fruitEdible = false;
+  } else {
+    plantCategory = 'fruit-tree';
+    fruitEdible = true;
+  }
+
   const firstHarvest = parseTreeNum(data.growth?.firstHarvest ?? "5 ans", 5);
   const height = parseTreeNum(data.growth?.matureTreeHeight ?? "8 m", 8);
   const spread = parseTreeNum(data.growth?.spread ?? "6 m", 6);
@@ -407,7 +455,7 @@ function buildTreeEntry(data: CardData): string {
   return `  // ─── ${data.name.toUpperCase()} ───
   ${data.plantDefId}: {
     id: '${data.plantDefId}',
-    plantCategory: '${isOrnamental ? "forest-tree" : "fruit-tree"}',
+    plantCategory: '${plantCategory}',
     tBase: ${base},
     tCap: ${opt[1] + 5},
     stageGDD: [${Math.round(sd[0] * 5)}, ${Math.round(sd[1] * 5)}, ${Math.round(sd[2] * 5)}, ${Math.round(sd[3] * 5)}],

@@ -60,7 +60,7 @@ const codeToGameWeather: Record<number, string> = {
 
 const rainCodes = new Set([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99]);
 
-function weatherCodeEmoji(code: number): string {
+export function weatherCodeEmoji(code: number): string {
   if (code === 0) return "☀️";
   if (code === 1) return "🌤️";
   if (code === 2) return "⛅";
@@ -77,7 +77,7 @@ function weatherCodeEmoji(code: number): string {
   return "🌈";
 }
 
-function weatherCodeDescription(code: number): string {
+export function weatherCodeDescription(code: number): string {
   if (code === 0) return "Ciel dégagé";
   if (code === 1) return "Partiellement dégagé";
   if (code === 2) return "Partiellement nuageux";
@@ -91,7 +91,7 @@ function weatherCodeDescription(code: number): string {
   if (code >= 75 && code <= 77) return "Fortes chutes de neige";
   if (code >= 80 && code <= 82) return "Averses";
   if (code >= 85 && code <= 86) return "Averses de neige";
-  if (code >= 95) return "Orage";
+  if (code >= 95 && code <= 99) return "Orage avec grêle";
   return "Variable";
 }
 

@@ -403,7 +403,7 @@ export function GrainCollection() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {SEED_CATALOG.map((item) => {
-              const owned = seedCollection[item.id] || 0;
+              const owned = seedCollection[item.plantDefId] || 0;
               if (owned <= 0) return null;
               const plantDef = PLANTS[item.plantDefId];
 

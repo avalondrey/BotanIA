@@ -407,7 +407,7 @@ export const useNurseryStore = create<NurseryState>()(
           for (let r = 0; r < newSlots.length && placed < toFill; r++) {
             for (let c = 0; c < newSlots[r].length && placed < toFill; c++) {
               if (!newSlots[r][c]) {
-                newSlots[r][c] = createInitialPlantState(plantDefId);
+                newSlots[r][c] = createMiniserreRouteState(plantDefId);
                 placed++;
               }
             }
@@ -430,7 +430,7 @@ export const useNurseryStore = create<NurseryState>()(
         if (!consumed) return false;
 
         const newPlant: PlantState = {
-          ...createInitialPlantState(plantDefId),
+          ...createMiniserreRouteState(plantDefId),
           daysSincePlanting: daysSincePlanting,
         };
 

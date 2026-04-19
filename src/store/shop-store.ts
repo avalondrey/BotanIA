@@ -95,7 +95,7 @@ export const useShopStore = create<ShopState>()(
         if (!item) return false;
         if (state.coins < item.price) return false;
 
-        const key = item.id;
+        const key = item.plantDefId;
         const newCollection = { ...state.seedCollection };
         newCollection[key] = (newCollection[key] || 0) + Math.ceil(item.price / 15);
         const newCoins = state.coins - item.price;
@@ -212,23 +212,9 @@ export const useShopStore = create<ShopState>()(
 
       _consumeSeed: (plantDefId: string) => {
         const state = get();
-        // Priority: consume from varieties first, then classic
-        const newVarieties = { ...state.seedVarieties };
+        // Only consume from seedCollection (classic seeds + opened variety seeds).
+        // seedVarieties contains closed packets — must be opened via openSeedPacket first.
         const newCollection = { ...state.seedCollection };
-
-        // Try variety seeds first
-        for (const [varietyId, qty] of Object.entries(newVarieties)) {
-          if (qty <= 0) continue;
-          const variety = SEED_VARIETIES.find((v) => v.id === varietyId);
-          if (variety && variety.plantDefId === plantDefId) {
-            newVarieties[varietyId] = qty - 1;
-            if (newVarieties[varietyId] <= 0) delete newVarieties[varietyId];
-            set({ seedVarieties: newVarieties });
-            return true;
-          }
-        }
-
-        // Fallback to classic seeds
         const count = newCollection[plantDefId] || 0;
         if (count <= 0) return false;
         newCollection[plantDefId] = count - 1;

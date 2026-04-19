@@ -1,0 +1,352 @@
+[
+  {
+    "plantName": "basil",
+    "outputFile": "\\sprites\\basil-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "cucumber",
+    "outputFile": "\\sprites\\cucumber-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "custom-plant",
+    "outputFile": "\\sprites\\custom-plant-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "eggplant",
+    "outputFile": "\\sprites\\eggplant-stages.png",
+    "width": 6656,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "melon",
+    "outputFile": "\\sprites\\melon-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "parsley",
+    "outputFile": "\\sprites\\parsley-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "spinach",
+    "outputFile": "\\sprites\\spinach-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "tomato",
+    "outputFile": "\\sprites\\tomato-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "plantName": "zucchini",
+    "outputFile": "\\sprites\\zucchini-stages.png",
+    "width": 9984,
+    "height": 928,
+    "stageWidth": 1664,
+    "stageHeight": 928,
+    "stages": [
+      {
+        "index": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "index": 2,
+        "x": 1664,
+        "y": 0
+      },
+      {
+        "index": 3,
+        "x": 3328,
+        "y": 0
+      },
+      {
+        "index": 4,
+        "x": 4992,
+        "y": 0
+      },
+      {
+        "index": 5,
+        "x": 6656,
+        "y": 0
+      },
+      {
+        "index": 6,
+        "x": 8320,
+        "y": 0
+      }
+    ]
+  }
+]

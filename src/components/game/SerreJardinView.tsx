@@ -696,7 +696,7 @@ export function SerreJardinView() {
                         if (stageIdx >= 0 && stageIdx <= 5) {
                           return (
                             <img
-                              src={getStageImage(detailPlant.plantDefId, stageIdx)}
+                              src={getStageImage(detailPlant.plantDefId, stageIdx, detailPlant.growthRoute)}
                               alt={ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'][stageIdx]}
                               className="w-6 h-6 object-contain"
                             />
@@ -745,7 +745,7 @@ export function SerreJardinView() {
                 {detailPlant.stage >= 0 && detailPlant.stage <= 5 && (
                   <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-center">
                     <img
-                      src={getStageImage(detailPlant.plantDefId, detailPlant.stage)}
+                      src={getStageImage(detailPlant.plantDefId, detailPlant.stage, detailPlant.growthRoute)}
                       alt={ROUTE_STAGE_LABELS[detailPlant.growthRoute || 'jardin'][detailPlant.stage]}
                       className="w-20 h-20 object-contain mx-auto"
                     />

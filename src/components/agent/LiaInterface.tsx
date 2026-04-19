@@ -166,9 +166,12 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b bg-muted/20">
+      <div className="flex border-b bg-muted/20" role="tablist">
         <button
           onClick={() => setActiveTab('chat')}
+          role="tab"
+          aria-selected={activeTab === 'chat'}
+          aria-label="Onglet Chat"
           className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors ${
             activeTab === 'chat' ? 'border-green-500 text-green-700 bg-green-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
           }`}
@@ -177,6 +180,9 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
         </button>
         <button
           onClick={() => setActiveTab('suggestions')}
+          role="tab"
+          aria-selected={activeTab === 'suggestions'}
+          aria-label="Onglet Suggestions"
           className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors relative ${
             activeTab === 'suggestions' ? 'border-yellow-500 text-yellow-700 bg-yellow-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
           }`}
@@ -185,6 +191,9 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
         </button>
         <button
           onClick={() => setActiveTab('tasks')}
+          role="tab"
+          aria-selected={activeTab === 'tasks'}
+          aria-label="Onglet Tâches"
           className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors relative ${
             activeTab === 'tasks' ? 'border-blue-500 text-blue-700 bg-blue-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
           }`}
@@ -193,6 +202,9 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
         </button>
         <button
           onClick={() => setActiveTab('sprites')}
+          role="tab"
+          aria-selected={activeTab === 'sprites'}
+          aria-label="Onglet Sprites"
           className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors ${
             activeTab === 'sprites' ? 'border-pink-500 text-pink-700 bg-pink-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
           }`}
@@ -212,6 +224,9 @@ En 5 points max, liste les incohérences ou manques entre PLANT_CARDS et les fon
               })
               .catch(() => {});
           }}
+          role="tab"
+          aria-selected={activeTab === 'validation'}
+          aria-label="Onglet Validation"
           className={`flex-1 py-2 px-3 text-xs font-bold border-b-2 transition-colors relative ${
             activeTab === 'validation' ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-transparent text-muted-foreground hover:bg-muted/30'
           }`}

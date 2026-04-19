@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { weatherCodeEmoji, weatherCodeDescription } from "@/lib/weather-service";
 
 interface OpenMeteoCurrent {
   temperature_2m: number;
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
         temperature: data.current.temperature_2m,
         humidity: data.current.relative_humidity_2m,
         weatherCode: data.current.weather_code,
-        weatherDescription: wmoCodeDescription(data.current.weather_code),
+        weatherDescription: weatherCodeDescription(data.current.weather_code),
         weatherEmoji: weatherCodeEmoji(data.current.weather_code),
         windSpeed: data.current.wind_speed_10m,
         gameWeather,
@@ -103,9 +104,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-// ═══ WMO Weather Code mappings ═══
-
 function weatherCodeToGame(code: number): "sunny" | "cloudy" | "rainy" | "stormy" | "heatwave" | "frost" {
   if (code === 0) return "sunny";
   if (code <= 3) return "cloudy";
@@ -126,38 +124,3 @@ function guessWeatherCodeFromTemp(tempMax: number, precip: number): number {
   return 2; // partly cloudy
 }
 
-function weatherCodeEmoji(code: number): string {
-  if (code === 0) return "☀️";
-  if (code === 1) return "🌤️";
-  if (code === 2) return "⛅";
-  if (code === 3) return "☁️";
-  if (code >= 45 && code <= 48) return "🌫️";
-  if (code >= 51 && code <= 55) return "🌧️";
-  if (code >= 56 && code <= 57) return "🌧️";
-  if (code >= 61 && code <= 65) return "🌧️";
-  if (code >= 66 && code <= 67) return "🌧️";
-  if (code >= 71 && code <= 77) return "🌨️";
-  if (code >= 80 && code <= 82) return "🌦️";
-  if (code >= 85 && code <= 86) return "🌨️";
-  if (code >= 95) return "⛈️";
-  return "🌈";
-}
-
-function wmoCodeDescription(code: number): string {
-  if (code === 0) return "Ciel dégagé";
-  if (code === 1) return "Principalement dégagé";
-  if (code === 2) return "Partiellement nuageux";
-  if (code === 3) return "Couvert";
-  if (code >= 45 && code <= 48) return "Brouillard";
-  if (code >= 51 && code <= 55) return "Bruine";
-  if (code >= 56 && code <= 57) return "Bruine verglaçante";
-  if (code >= 61 && code <= 63) return "Pluie";
-  if (code >= 65 && code <= 67) return "Forte pluie";
-  if (code >= 71 && code <= 73) return "Neige";
-  if (code >= 75 && code <= 77) return "Fortes chutes de neige";
-  if (code >= 80 && code <= 82) return "Averses";
-  if (code >= 85 && code <= 86) return "Averses de neige";
-  if (code >= 95) return "Orage";
-  if (code >= 96 && code <= 99) return "Orage avec grêle";
-  return "Conditions variables";
-}

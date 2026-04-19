@@ -329,9 +329,10 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
               <div className="flex gap-1">
                 <input type="text" value={memoryNote} onChange={e => setMemoryNote(e.target.value)}
                   placeholder="Ex: Tomate du rang 3, jaunissement..."
+                  aria-label="Note d'observation"
                   className="flex-1 px-2 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-green-400"
                   onKeyDown={e => e.key === 'Enter' && saveObservation()} />
-                <button onClick={saveObservation} className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-2 py-1.5"><Plus className="w-4 h-4" /></button>
+                <button onClick={saveObservation} aria-label="Sauvegarder l'observation" className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-2 py-1.5"><Plus className="w-4 h-4" /></button>
               </div>
               {memories.length > 0 && (
                 <div className="mt-2 max-h-24 overflow-y-auto space-y-1">
@@ -348,8 +349,8 @@ export default function LiaAssistant({ plants = [], weather }: { plants?: any[];
             </div>
           )}
           <div className="p-2.5 border-t border-gray-200 flex gap-2">
-            <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Pose une question à Lia..." className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500/30 text-sm" />
-            <button onClick={handleSend} disabled={!chatInput.trim()} className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-lg px-3 transition"><Send className="w-4 h-4" /></button>
+            <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Pose une question à Lia..." aria-label="Question pour Lia" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500/30 text-sm" />
+            <button onClick={handleSend} disabled={!chatInput.trim()} aria-label="Envoyer" className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-lg px-3 transition"><Send className="w-4 h-4" /></button>
           </div>
         </motion.div>
       )}

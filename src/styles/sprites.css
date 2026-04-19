@@ -1,0 +1,275 @@
+/**
+ * Sprite Sheets — Auto-générés
+ * Ne pas éditer manuellement — regénérer avec: npx tsx scripts/generate-sprite-sheets.ts
+ */
+
+.sprite-basil {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\basil-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-basil.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-basil.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-basil.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-basil.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-basil.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-basil.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-cucumber {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\cucumber-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-cucumber.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-cucumber.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-cucumber.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-cucumber.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-cucumber.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-cucumber.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-custom-plant {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\custom-plant-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-custom-plant.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-custom-plant.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-custom-plant.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-custom-plant.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-custom-plant.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-custom-plant.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-eggplant {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\eggplant-stages.png');
+  background-size: 6656px 928px;
+}
+
+.sprite-eggplant.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-eggplant.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-eggplant.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-eggplant.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-melon {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\melon-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-melon.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-melon.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-melon.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-melon.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-melon.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-melon.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-parsley {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\parsley-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-parsley.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-parsley.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-parsley.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-parsley.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-parsley.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-parsley.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-spinach {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\spinach-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-spinach.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-spinach.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-spinach.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-spinach.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-spinach.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-spinach.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-tomato {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\tomato-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-tomato.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-tomato.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-tomato.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-tomato.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-tomato.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-tomato.stage-6 {
+  background-position: -8320px -0px;
+}
+
+.sprite-zucchini {
+  width: 1664px;
+  height: 928px;
+  background-image: url('\sprites\zucchini-stages.png');
+  background-size: 9984px 928px;
+}
+
+.sprite-zucchini.stage-1 {
+  background-position: -0px -0px;
+}
+
+.sprite-zucchini.stage-2 {
+  background-position: -1664px -0px;
+}
+
+.sprite-zucchini.stage-3 {
+  background-position: -3328px -0px;
+}
+
+.sprite-zucchini.stage-4 {
+  background-position: -4992px -0px;
+}
+
+.sprite-zucchini.stage-5 {
+  background-position: -6656px -0px;
+}
+
+.sprite-zucchini.stage-6 {
+  background-position: -8320px -0px;
+}

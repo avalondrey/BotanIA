@@ -1,6 +1,6 @@
 {
   "name": "botania",
-  "version": "2.2.0",
+  "version": "2.5.0",
   "private": true,
   "description": "Application de jardinage botanique scientifique — données agronomiques INRAE, FAO, GNIS",
   "scripts": {
@@ -11,7 +11,12 @@
     "generate-cards": "node generate-cards.js",
     "create-demo-save": "node create-real-garden-save.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "validate-plant-data": "npx tsx scripts/validate-plant-data.ts",
+    "cleanup-hologram": "npx tsx scripts/cleanup-hologram.ts --fix",
+    "generate-plantcards": "npx tsx scripts/generate-plantcards.ts",
+    "optimize-images": "npx tsx scripts/optimize-images.ts",
+    "generate-sprite-sheets": "npx tsx scripts/generate-sprite-sheets.ts"
   },
   "dependencies": {
     "@builder.io/react": "^9.3.0",

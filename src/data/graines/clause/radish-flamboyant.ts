@@ -21,7 +21,6 @@ export const CARD_DATA = {
     "/plants/radish-stage-3.png",
     "/plants/radish-stage-4.png",
     "/plants/radish-stage-5.png",
-    "/plants/radish-stage-6.png",
   ],
 
   // === PRIX & QUANTITE ===

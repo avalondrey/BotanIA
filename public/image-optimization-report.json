@@ -1,0 +1,3028 @@
+{
+  "generatedAt": "2026-04-19T04:58:01.242Z",
+  "quality": 85,
+  "totalOriginalMB": "388.18",
+  "totalWebpMB": "37.63",
+  "savedMB": "350.55",
+  "savedPercent": 90,
+  "files": 431,
+  "details": [
+    {
+      "original": "assets\\packets\\card-basil-genoveois.png",
+      "webp": "assets\\packets\\card-basil-genoveois.webp",
+      "originalKB": "140.5",
+      "webpKB": "117.8",
+      "savedPercent": 16
+    },
+    {
+      "original": "assets\\packets\\card-basil.png",
+      "webp": "assets\\packets\\card-basil.webp",
+      "originalKB": "140.5",
+      "webpKB": "117.8",
+      "savedPercent": 16
+    },
+    {
+      "original": "assets\\packets\\card-carrot-guerande.png",
+      "webp": "assets\\packets\\card-carrot-guerande.webp",
+      "originalKB": "127.7",
+      "webpKB": "102.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "assets\\packets\\card-carrot.png",
+      "webp": "assets\\packets\\card-carrot.webp",
+      "originalKB": "127.7",
+      "webpKB": "102.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "assets\\packets\\card-lettuce.png",
+      "webp": "assets\\packets\\card-lettuce.webp",
+      "originalKB": "104.4",
+      "webpKB": "81.4",
+      "savedPercent": 22
+    },
+    {
+      "original": "assets\\packets\\card-pepper-doux-france.png",
+      "webp": "assets\\packets\\card-pepper-doux-france.webp",
+      "originalKB": "123.3",
+      "webpKB": "83.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "assets\\packets\\card-pepper.png",
+      "webp": "assets\\packets\\card-pepper.webp",
+      "originalKB": "123.3",
+      "webpKB": "83.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "assets\\packets\\card-strawberry.png",
+      "webp": "assets\\packets\\card-strawberry.webp",
+      "originalKB": "115.3",
+      "webpKB": "92.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "assets\\packets\\card-tomato-cherokee.png",
+      "webp": "assets\\packets\\card-tomato-cherokee.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "assets\\packets\\card-tomato-marmade.png",
+      "webp": "assets\\packets\\card-tomato-marmade.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "assets\\packets\\card-tomato-rosedeberne.png",
+      "webp": "assets\\packets\\card-tomato-rosedeberne.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "assets\\packets\\card-tomato.png",
+      "webp": "assets\\packets\\card-tomato.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "assets\\plants\\card-basil.png",
+      "webp": "assets\\plants\\card-basil.webp",
+      "originalKB": "140.5",
+      "webpKB": "117.8",
+      "savedPercent": 16
+    },
+    {
+      "original": "assets\\plants\\card-carrot.png",
+      "webp": "assets\\plants\\card-carrot.webp",
+      "originalKB": "127.7",
+      "webpKB": "102.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "assets\\plants\\card-lettuce.png",
+      "webp": "assets\\plants\\card-lettuce.webp",
+      "originalKB": "104.4",
+      "webpKB": "81.4",
+      "savedPercent": 22
+    },
+    {
+      "original": "assets\\plants\\card-pepper.png",
+      "webp": "assets\\plants\\card-pepper.webp",
+      "originalKB": "123.3",
+      "webpKB": "83.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "assets\\plants\\card-strawberry.png",
+      "webp": "assets\\plants\\card-strawberry.webp",
+      "originalKB": "115.3",
+      "webpKB": "92.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "assets\\plants\\card-tomato-aneas.png",
+      "webp": "assets\\plants\\card-tomato-aneas.webp",
+      "originalKB": "129.5",
+      "webpKB": "111.9",
+      "savedPercent": 14
+    },
+    {
+      "original": "assets\\plants\\card-tomato-cocktail.png",
+      "webp": "assets\\plants\\card-tomato-cocktail.webp",
+      "originalKB": "125.2",
+      "webpKB": "94.7",
+      "savedPercent": 24
+    },
+    {
+      "original": "assets\\plants\\card-tomato-evolution.png",
+      "webp": "assets\\plants\\card-tomato-evolution.webp",
+      "originalKB": "120.6",
+      "webpKB": "102.0",
+      "savedPercent": 15
+    },
+    {
+      "original": "assets\\plants\\card-tomato.png",
+      "webp": "assets\\plants\\card-tomato.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "assets\\shops\\card-shop-arbres-tissot.png",
+      "webp": "assets\\shops\\card-shop-arbres-tissot.webp",
+      "originalKB": "2268.7",
+      "webpKB": "143.5",
+      "savedPercent": 94
+    },
+    {
+      "original": "assets\\shops\\card-shop-clause.png",
+      "webp": "assets\\shops\\card-shop-clause.webp",
+      "originalKB": "126.8",
+      "webpKB": "90.1",
+      "savedPercent": 29
+    },
+    {
+      "original": "assets\\shops\\card-shop-fruitiers-forest.png",
+      "webp": "assets\\shops\\card-shop-fruitiers-forest.webp",
+      "originalKB": "2361.0",
+      "webpKB": "166.7",
+      "savedPercent": 93
+    },
+    {
+      "original": "assets\\shops\\card-shop-guignard.png",
+      "webp": "assets\\shops\\card-shop-guignard.webp",
+      "originalKB": "2134.6",
+      "webpKB": "100.5",
+      "savedPercent": 95
+    },
+    {
+      "original": "assets\\shops\\card-shop-inrae.png",
+      "webp": "assets\\shops\\card-shop-inrae.webp",
+      "originalKB": "2485.8",
+      "webpKB": "197.2",
+      "savedPercent": 92
+    },
+    {
+      "original": "assets\\shops\\card-shop-kokopelli.png",
+      "webp": "assets\\shops\\card-shop-kokopelli.webp",
+      "originalKB": "2110.5",
+      "webpKB": "104.5",
+      "savedPercent": 95
+    },
+    {
+      "original": "assets\\shops\\card-shop-lebiau.png",
+      "webp": "assets\\shops\\card-shop-lebiau.webp",
+      "originalKB": "2375.8",
+      "webpKB": "151.2",
+      "savedPercent": 94
+    },
+    {
+      "original": "assets\\shops\\card-shop-pepinieres-bordas.png",
+      "webp": "assets\\shops\\card-shop-pepinieres-bordas.webp",
+      "originalKB": "2382.1",
+      "webpKB": "167.6",
+      "savedPercent": 93
+    },
+    {
+      "original": "assets\\shops\\card-shop-sainte-marthe.png",
+      "webp": "assets\\shops\\card-shop-sainte-marthe.webp",
+      "originalKB": "2498.2",
+      "webpKB": "204.7",
+      "savedPercent": 92
+    },
+    {
+      "original": "assets\\shops\\card-shop-vilmorin.png",
+      "webp": "assets\\shops\\card-shop-vilmorin.webp",
+      "originalKB": "94.1",
+      "webpKB": "64.3",
+      "savedPercent": 32
+    },
+    {
+      "original": "cards\\card-akebia.png",
+      "webp": "cards\\card-akebia.webp",
+      "originalKB": "30.1",
+      "webpKB": "10.9",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-alert.png",
+      "webp": "cards\\card-alert.webp",
+      "originalKB": "194.1",
+      "webpKB": "155.8",
+      "savedPercent": 20
+    },
+    {
+      "original": "cards\\card-amaranth.png",
+      "webp": "cards\\card-amaranth.webp",
+      "originalKB": "32.2",
+      "webpKB": "11.7",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-amelanchier.png",
+      "webp": "cards\\card-amelanchier.webp",
+      "originalKB": "34.1",
+      "webpKB": "12.3",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-apple-gala.png",
+      "webp": "cards\\card-apple-gala.webp",
+      "originalKB": "34.8",
+      "webpKB": "12.6",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-apple-golden.png",
+      "webp": "cards\\card-apple-golden.webp",
+      "originalKB": "35.5",
+      "webpKB": "12.9",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-apple.png",
+      "webp": "cards\\card-apple.webp",
+      "originalKB": "34.6",
+      "webpKB": "12.9",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-arbousier.png",
+      "webp": "cards\\card-arbousier.webp",
+      "originalKB": "32.1",
+      "webpKB": "10.4",
+      "savedPercent": 68
+    },
+    {
+      "original": "cards\\card-baco-noir.png",
+      "webp": "cards\\card-baco-noir.webp",
+      "originalKB": "31.8",
+      "webpKB": "11.3",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-basil.png",
+      "webp": "cards\\card-basil.webp",
+      "originalKB": "140.5",
+      "webpKB": "117.8",
+      "savedPercent": 16
+    },
+    {
+      "original": "cards\\card-bean.png",
+      "webp": "cards\\card-bean.webp",
+      "originalKB": "30.9",
+      "webpKB": "10.8",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-birch.png",
+      "webp": "cards\\card-birch.webp",
+      "originalKB": "26.9",
+      "webpKB": "9.8",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-blackberry.png",
+      "webp": "cards\\card-blackberry.webp",
+      "originalKB": "32.7",
+      "webpKB": "11.4",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-blackcurrant.png",
+      "webp": "cards\\card-blackcurrant.webp",
+      "originalKB": "34.6",
+      "webpKB": "11.8",
+      "savedPercent": 66
+    },
+    {
+      "original": "cards\\card-cabbage.png",
+      "webp": "cards\\card-cabbage.webp",
+      "originalKB": "31.6",
+      "webpKB": "11.4",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-carrot.png",
+      "webp": "cards\\card-carrot.webp",
+      "originalKB": "127.7",
+      "webpKB": "102.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "cards\\card-casseille.png",
+      "webp": "cards\\card-casseille.webp",
+      "originalKB": "34.4",
+      "webpKB": "12.1",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-chambre-large.png",
+      "webp": "cards\\card-chambre-large.webp",
+      "originalKB": "210.3",
+      "webpKB": "24.4",
+      "savedPercent": 88
+    },
+    {
+      "original": "cards\\card-chambre-medium.png",
+      "webp": "cards\\card-chambre-medium.webp",
+      "originalKB": "171.9",
+      "webpKB": "18.1",
+      "savedPercent": 89
+    },
+    {
+      "original": "cards\\card-chambre-small.png",
+      "webp": "cards\\card-chambre-small.webp",
+      "originalKB": "127.2",
+      "webpKB": "14.5",
+      "savedPercent": 89
+    },
+    {
+      "original": "cards\\card-cherry.png",
+      "webp": "cards\\card-cherry.webp",
+      "originalKB": "29.6",
+      "webpKB": "10.6",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-corn.png",
+      "webp": "cards\\card-corn.webp",
+      "originalKB": "27.8",
+      "webpKB": "9.9",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-cornus.png",
+      "webp": "cards\\card-cornus.webp",
+      "originalKB": "31.5",
+      "webpKB": "11.3",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-cucumber.png",
+      "webp": "cards\\card-cucumber.webp",
+      "originalKB": "31.2",
+      "webpKB": "11.5",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-custom-plant.png",
+      "webp": "cards\\card-custom-plant.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "cards\\card-disease.png",
+      "webp": "cards\\card-disease.webp",
+      "originalKB": "149.7",
+      "webpKB": "125.4",
+      "savedPercent": 16
+    },
+    {
+      "original": "cards\\card-eggplant.png",
+      "webp": "cards\\card-eggplant.webp",
+      "originalKB": "29.4",
+      "webpKB": "10.5",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-eleagnus.png",
+      "webp": "cards\\card-eleagnus.webp",
+      "originalKB": "30.3",
+      "webpKB": "10.8",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-fertilizer.png",
+      "webp": "cards\\card-fertilizer.webp",
+      "originalKB": "208.7",
+      "webpKB": "200.5",
+      "savedPercent": 4
+    },
+    {
+      "original": "cards\\card-garden.png",
+      "webp": "cards\\card-garden.webp",
+      "originalKB": "203.0",
+      "webpKB": "186.0",
+      "savedPercent": 8
+    },
+    {
+      "original": "cards\\card-goji.png",
+      "webp": "cards\\card-goji.webp",
+      "originalKB": "30.6",
+      "webpKB": "10.7",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-greenhouse.png",
+      "webp": "cards\\card-greenhouse.webp",
+      "originalKB": "219.1",
+      "webpKB": "191.9",
+      "savedPercent": 12
+    },
+    {
+      "original": "cards\\card-hazelnut.png",
+      "webp": "cards\\card-hazelnut.webp",
+      "originalKB": "27.7",
+      "webpKB": "10.1",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-josta.png",
+      "webp": "cards\\card-josta.webp",
+      "originalKB": "33.8",
+      "webpKB": "11.6",
+      "savedPercent": 66
+    },
+    {
+      "original": "cards\\card-kokopelli-semences-fr.png",
+      "webp": "cards\\card-kokopelli-semences-fr.webp",
+      "originalKB": "81.7",
+      "webpKB": "57.1",
+      "savedPercent": 30
+    },
+    {
+      "original": "cards\\card-kokopelli.png",
+      "webp": "cards\\card-kokopelli.webp",
+      "originalKB": "86.2",
+      "webpKB": "66.4",
+      "savedPercent": 23
+    },
+    {
+      "original": "cards\\card-laurus.png",
+      "webp": "cards\\card-laurus.webp",
+      "originalKB": "34.4",
+      "webpKB": "12.4",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-lemon.png",
+      "webp": "cards\\card-lemon.webp",
+      "originalKB": "30.4",
+      "webpKB": "11.1",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-lettuce.png",
+      "webp": "cards\\card-lettuce.webp",
+      "originalKB": "104.4",
+      "webpKB": "81.4",
+      "savedPercent": 22
+    },
+    {
+      "original": "cards\\card-lycium.png",
+      "webp": "cards\\card-lycium.webp",
+      "originalKB": "30.0",
+      "webpKB": "10.6",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-magnolia.png",
+      "webp": "cards\\card-magnolia.webp",
+      "originalKB": "30.2",
+      "webpKB": "11.2",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-maple.png",
+      "webp": "cards\\card-maple.webp",
+      "originalKB": "26.8",
+      "webpKB": "9.9",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-melon.png",
+      "webp": "cards\\card-melon.webp",
+      "originalKB": "31.0",
+      "webpKB": "10.8",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-mini-serre.png",
+      "webp": "cards\\card-mini-serre.webp",
+      "originalKB": "356.3",
+      "webpKB": "41.2",
+      "savedPercent": 88
+    },
+    {
+      "original": "cards\\card-mirabellier.png",
+      "webp": "cards\\card-mirabellier.webp",
+      "originalKB": "33.4",
+      "webpKB": "12.0",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-oak.png",
+      "webp": "cards\\card-oak.webp",
+      "originalKB": "25.7",
+      "webpKB": "9.5",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-olive.png",
+      "webp": "cards\\card-olive.webp",
+      "originalKB": "30.5",
+      "webpKB": "10.6",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-orange.png",
+      "webp": "cards\\card-orange.webp",
+      "originalKB": "28.6",
+      "webpKB": "10.4",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-parsley.png",
+      "webp": "cards\\card-parsley.webp",
+      "originalKB": "31.8",
+      "webpKB": "10.7",
+      "savedPercent": 66
+    },
+    {
+      "original": "cards\\card-pea.png",
+      "webp": "cards\\card-pea.webp",
+      "originalKB": "31.9",
+      "webpKB": "11.6",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-pear.png",
+      "webp": "cards\\card-pear.webp",
+      "originalKB": "30.8",
+      "webpKB": "11.3",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\card-pepper.png",
+      "webp": "cards\\card-pepper.webp",
+      "originalKB": "123.3",
+      "webpKB": "83.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "cards\\card-pest.png",
+      "webp": "cards\\card-pest.webp",
+      "originalKB": "241.8",
+      "webpKB": "224.2",
+      "savedPercent": 7
+    },
+    {
+      "original": "cards\\card-photinia.png",
+      "webp": "cards\\card-photinia.webp",
+      "originalKB": "32.0",
+      "webpKB": "11.2",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-pine.png",
+      "webp": "cards\\card-pine.webp",
+      "originalKB": "29.1",
+      "webpKB": "10.9",
+      "savedPercent": 62
+    },
+    {
+      "original": "cards\\card-planter.png",
+      "webp": "cards\\card-planter.webp",
+      "originalKB": "218.9",
+      "webpKB": "183.2",
+      "savedPercent": 16
+    },
+    {
+      "original": "cards\\card-quinoa.png",
+      "webp": "cards\\card-quinoa.webp",
+      "originalKB": "29.1",
+      "webpKB": "10.6",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-radish.png",
+      "webp": "cards\\card-radish.webp",
+      "originalKB": "34.9",
+      "webpKB": "11.7",
+      "savedPercent": 67
+    },
+    {
+      "original": "cards\\card-rain.png",
+      "webp": "cards\\card-rain.webp",
+      "originalKB": "179.2",
+      "webpKB": "140.6",
+      "savedPercent": 22
+    },
+    {
+      "original": "cards\\card-seeds-tomato.png",
+      "webp": "cards\\card-seeds-tomato.webp",
+      "originalKB": "107.2",
+      "webpKB": "81.0",
+      "savedPercent": 24
+    },
+    {
+      "original": "cards\\card-shop-clause.png",
+      "webp": "cards\\card-shop-clause.webp",
+      "originalKB": "126.8",
+      "webpKB": "90.1",
+      "savedPercent": 29
+    },
+    {
+      "original": "cards\\card-shop-vilmorin.png",
+      "webp": "cards\\card-shop-vilmorin.webp",
+      "originalKB": "94.1",
+      "webpKB": "64.3",
+      "savedPercent": 32
+    },
+    {
+      "original": "cards\\card-soil.png",
+      "webp": "cards\\card-soil.webp",
+      "originalKB": "137.2",
+      "webpKB": "90.0",
+      "savedPercent": 34
+    },
+    {
+      "original": "cards\\card-sorrel.png",
+      "webp": "cards\\card-sorrel.webp",
+      "originalKB": "31.6",
+      "webpKB": "10.9",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-spinach.png",
+      "webp": "cards\\card-spinach.webp",
+      "originalKB": "31.4",
+      "webpKB": "11.4",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-squash.png",
+      "webp": "cards\\card-squash.webp",
+      "originalKB": "30.6",
+      "webpKB": "10.9",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-strawberry.png",
+      "webp": "cards\\card-strawberry.webp",
+      "originalKB": "115.3",
+      "webpKB": "92.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "cards\\card-sunflower.png",
+      "webp": "cards\\card-sunflower.webp",
+      "originalKB": "34.9",
+      "webpKB": "12.1",
+      "savedPercent": 65
+    },
+    {
+      "original": "cards\\card-sunlight.png",
+      "webp": "cards\\card-sunlight.webp",
+      "originalKB": "193.9",
+      "webpKB": "154.4",
+      "savedPercent": 20
+    },
+    {
+      "original": "cards\\card-tomato-aneas.png",
+      "webp": "cards\\card-tomato-aneas.webp",
+      "originalKB": "129.5",
+      "webpKB": "111.9",
+      "savedPercent": 14
+    },
+    {
+      "original": "cards\\card-tomato-cocktail.png",
+      "webp": "cards\\card-tomato-cocktail.webp",
+      "originalKB": "125.2",
+      "webpKB": "94.7",
+      "savedPercent": 24
+    },
+    {
+      "original": "cards\\card-tomato-evolution.png",
+      "webp": "cards\\card-tomato-evolution.webp",
+      "originalKB": "120.6",
+      "webpKB": "102.0",
+      "savedPercent": 15
+    },
+    {
+      "original": "cards\\card-tomato.png",
+      "webp": "cards\\card-tomato.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "cards\\card-treatment.png",
+      "webp": "cards\\card-treatment.webp",
+      "originalKB": "213.0",
+      "webpKB": "193.8",
+      "savedPercent": 9
+    },
+    {
+      "original": "cards\\card-walnut.png",
+      "webp": "cards\\card-walnut.webp",
+      "originalKB": "27.5",
+      "webpKB": "9.9",
+      "savedPercent": 64
+    },
+    {
+      "original": "cards\\card-watering.png",
+      "webp": "cards\\card-watering.webp",
+      "originalKB": "229.7",
+      "webpKB": "200.8",
+      "savedPercent": 13
+    },
+    {
+      "original": "cards\\card-zucchini.png",
+      "webp": "cards\\card-zucchini.webp",
+      "originalKB": "30.0",
+      "webpKB": "11.1",
+      "savedPercent": 63
+    },
+    {
+      "original": "cards\\packet-cucumber-marketer.png",
+      "webp": "cards\\packet-cucumber-marketer.webp",
+      "originalKB": "2097.8",
+      "webpKB": "83.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "cards\\seeds\\clause\\card-cucumber-marketer.png",
+      "webp": "cards\\seeds\\clause\\card-cucumber-marketer.webp",
+      "originalKB": "199.4",
+      "webpKB": "13.8",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\clause\\card-lettuce-batavia.png",
+      "webp": "cards\\seeds\\clause\\card-lettuce-batavia.webp",
+      "originalKB": "208.2",
+      "webpKB": "15.8",
+      "savedPercent": 92
+    },
+    {
+      "original": "cards\\seeds\\clause\\card-pepper-california-wonder.png",
+      "webp": "cards\\seeds\\clause\\card-pepper-california-wonder.webp",
+      "originalKB": "221.8",
+      "webpKB": "16.6",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\clause\\card-zucchini-black-beauty.png",
+      "webp": "cards\\seeds\\clause\\card-zucchini-black-beauty.webp",
+      "originalKB": "222.4",
+      "webpKB": "14.2",
+      "savedPercent": 94
+    },
+    {
+      "original": "cards\\seeds\\kokopelli\\card-eggplant-long-violette.png",
+      "webp": "cards\\seeds\\kokopelli\\card-eggplant-long-violette.webp",
+      "originalKB": "201.1",
+      "webpKB": "13.1",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\kokopelli\\card-squash-butternut-coco.png",
+      "webp": "cards\\seeds\\kokopelli\\card-squash-butternut-coco.webp",
+      "originalKB": "228.4",
+      "webpKB": "15.3",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\kokopelli\\card-tomato-blackk.png",
+      "webp": "cards\\seeds\\kokopelli\\card-tomato-blackk.webp",
+      "originalKB": "201.7",
+      "webpKB": "15.1",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\kokopelli\\card-tomato-cherokee-purple.png",
+      "webp": "cards\\seeds\\kokopelli\\card-tomato-cherokee-purple.webp",
+      "originalKB": "218.7",
+      "webpKB": "15.3",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\kokopelli\\card-tomato-green-zebra.png",
+      "webp": "cards\\seeds\\kokopelli\\card-tomato-green-zebra.webp",
+      "originalKB": "214.7",
+      "webpKB": "19.7",
+      "savedPercent": 91
+    },
+    {
+      "original": "cards\\seeds\\kokopelli\\card-tomato-rose-de-berne.png",
+      "webp": "cards\\seeds\\kokopelli\\card-tomato-rose-de-berne.webp",
+      "originalKB": "215.7",
+      "webpKB": "14.1",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\lebiau\\card-bean-coco.png",
+      "webp": "cards\\seeds\\lebiau\\card-bean-coco.webp",
+      "originalKB": "196.4",
+      "webpKB": "13.1",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\lebiau\\card-cabbage-milan.png",
+      "webp": "cards\\seeds\\lebiau\\card-cabbage-milan.webp",
+      "originalKB": "208.5",
+      "webpKB": "16.7",
+      "savedPercent": 92
+    },
+    {
+      "original": "cards\\seeds\\lebiau\\card-carrot-guerande.png",
+      "webp": "cards\\seeds\\lebiau\\card-carrot-guerande.webp",
+      "originalKB": "189.6",
+      "webpKB": "12.9",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\lebiau\\card-carrot-robver.png",
+      "webp": "cards\\seeds\\lebiau\\card-carrot-robver.webp",
+      "originalKB": "214.6",
+      "webpKB": "15.0",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\lebiau\\card-lettuce-chene.png",
+      "webp": "cards\\seeds\\lebiau\\card-lettuce-chene.webp",
+      "originalKB": "196.2",
+      "webpKB": "14.3",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\lebiau\\card-tomato-marmande.png",
+      "webp": "cards\\seeds\\lebiau\\card-tomato-marmande.webp",
+      "originalKB": "221.8",
+      "webpKB": "17.9",
+      "savedPercent": 92
+    },
+    {
+      "original": "cards\\seeds\\sainte-marthe\\card-basil-genoveois.png",
+      "webp": "cards\\seeds\\sainte-marthe\\card-basil-genoveois.webp",
+      "originalKB": "221.8",
+      "webpKB": "20.2",
+      "savedPercent": 91
+    },
+    {
+      "original": "cards\\seeds\\sainte-marthe\\card-basil-marseillais.png",
+      "webp": "cards\\seeds\\sainte-marthe\\card-basil-marseillais.webp",
+      "originalKB": "202.5",
+      "webpKB": "16.5",
+      "savedPercent": 92
+    },
+    {
+      "original": "cards\\seeds\\sainte-marthe\\card-pepper-doux-france.png",
+      "webp": "cards\\seeds\\sainte-marthe\\card-pepper-doux-france.webp",
+      "originalKB": "190.6",
+      "webpKB": "12.8",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\seeds\\sainte-marthe\\card-strawberry-ciflorette.png",
+      "webp": "cards\\seeds\\sainte-marthe\\card-strawberry-ciflorette.webp",
+      "originalKB": "220.4",
+      "webpKB": "16.6",
+      "savedPercent": 92
+    },
+    {
+      "original": "cards\\shops\\card-shop-arbres-tissot.png",
+      "webp": "cards\\shops\\card-shop-arbres-tissot.webp",
+      "originalKB": "239.6",
+      "webpKB": "25.8",
+      "savedPercent": 89
+    },
+    {
+      "original": "cards\\shops\\card-shop-clause.png",
+      "webp": "cards\\shops\\card-shop-clause.webp",
+      "originalKB": "126.8",
+      "webpKB": "90.1",
+      "savedPercent": 29
+    },
+    {
+      "original": "cards\\shops\\card-shop-fruitiers-forest.png",
+      "webp": "cards\\shops\\card-shop-fruitiers-forest.webp",
+      "originalKB": "256.8",
+      "webpKB": "30.0",
+      "savedPercent": 88
+    },
+    {
+      "original": "cards\\shops\\card-shop-guignard.png",
+      "webp": "cards\\shops\\card-shop-guignard.webp",
+      "originalKB": "201.7",
+      "webpKB": "15.1",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\shops\\card-shop-inrae.png",
+      "webp": "cards\\shops\\card-shop-inrae.webp",
+      "originalKB": "218.7",
+      "webpKB": "15.3",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\shops\\card-shop-kokopelli.png",
+      "webp": "cards\\shops\\card-shop-kokopelli.webp",
+      "originalKB": "218.7",
+      "webpKB": "15.3",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\shops\\card-shop-lebiau.png",
+      "webp": "cards\\shops\\card-shop-lebiau.webp",
+      "originalKB": "189.6",
+      "webpKB": "12.9",
+      "savedPercent": 93
+    },
+    {
+      "original": "cards\\shops\\card-shop-pepinieres-bordas.png",
+      "webp": "cards\\shops\\card-shop-pepinieres-bordas.webp",
+      "originalKB": "205.8",
+      "webpKB": "24.4",
+      "savedPercent": 88
+    },
+    {
+      "original": "cards\\shops\\card-shop-sainte-marthe.png",
+      "webp": "cards\\shops\\card-shop-sainte-marthe.webp",
+      "originalKB": "235.7",
+      "webpKB": "30.2",
+      "savedPercent": 87
+    },
+    {
+      "original": "cards\\shops\\card-shop-vilmorin.png",
+      "webp": "cards\\shops\\card-shop-vilmorin.webp",
+      "originalKB": "94.1",
+      "webpKB": "64.3",
+      "savedPercent": 32
+    },
+    {
+      "original": "cards\\src\\components\\game\\Boutique\\packet-cucumber-marketer.png",
+      "webp": "cards\\src\\components\\game\\Boutique\\packet-cucumber-marketer.webp",
+      "originalKB": "2097.8",
+      "webpKB": "83.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "cards-preview\\card-arbousier.png",
+      "webp": "cards-preview\\card-arbousier.webp",
+      "originalKB": "32.1",
+      "webpKB": "10.4",
+      "savedPercent": 68
+    },
+    {
+      "original": "equipment\\serre-de-jardin.png",
+      "webp": "equipment\\serre-de-jardin.webp",
+      "originalKB": "44.5",
+      "webpKB": "43.8",
+      "savedPercent": 2
+    },
+    {
+      "original": "greenhouse-sprite.png",
+      "webp": "greenhouse-sprite.webp",
+      "originalKB": "2358.8",
+      "webpKB": "179.1",
+      "savedPercent": 92
+    },
+    {
+      "original": "images\\pepiniere\\carrot\\stage-0.png",
+      "webp": "images\\pepiniere\\carrot\\stage-0.webp",
+      "originalKB": "87.3",
+      "webpKB": "62.2",
+      "savedPercent": 29
+    },
+    {
+      "original": "images\\pepiniere\\carrot\\stage-1.png",
+      "webp": "images\\pepiniere\\carrot\\stage-1.webp",
+      "originalKB": "51.0",
+      "webpKB": "30.9",
+      "savedPercent": 39
+    },
+    {
+      "original": "images\\pepiniere\\carrot\\stage-2.png",
+      "webp": "images\\pepiniere\\carrot\\stage-2.webp",
+      "originalKB": "89.3",
+      "webpKB": "61.6",
+      "savedPercent": 31
+    },
+    {
+      "original": "images\\pepiniere\\carrot\\stage-3.png",
+      "webp": "images\\pepiniere\\carrot\\stage-3.webp",
+      "originalKB": "101.0",
+      "webpKB": "71.9",
+      "savedPercent": 29
+    },
+    {
+      "original": "images\\pepiniere\\carrot\\stage-4.png",
+      "webp": "images\\pepiniere\\carrot\\stage-4.webp",
+      "originalKB": "118.0",
+      "webpKB": "95.2",
+      "savedPercent": 19
+    },
+    {
+      "original": "images\\pepiniere\\carrot\\stage-5.png",
+      "webp": "images\\pepiniere\\carrot\\stage-5.webp",
+      "originalKB": "134.9",
+      "webpKB": "109.6",
+      "savedPercent": 19
+    },
+    {
+      "original": "images\\pepiniere\\lettuce\\stage-0.png",
+      "webp": "images\\pepiniere\\lettuce\\stage-0.webp",
+      "originalKB": "69.2",
+      "webpKB": "44.7",
+      "savedPercent": 35
+    },
+    {
+      "original": "images\\pepiniere\\lettuce\\stage-1.png",
+      "webp": "images\\pepiniere\\lettuce\\stage-1.webp",
+      "originalKB": "38.1",
+      "webpKB": "20.3",
+      "savedPercent": 47
+    },
+    {
+      "original": "images\\pepiniere\\lettuce\\stage-2.png",
+      "webp": "images\\pepiniere\\lettuce\\stage-2.webp",
+      "originalKB": "59.8",
+      "webpKB": "33.5",
+      "savedPercent": 44
+    },
+    {
+      "original": "images\\pepiniere\\lettuce\\stage-3.png",
+      "webp": "images\\pepiniere\\lettuce\\stage-3.webp",
+      "originalKB": "71.0",
+      "webpKB": "45.9",
+      "savedPercent": 35
+    },
+    {
+      "original": "images\\pepiniere\\lettuce\\stage-4.png",
+      "webp": "images\\pepiniere\\lettuce\\stage-4.webp",
+      "originalKB": "87.1",
+      "webpKB": "57.3",
+      "savedPercent": 34
+    },
+    {
+      "original": "images\\pepiniere\\lettuce\\stage-5.png",
+      "webp": "images\\pepiniere\\lettuce\\stage-5.webp",
+      "originalKB": "71.6",
+      "webpKB": "46.4",
+      "savedPercent": 35
+    },
+    {
+      "original": "images\\pepiniere\\tomato\\stage-0.png",
+      "webp": "images\\pepiniere\\tomato\\stage-0.webp",
+      "originalKB": "57.1",
+      "webpKB": "35.6",
+      "savedPercent": 38
+    },
+    {
+      "original": "images\\pepiniere\\tomato\\stage-1.png",
+      "webp": "images\\pepiniere\\tomato\\stage-1.webp",
+      "originalKB": "60.4",
+      "webpKB": "37.3",
+      "savedPercent": 38
+    },
+    {
+      "original": "images\\pepiniere\\tomato\\stage-2.png",
+      "webp": "images\\pepiniere\\tomato\\stage-2.webp",
+      "originalKB": "67.9",
+      "webpKB": "44.4",
+      "savedPercent": 35
+    },
+    {
+      "original": "images\\pepiniere\\tomato\\stage-3.png",
+      "webp": "images\\pepiniere\\tomato\\stage-3.webp",
+      "originalKB": "71.2",
+      "webpKB": "48.0",
+      "savedPercent": 33
+    },
+    {
+      "original": "images\\pepiniere\\tomato\\stage-4.png",
+      "webp": "images\\pepiniere\\tomato\\stage-4.webp",
+      "originalKB": "91.8",
+      "webpKB": "62.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "images\\pepiniere\\tomato\\stage-5.png",
+      "webp": "images\\pepiniere\\tomato\\stage-5.webp",
+      "originalKB": "87.4",
+      "webpKB": "62.3",
+      "savedPercent": 29
+    },
+    {
+      "original": "packets\\card-basil-genoveois.png",
+      "webp": "packets\\card-basil-genoveois.webp",
+      "originalKB": "140.5",
+      "webpKB": "117.8",
+      "savedPercent": 16
+    },
+    {
+      "original": "packets\\card-basil.png",
+      "webp": "packets\\card-basil.webp",
+      "originalKB": "140.5",
+      "webpKB": "117.8",
+      "savedPercent": 16
+    },
+    {
+      "original": "packets\\card-carrot-guerande.png",
+      "webp": "packets\\card-carrot-guerande.webp",
+      "originalKB": "127.7",
+      "webpKB": "102.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "packets\\card-carrot.png",
+      "webp": "packets\\card-carrot.webp",
+      "originalKB": "127.7",
+      "webpKB": "102.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "packets\\card-lettuce.png",
+      "webp": "packets\\card-lettuce.webp",
+      "originalKB": "104.4",
+      "webpKB": "81.4",
+      "savedPercent": 22
+    },
+    {
+      "original": "packets\\card-pepper-doux-france.png",
+      "webp": "packets\\card-pepper-doux-france.webp",
+      "originalKB": "123.3",
+      "webpKB": "83.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "packets\\card-pepper.png",
+      "webp": "packets\\card-pepper.webp",
+      "originalKB": "123.3",
+      "webpKB": "83.7",
+      "savedPercent": 32
+    },
+    {
+      "original": "packets\\card-seeds-tomato.png",
+      "webp": "packets\\card-seeds-tomato.webp",
+      "originalKB": "107.2",
+      "webpKB": "81.0",
+      "savedPercent": 24
+    },
+    {
+      "original": "packets\\card-strawberry.png",
+      "webp": "packets\\card-strawberry.webp",
+      "originalKB": "115.3",
+      "webpKB": "92.5",
+      "savedPercent": 20
+    },
+    {
+      "original": "packets\\card-tomato-cherokee.png",
+      "webp": "packets\\card-tomato-cherokee.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "packets\\card-tomato-marmade.png",
+      "webp": "packets\\card-tomato-marmade.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "packets\\card-tomato-rosedeberne.png",
+      "webp": "packets\\card-tomato-rosedeberne.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "packets\\card-tomato.png",
+      "webp": "packets\\card-tomato.webp",
+      "originalKB": "127.5",
+      "webpKB": "105.2",
+      "savedPercent": 17
+    },
+    {
+      "original": "packets\\clause\\packet-carrot-nantaise.png",
+      "webp": "packets\\clause\\packet-carrot-nantaise.webp",
+      "originalKB": "2002.7",
+      "webpKB": "71.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\clause\\packet-cucumber-marketer.png",
+      "webp": "packets\\clause\\packet-cucumber-marketer.webp",
+      "originalKB": "2097.8",
+      "webpKB": "83.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\clause\\packet-lettuce-batavia.png",
+      "webp": "packets\\clause\\packet-lettuce-batavia.webp",
+      "originalKB": "2044.6",
+      "webpKB": "86.3",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\clause\\packet-pepper-california-wonder.png",
+      "webp": "packets\\clause\\packet-pepper-california-wonder.webp",
+      "originalKB": "2023.6",
+      "webpKB": "90.3",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\clause\\packet-zucchini-black-beauty.png",
+      "webp": "packets\\clause\\packet-zucchini-black-beauty.webp",
+      "originalKB": "2040.6",
+      "webpKB": "74.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-amaranth-red-garnet.png",
+      "webp": "packets\\kokopelli\\packet-amaranth-red-garnet.webp",
+      "originalKB": "2405.6",
+      "webpKB": "165.1",
+      "savedPercent": 93
+    },
+    {
+      "original": "packets\\kokopelli\\packet-bean-coco-rouge.png",
+      "webp": "packets\\kokopelli\\packet-bean-coco-rouge.webp",
+      "originalKB": "2189.4",
+      "webpKB": "110.9",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\kokopelli\\packet-corn-miel-jaune.png",
+      "webp": "packets\\kokopelli\\packet-corn-miel-jaune.webp",
+      "originalKB": "2266.6",
+      "webpKB": "124.1",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\kokopelli\\packet-eggplant-long-violette.png",
+      "webp": "packets\\kokopelli\\packet-eggplant-long-violette.webp",
+      "originalKB": "2096.0",
+      "webpKB": "77.8",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-quinoa-tempe.png",
+      "webp": "packets\\kokopelli\\packet-quinoa-tempe.webp",
+      "originalKB": "2026.4",
+      "webpKB": "82.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-sorrel-commune.png",
+      "webp": "packets\\kokopelli\\packet-sorrel-commune.webp",
+      "originalKB": "2113.6",
+      "webpKB": "97.9",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\kokopelli\\packet-squash-butternut-coco.png",
+      "webp": "packets\\kokopelli\\packet-squash-butternut-coco.webp",
+      "originalKB": "2093.5",
+      "webpKB": "90.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-sunflower-titania.png",
+      "webp": "packets\\kokopelli\\packet-sunflower-titania.webp",
+      "originalKB": "2027.1",
+      "webpKB": "81.8",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-tomato-blackk.png",
+      "webp": "packets\\kokopelli\\packet-tomato-blackk.webp",
+      "originalKB": "2066.0",
+      "webpKB": "75.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-tomato-cherokee-purple.png",
+      "webp": "packets\\kokopelli\\packet-tomato-cherokee-purple.webp",
+      "originalKB": "2050.9",
+      "webpKB": "76.1",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\kokopelli\\packet-tomato-green-zebra.png",
+      "webp": "packets\\kokopelli\\packet-tomato-green-zebra.webp",
+      "originalKB": "2194.0",
+      "webpKB": "105.8",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\kokopelli\\packet-tomato-rose-de-berne.png",
+      "webp": "packets\\kokopelli\\packet-tomato-rose-de-berne.webp",
+      "originalKB": "2067.7",
+      "webpKB": "90.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-bean-coco-paimpol.png",
+      "webp": "packets\\lebiau\\packet-bean-coco-paimpol.webp",
+      "originalKB": "2039.1",
+      "webpKB": "74.5",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-bean-coco.png",
+      "webp": "packets\\lebiau\\packet-bean-coco.webp",
+      "originalKB": "2025.1",
+      "webpKB": "74.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-cabbage-milan.png",
+      "webp": "packets\\lebiau\\packet-cabbage-milan.webp",
+      "originalKB": "2023.7",
+      "webpKB": "82.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-carrot-guerande.png",
+      "webp": "packets\\lebiau\\packet-carrot-guerande.webp",
+      "originalKB": "1985.1",
+      "webpKB": "70.6",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-carrot-robver.png",
+      "webp": "packets\\lebiau\\packet-carrot-robver.webp",
+      "originalKB": "2085.9",
+      "webpKB": "84.6",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-chard-vert-lyon.png",
+      "webp": "packets\\lebiau\\packet-chard-vert-lyon.webp",
+      "originalKB": "2026.4",
+      "webpKB": "93.9",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\lebiau\\packet-cucumber-le-genereux.png",
+      "webp": "packets\\lebiau\\packet-cucumber-le-genereux.webp",
+      "originalKB": "10.6",
+      "webpKB": "4.9",
+      "savedPercent": 53
+    },
+    {
+      "original": "packets\\lebiau\\packet-cucumber-rollisons-telegraph.png",
+      "webp": "packets\\lebiau\\packet-cucumber-rollisons-telegraph.webp",
+      "originalKB": "10.8",
+      "webpKB": "5.1",
+      "savedPercent": 53
+    },
+    {
+      "original": "packets\\lebiau\\packet-eggplant-longue-violette.png",
+      "webp": "packets\\lebiau\\packet-eggplant-longue-violette.webp",
+      "originalKB": "10.4",
+      "webpKB": "5.2",
+      "savedPercent": 50
+    },
+    {
+      "original": "packets\\lebiau\\packet-lettuce-chene.png",
+      "webp": "packets\\lebiau\\packet-lettuce-chene.webp",
+      "originalKB": "1964.1",
+      "webpKB": "73.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-pepper-ariane.png",
+      "webp": "packets\\lebiau\\packet-pepper-ariane.webp",
+      "originalKB": "9.9",
+      "webpKB": "5.1",
+      "savedPercent": 49
+    },
+    {
+      "original": "packets\\lebiau\\packet-pepper-chocolat.png",
+      "webp": "packets\\lebiau\\packet-pepper-chocolat.webp",
+      "originalKB": "10.0",
+      "webpKB": "5.1",
+      "savedPercent": 49
+    },
+    {
+      "original": "packets\\lebiau\\packet-pepper-doux-espagne.png",
+      "webp": "packets\\lebiau\\packet-pepper-doux-espagne.webp",
+      "originalKB": "10.4",
+      "webpKB": "5.3",
+      "savedPercent": 49
+    },
+    {
+      "original": "packets\\lebiau\\packet-poppy-californie.png",
+      "webp": "packets\\lebiau\\packet-poppy-californie.webp",
+      "originalKB": "2150.4",
+      "webpKB": "92.5",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-squash-musquee.png",
+      "webp": "packets\\lebiau\\packet-squash-musquee.webp",
+      "originalKB": "1894.1",
+      "webpKB": "58.2",
+      "savedPercent": 97
+    },
+    {
+      "original": "packets\\lebiau\\packet-squash-striped-cushaw.png",
+      "webp": "packets\\lebiau\\packet-squash-striped-cushaw.webp",
+      "originalKB": "10.7",
+      "webpKB": "5.1",
+      "savedPercent": 53
+    },
+    {
+      "original": "packets\\lebiau\\packet-sunflower-velours.png",
+      "webp": "packets\\lebiau\\packet-sunflower-velours.webp",
+      "originalKB": "2094.8",
+      "webpKB": "81.5",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\lebiau\\packet-tomato-cerisette-brin-muguet.png",
+      "webp": "packets\\lebiau\\packet-tomato-cerisette-brin-muguet.webp",
+      "originalKB": "10.8",
+      "webpKB": "5.4",
+      "savedPercent": 50
+    },
+    {
+      "original": "packets\\lebiau\\packet-tomato-evergreen.png",
+      "webp": "packets\\lebiau\\packet-tomato-evergreen.webp",
+      "originalKB": "10.1",
+      "webpKB": "5.1",
+      "savedPercent": 50
+    },
+    {
+      "original": "packets\\lebiau\\packet-tomato-kumato.png",
+      "webp": "packets\\lebiau\\packet-tomato-kumato.webp",
+      "originalKB": "10.0",
+      "webpKB": "5.0",
+      "savedPercent": 50
+    },
+    {
+      "original": "packets\\lebiau\\packet-tomato-marmande.png",
+      "webp": "packets\\lebiau\\packet-tomato-marmande.webp",
+      "originalKB": "2123.9",
+      "webpKB": "107.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\lebiau\\packet-tomato-raisin-vert.png",
+      "webp": "packets\\lebiau\\packet-tomato-raisin-vert.webp",
+      "originalKB": "10.2",
+      "webpKB": "5.1",
+      "savedPercent": 50
+    },
+    {
+      "original": "packets\\lebiau\\packet-tomato-saint-pierre.png",
+      "webp": "packets\\lebiau\\packet-tomato-saint-pierre.webp",
+      "originalKB": "10.2",
+      "webpKB": "5.1",
+      "savedPercent": 50
+    },
+    {
+      "original": "packets\\lebiau\\packet-zucchini-verte-italie.png",
+      "webp": "packets\\lebiau\\packet-zucchini-verte-italie.webp",
+      "originalKB": "10.4",
+      "webpKB": "4.9",
+      "savedPercent": 53
+    },
+    {
+      "original": "packets\\lebiau\\packet-zucchini-verte-milan-black-beauty.png",
+      "webp": "packets\\lebiau\\packet-zucchini-verte-milan-black-beauty.webp",
+      "originalKB": "11.2",
+      "webpKB": "5.2",
+      "savedPercent": 53
+    },
+    {
+      "original": "packets\\sainte-marthe\\packet-basil-genoveois.png",
+      "webp": "packets\\sainte-marthe\\packet-basil-genoveois.webp",
+      "originalKB": "2050.7",
+      "webpKB": "99.5",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\sainte-marthe\\packet-basil-marseillais.png",
+      "webp": "packets\\sainte-marthe\\packet-basil-marseillais.webp",
+      "originalKB": "2084.4",
+      "webpKB": "90.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\sainte-marthe\\packet-pepper-doux-france.png",
+      "webp": "packets\\sainte-marthe\\packet-pepper-doux-france.webp",
+      "originalKB": "1980.0",
+      "webpKB": "64.8",
+      "savedPercent": 97
+    },
+    {
+      "original": "packets\\sainte-marthe\\packet-strawberry-ciflorette.png",
+      "webp": "packets\\sainte-marthe\\packet-strawberry-ciflorette.webp",
+      "originalKB": "2095.0",
+      "webpKB": "95.2",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\vilmorin\\packet-basil-loki.png",
+      "webp": "packets\\vilmorin\\packet-basil-loki.webp",
+      "originalKB": "2103.5",
+      "webpKB": "83.8",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\vilmorin\\packet-parsley-lion.png",
+      "webp": "packets\\vilmorin\\packet-parsley-lion.webp",
+      "originalKB": "2052.1",
+      "webpKB": "86.1",
+      "savedPercent": 96
+    },
+    {
+      "original": "packets\\vilmorin\\packet-radis-expo.png",
+      "webp": "packets\\vilmorin\\packet-radis-expo.webp",
+      "originalKB": "2217.0",
+      "webpKB": "125.3",
+      "savedPercent": 94
+    },
+    {
+      "original": "packets\\vilmorin\\packet-spinach-soyuz.png",
+      "webp": "packets\\vilmorin\\packet-spinach-soyuz.webp",
+      "originalKB": "2163.1",
+      "webpKB": "106.0",
+      "savedPercent": 95
+    },
+    {
+      "original": "packets\\vilmorin\\packet-tomato-aneas.png",
+      "webp": "packets\\vilmorin\\packet-tomato-aneas.webp",
+      "originalKB": "1985.9",
+      "webpKB": "70.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\basil-stage-1.png",
+      "webp": "plants\\basil-stage-1.webp",
+      "originalKB": "1787.7",
+      "webpKB": "54.6",
+      "savedPercent": 97
+    },
+    {
+      "original": "plants\\basil-stage-2.png",
+      "webp": "plants\\basil-stage-2.webp",
+      "originalKB": "1943.2",
+      "webpKB": "75.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\basil-stage-3.png",
+      "webp": "plants\\basil-stage-3.webp",
+      "originalKB": "2019.2",
+      "webpKB": "96.2",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\basil-stage-4.png",
+      "webp": "plants\\basil-stage-4.webp",
+      "originalKB": "2030.2",
+      "webpKB": "86.5",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\basil-stage-5.png",
+      "webp": "plants\\basil-stage-5.webp",
+      "originalKB": "2002.6",
+      "webpKB": "106.3",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\basil-stage-6.png",
+      "webp": "plants\\basil-stage-6.webp",
+      "originalKB": "1970.9",
+      "webpKB": "85.1",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\cucumber-stage-1.png",
+      "webp": "plants\\cucumber-stage-1.webp",
+      "originalKB": "1814.6",
+      "webpKB": "46.8",
+      "savedPercent": 97
+    },
+    {
+      "original": "plants\\cucumber-stage-2.png",
+      "webp": "plants\\cucumber-stage-2.webp",
+      "originalKB": "1822.9",
+      "webpKB": "50.6",
+      "savedPercent": 97
+    },
+    {
+      "original": "plants\\cucumber-stage-3.png",
+      "webp": "plants\\cucumber-stage-3.webp",
+      "originalKB": "2038.7",
+      "webpKB": "89.3",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\cucumber-stage-4.png",
+      "webp": "plants\\cucumber-stage-4.webp",
+      "originalKB": "2049.5",
+      "webpKB": "107.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\cucumber-stage-5.png",
+      "webp": "plants\\cucumber-stage-5.webp",
+      "originalKB": "1614.5",
+      "webpKB": "42.7",
+      "savedPercent": 97
+    },
+    {
+      "original": "plants\\cucumber-stage-6.png",
+      "webp": "plants\\cucumber-stage-6.webp",
+      "originalKB": "2044.8",
+      "webpKB": "93.5",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\custom-plant-stage-1.png",
+      "webp": "plants\\custom-plant-stage-1.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\custom-plant-stage-2.png",
+      "webp": "plants\\custom-plant-stage-2.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\custom-plant-stage-3.png",
+      "webp": "plants\\custom-plant-stage-3.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\custom-plant-stage-4.png",
+      "webp": "plants\\custom-plant-stage-4.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\custom-plant-stage-5.png",
+      "webp": "plants\\custom-plant-stage-5.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\custom-plant-stage-6.png",
+      "webp": "plants\\custom-plant-stage-6.webp",
+      "originalKB": "1579.4",
+      "webpKB": "35.4",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\eggplant-stage-1.png",
+      "webp": "plants\\eggplant-stage-1.webp",
+      "originalKB": "1908.0",
+      "webpKB": "79.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\eggplant-stage-2.png",
+      "webp": "plants\\eggplant-stage-2.webp",
+      "originalKB": "2051.1",
+      "webpKB": "93.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\eggplant-stage-3.png",
+      "webp": "plants\\eggplant-stage-3.webp",
+      "originalKB": "1954.9",
+      "webpKB": "78.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\eggplant-stage-4.png",
+      "webp": "plants\\eggplant-stage-4.webp",
+      "originalKB": "1965.0",
+      "webpKB": "77.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\melon-stage-1.png",
+      "webp": "plants\\melon-stage-1.webp",
+      "originalKB": "2041.8",
+      "webpKB": "93.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\melon-stage-2.png",
+      "webp": "plants\\melon-stage-2.webp",
+      "originalKB": "1701.9",
+      "webpKB": "62.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\melon-stage-3.png",
+      "webp": "plants\\melon-stage-3.webp",
+      "originalKB": "1946.2",
+      "webpKB": "72.7",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\melon-stage-4.png",
+      "webp": "plants\\melon-stage-4.webp",
+      "originalKB": "2097.9",
+      "webpKB": "100.8",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\melon-stage-5.png",
+      "webp": "plants\\melon-stage-5.webp",
+      "originalKB": "2269.0",
+      "webpKB": "156.2",
+      "savedPercent": 93
+    },
+    {
+      "original": "plants\\melon-stage-6.png",
+      "webp": "plants\\melon-stage-6.webp",
+      "originalKB": "31.0",
+      "webpKB": "10.8",
+      "savedPercent": 65
+    },
+    {
+      "original": "plants\\parsley-stage-1.png",
+      "webp": "plants\\parsley-stage-1.webp",
+      "originalKB": "2077.2",
+      "webpKB": "105.1",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\parsley-stage-2.png",
+      "webp": "plants\\parsley-stage-2.webp",
+      "originalKB": "1895.1",
+      "webpKB": "72.3",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\parsley-stage-3.png",
+      "webp": "plants\\parsley-stage-3.webp",
+      "originalKB": "2020.3",
+      "webpKB": "94.3",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\parsley-stage-4.png",
+      "webp": "plants\\parsley-stage-4.webp",
+      "originalKB": "1926.5",
+      "webpKB": "88.5",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\parsley-stage-5.png",
+      "webp": "plants\\parsley-stage-5.webp",
+      "originalKB": "2057.8",
+      "webpKB": "102.9",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\parsley-stage-6.png",
+      "webp": "plants\\parsley-stage-6.webp",
+      "originalKB": "2197.7",
+      "webpKB": "128.0",
+      "savedPercent": 94
+    },
+    {
+      "original": "plants\\spinach-stage-1.png",
+      "webp": "plants\\spinach-stage-1.webp",
+      "originalKB": "2075.4",
+      "webpKB": "95.2",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\spinach-stage-2.png",
+      "webp": "plants\\spinach-stage-2.webp",
+      "originalKB": "1885.4",
+      "webpKB": "61.1",
+      "savedPercent": 97
+    },
+    {
+      "original": "plants\\spinach-stage-3.png",
+      "webp": "plants\\spinach-stage-3.webp",
+      "originalKB": "1999.9",
+      "webpKB": "103.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\spinach-stage-4.png",
+      "webp": "plants\\spinach-stage-4.webp",
+      "originalKB": "2264.6",
+      "webpKB": "140.2",
+      "savedPercent": 94
+    },
+    {
+      "original": "plants\\spinach-stage-5.png",
+      "webp": "plants\\spinach-stage-5.webp",
+      "originalKB": "2280.7",
+      "webpKB": "142.1",
+      "savedPercent": 94
+    },
+    {
+      "original": "plants\\spinach-stage-6.png",
+      "webp": "plants\\spinach-stage-6.webp",
+      "originalKB": "2087.5",
+      "webpKB": "106.3",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\tomato-stage-1.png",
+      "webp": "plants\\tomato-stage-1.webp",
+      "originalKB": "1706.2",
+      "webpKB": "37.0",
+      "savedPercent": 98
+    },
+    {
+      "original": "plants\\tomato-stage-2.png",
+      "webp": "plants\\tomato-stage-2.webp",
+      "originalKB": "1831.6",
+      "webpKB": "71.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\tomato-stage-3.png",
+      "webp": "plants\\tomato-stage-3.webp",
+      "originalKB": "1978.1",
+      "webpKB": "122.1",
+      "savedPercent": 94
+    },
+    {
+      "original": "plants\\tomato-stage-4.png",
+      "webp": "plants\\tomato-stage-4.webp",
+      "originalKB": "1932.6",
+      "webpKB": "104.3",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\tomato-stage-5.png",
+      "webp": "plants\\tomato-stage-5.webp",
+      "originalKB": "1977.9",
+      "webpKB": "107.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\tomato-stage-6.png",
+      "webp": "plants\\tomato-stage-6.webp",
+      "originalKB": "1944.6",
+      "webpKB": "105.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "plants\\zucchini-stage-1.png",
+      "webp": "plants\\zucchini-stage-1.webp",
+      "originalKB": "1961.1",
+      "webpKB": "72.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\zucchini-stage-2.png",
+      "webp": "plants\\zucchini-stage-2.webp",
+      "originalKB": "1907.6",
+      "webpKB": "71.9",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\zucchini-stage-3.png",
+      "webp": "plants\\zucchini-stage-3.webp",
+      "originalKB": "1749.7",
+      "webpKB": "68.9",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\zucchini-stage-4.png",
+      "webp": "plants\\zucchini-stage-4.webp",
+      "originalKB": "1887.6",
+      "webpKB": "69.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "plants\\zucchini-stage-5.png",
+      "webp": "plants\\zucchini-stage-5.webp",
+      "originalKB": "2205.1",
+      "webpKB": "142.0",
+      "savedPercent": 94
+    },
+    {
+      "original": "plants\\zucchini-stage-6.png",
+      "webp": "plants\\zucchini-stage-6.webp",
+      "originalKB": "2130.4",
+      "webpKB": "123.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "plantules\\tomato-stage-1.png",
+      "webp": "plantules\\tomato-stage-1.webp",
+      "originalKB": "2153.2",
+      "webpKB": "113.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "plantules\\tomato-stage-2.png",
+      "webp": "plantules\\tomato-stage-2.webp",
+      "originalKB": "1933.3",
+      "webpKB": "56.9",
+      "savedPercent": 97
+    },
+    {
+      "original": "plantules\\tomato-stage-3.png",
+      "webp": "plantules\\tomato-stage-3.webp",
+      "originalKB": "1913.0",
+      "webpKB": "73.0",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\arbres-tissot\\pot-apple-belle-fleur.png",
+      "webp": "pots\\arbres-tissot\\pot-apple-belle-fleur.webp",
+      "originalKB": "2135.2",
+      "webpKB": "104.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "pots\\arbres-tissot\\pot-apple-reine-reinettes.png",
+      "webp": "pots\\arbres-tissot\\pot-apple-reine-reinettes.webp",
+      "originalKB": "2041.8",
+      "webpKB": "77.5",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\arbres-tissot\\pot-pear-conference.png",
+      "webp": "pots\\arbres-tissot\\pot-pear-conference.webp",
+      "originalKB": "2017.5",
+      "webpKB": "71.6",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\arbres-tissot\\pot-pear-louise-bonne.png",
+      "webp": "pots\\arbres-tissot\\pot-pear-louise-bonne.webp",
+      "originalKB": "2017.5",
+      "webpKB": "71.6",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\guignard\\pot-apple-gala.png",
+      "webp": "pots\\guignard\\pot-apple-gala.webp",
+      "originalKB": "2135.2",
+      "webpKB": "104.4",
+      "savedPercent": 95
+    },
+    {
+      "original": "pots\\guignard\\pot-apple-golden.png",
+      "webp": "pots\\guignard\\pot-apple-golden.webp",
+      "originalKB": "2041.8",
+      "webpKB": "77.5",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\guignard\\pot-pear-williams.png",
+      "webp": "pots\\guignard\\pot-pear-williams.webp",
+      "originalKB": "2017.5",
+      "webpKB": "71.6",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\inrae\\cherry-bing-pot.png",
+      "webp": "pots\\inrae\\cherry-bing-pot.webp",
+      "originalKB": "2298.3",
+      "webpKB": "140.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "pots\\reserve\\pot-lemon.png",
+      "webp": "pots\\reserve\\pot-lemon.webp",
+      "originalKB": "2131.4",
+      "webpKB": "91.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "pots\\reserve\\pot-orange.png",
+      "webp": "pots\\reserve\\pot-orange.webp",
+      "originalKB": "2142.5",
+      "webpKB": "104.3",
+      "savedPercent": 95
+    },
+    {
+      "original": "seeds\\packet-cucumber-marketer.png",
+      "webp": "seeds\\packet-cucumber-marketer.webp",
+      "originalKB": "2097.8",
+      "webpKB": "83.4",
+      "savedPercent": 96
+    },
+    {
+      "original": "serre-bg.png",
+      "webp": "serre-bg.webp",
+      "originalKB": "2061.9",
+      "webpKB": "105.7",
+      "savedPercent": 95
+    },
+    {
+      "original": "sprites\\basil-stages.png",
+      "webp": "sprites\\basil-stages.webp",
+      "originalKB": "4503.1",
+      "webpKB": "537.0",
+      "savedPercent": 88
+    },
+    {
+      "original": "sprites\\cucumber-stages.png",
+      "webp": "sprites\\cucumber-stages.webp",
+      "originalKB": "4097.3",
+      "webpKB": "462.7",
+      "savedPercent": 89
+    },
+    {
+      "original": "sprites\\custom-plant-stages.png",
+      "webp": "sprites\\custom-plant-stages.webp",
+      "originalKB": "595.2",
+      "webpKB": "223.7",
+      "savedPercent": 62
+    },
+    {
+      "original": "sprites\\eggplant-stages.png",
+      "webp": "sprites\\eggplant-stages.webp",
+      "originalKB": "2921.0",
+      "webpKB": "358.2",
+      "savedPercent": 88
+    },
+    {
+      "original": "sprites\\melon-stages.png",
+      "webp": "sprites\\melon-stages.webp",
+      "originalKB": "3389.3",
+      "webpKB": "549.4",
+      "savedPercent": 84
+    },
+    {
+      "original": "sprites\\parsley-stages.png",
+      "webp": "sprites\\parsley-stages.webp",
+      "originalKB": "4452.2",
+      "webpKB": "650.6",
+      "savedPercent": 85
+    },
+    {
+      "original": "sprites\\spinach-stages.png",
+      "webp": "sprites\\spinach-stages.webp",
+      "originalKB": "4177.8",
+      "webpKB": "725.0",
+      "savedPercent": 83
+    },
+    {
+      "original": "sprites\\tomato-stages.png",
+      "webp": "sprites\\tomato-stages.webp",
+      "originalKB": "4202.0",
+      "webpKB": "586.2",
+      "savedPercent": 86
+    },
+    {
+      "original": "sprites\\zucchini-stages.png",
+      "webp": "sprites\\zucchini-stages.webp",
+      "originalKB": "4037.6",
+      "webpKB": "621.4",
+      "savedPercent": 85
+    },
+    {
+      "original": "stages\\apple\\stage-1.png",
+      "webp": "stages\\apple\\stage-1.webp",
+      "originalKB": "170.3",
+      "webpKB": "14.6",
+      "savedPercent": 91
+    },
+    {
+      "original": "stages\\basil\\0.png",
+      "webp": "stages\\basil\\0.webp",
+      "originalKB": "123.7",
+      "webpKB": "100.4",
+      "savedPercent": 19
+    },
+    {
+      "original": "stages\\basil\\1.png",
+      "webp": "stages\\basil\\1.webp",
+      "originalKB": "111.7",
+      "webpKB": "94.1",
+      "savedPercent": 16
+    },
+    {
+      "original": "stages\\basil\\2.png",
+      "webp": "stages\\basil\\2.webp",
+      "originalKB": "117.3",
+      "webpKB": "101.6",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\basil\\3.png",
+      "webp": "stages\\basil\\3.webp",
+      "originalKB": "139.5",
+      "webpKB": "126.2",
+      "savedPercent": 10
+    },
+    {
+      "original": "stages\\basil\\4.png",
+      "webp": "stages\\basil\\4.webp",
+      "originalKB": "125.5",
+      "webpKB": "105.3",
+      "savedPercent": 16
+    },
+    {
+      "original": "stages\\basil\\5.png",
+      "webp": "stages\\basil\\5.webp",
+      "originalKB": "152.1",
+      "webpKB": "141.4",
+      "savedPercent": 7
+    },
+    {
+      "original": "stages\\basil-0.png",
+      "webp": "stages\\basil-0.webp",
+      "originalKB": "123.7",
+      "webpKB": "100.4",
+      "savedPercent": 19
+    },
+    {
+      "original": "stages\\basil-1.png",
+      "webp": "stages\\basil-1.webp",
+      "originalKB": "111.7",
+      "webpKB": "94.1",
+      "savedPercent": 16
+    },
+    {
+      "original": "stages\\basil-2.png",
+      "webp": "stages\\basil-2.webp",
+      "originalKB": "117.3",
+      "webpKB": "101.6",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\basil-3.png",
+      "webp": "stages\\basil-3.webp",
+      "originalKB": "139.5",
+      "webpKB": "126.2",
+      "savedPercent": 10
+    },
+    {
+      "original": "stages\\basil-4.png",
+      "webp": "stages\\basil-4.webp",
+      "originalKB": "125.5",
+      "webpKB": "105.3",
+      "savedPercent": 16
+    },
+    {
+      "original": "stages\\basil-5.png",
+      "webp": "stages\\basil-5.webp",
+      "originalKB": "152.1",
+      "webpKB": "141.4",
+      "savedPercent": 7
+    },
+    {
+      "original": "stages\\carrot\\0.png",
+      "webp": "stages\\carrot\\0.webp",
+      "originalKB": "169.6",
+      "webpKB": "150.8",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\carrot\\1.png",
+      "webp": "stages\\carrot\\1.webp",
+      "originalKB": "160.8",
+      "webpKB": "156.0",
+      "savedPercent": 3
+    },
+    {
+      "original": "stages\\carrot\\2.png",
+      "webp": "stages\\carrot\\2.webp",
+      "originalKB": "162.2",
+      "webpKB": "145.0",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\carrot\\3.png",
+      "webp": "stages\\carrot\\3.webp",
+      "originalKB": "166.7",
+      "webpKB": "151.8",
+      "savedPercent": 9
+    },
+    {
+      "original": "stages\\carrot\\4.png",
+      "webp": "stages\\carrot\\4.webp",
+      "originalKB": "150.3",
+      "webpKB": "134.3",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\carrot\\5.png",
+      "webp": "stages\\carrot\\5.webp",
+      "originalKB": "143.7",
+      "webpKB": "134.7",
+      "savedPercent": 6
+    },
+    {
+      "original": "stages\\carrot-0.png",
+      "webp": "stages\\carrot-0.webp",
+      "originalKB": "169.6",
+      "webpKB": "150.8",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\carrot-1.png",
+      "webp": "stages\\carrot-1.webp",
+      "originalKB": "160.8",
+      "webpKB": "156.0",
+      "savedPercent": 3
+    },
+    {
+      "original": "stages\\carrot-2.png",
+      "webp": "stages\\carrot-2.webp",
+      "originalKB": "162.2",
+      "webpKB": "145.0",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\carrot-3.png",
+      "webp": "stages\\carrot-3.webp",
+      "originalKB": "166.7",
+      "webpKB": "151.8",
+      "savedPercent": 9
+    },
+    {
+      "original": "stages\\carrot-4.png",
+      "webp": "stages\\carrot-4.webp",
+      "originalKB": "150.3",
+      "webpKB": "134.3",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\carrot-5.png",
+      "webp": "stages\\carrot-5.webp",
+      "originalKB": "143.7",
+      "webpKB": "134.7",
+      "savedPercent": 6
+    },
+    {
+      "original": "stages\\cherry\\stage-1.png",
+      "webp": "stages\\cherry\\stage-1.webp",
+      "originalKB": "194.4",
+      "webpKB": "19.9",
+      "savedPercent": 90
+    },
+    {
+      "original": "stages\\lemon\\stage-1.png",
+      "webp": "stages\\lemon\\stage-1.webp",
+      "originalKB": "198.9",
+      "webpKB": "16.9",
+      "savedPercent": 92
+    },
+    {
+      "original": "stages\\lettuce\\0.png",
+      "webp": "stages\\lettuce\\0.webp",
+      "originalKB": "149.9",
+      "webpKB": "132.7",
+      "savedPercent": 12
+    },
+    {
+      "original": "stages\\lettuce\\1.png",
+      "webp": "stages\\lettuce\\1.webp",
+      "originalKB": "114.7",
+      "webpKB": "94.0",
+      "savedPercent": 18
+    },
+    {
+      "original": "stages\\lettuce\\2.png",
+      "webp": "stages\\lettuce\\2.webp",
+      "originalKB": "134.3",
+      "webpKB": "115.6",
+      "savedPercent": 14
+    },
+    {
+      "original": "stages\\lettuce\\3.png",
+      "webp": "stages\\lettuce\\3.webp",
+      "originalKB": "172.5",
+      "webpKB": "164.7",
+      "savedPercent": 5
+    },
+    {
+      "original": "stages\\lettuce\\4.png",
+      "webp": "stages\\lettuce\\4.webp",
+      "originalKB": "161.8",
+      "webpKB": "152.0",
+      "savedPercent": 6
+    },
+    {
+      "original": "stages\\lettuce\\5.png",
+      "webp": "stages\\lettuce\\5.webp",
+      "originalKB": "158.5",
+      "webpKB": "145.4",
+      "savedPercent": 8
+    },
+    {
+      "original": "stages\\lettuce-0.png",
+      "webp": "stages\\lettuce-0.webp",
+      "originalKB": "149.9",
+      "webpKB": "132.7",
+      "savedPercent": 12
+    },
+    {
+      "original": "stages\\lettuce-1.png",
+      "webp": "stages\\lettuce-1.webp",
+      "originalKB": "114.7",
+      "webpKB": "94.0",
+      "savedPercent": 18
+    },
+    {
+      "original": "stages\\lettuce-2.png",
+      "webp": "stages\\lettuce-2.webp",
+      "originalKB": "134.3",
+      "webpKB": "115.6",
+      "savedPercent": 14
+    },
+    {
+      "original": "stages\\lettuce-3.png",
+      "webp": "stages\\lettuce-3.webp",
+      "originalKB": "172.5",
+      "webpKB": "164.7",
+      "savedPercent": 5
+    },
+    {
+      "original": "stages\\lettuce-4.png",
+      "webp": "stages\\lettuce-4.webp",
+      "originalKB": "161.8",
+      "webpKB": "152.0",
+      "savedPercent": 6
+    },
+    {
+      "original": "stages\\lettuce-5.png",
+      "webp": "stages\\lettuce-5.webp",
+      "originalKB": "158.5",
+      "webpKB": "145.4",
+      "savedPercent": 8
+    },
+    {
+      "original": "stages\\pepiniere\\stage0-graine.png",
+      "webp": "stages\\pepiniere\\stage0-graine.webp",
+      "originalKB": "193.1",
+      "webpKB": "193.1",
+      "savedPercent": 0
+    },
+    {
+      "original": "stages\\pepiniere\\stage1-monticule.png",
+      "webp": "stages\\pepiniere\\stage1-monticule.webp",
+      "originalKB": "172.1",
+      "webpKB": "161.9",
+      "savedPercent": 6
+    },
+    {
+      "original": "stages\\pepiniere\\stage2-plantule.png",
+      "webp": "stages\\pepiniere\\stage2-plantule.webp",
+      "originalKB": "173.4",
+      "webpKB": "161.8",
+      "savedPercent": 7
+    },
+    {
+      "original": "stages\\pepiniere\\stage3-feuilles.png",
+      "webp": "stages\\pepiniere\\stage3-feuilles.webp",
+      "originalKB": "141.5",
+      "webpKB": "128.0",
+      "savedPercent": 10
+    },
+    {
+      "original": "stages\\pepiniere\\stage4-pret.png",
+      "webp": "stages\\pepiniere\\stage4-pret.webp",
+      "originalKB": "134.3",
+      "webpKB": "116.9",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\pepper\\0.png",
+      "webp": "stages\\pepper\\0.webp",
+      "originalKB": "128.3",
+      "webpKB": "110.4",
+      "savedPercent": 14
+    },
+    {
+      "original": "stages\\pepper\\1.png",
+      "webp": "stages\\pepper\\1.webp",
+      "originalKB": "96.4",
+      "webpKB": "75.8",
+      "savedPercent": 21
+    },
+    {
+      "original": "stages\\pepper\\2.png",
+      "webp": "stages\\pepper\\2.webp",
+      "originalKB": "124.5",
+      "webpKB": "108.7",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\pepper\\3.png",
+      "webp": "stages\\pepper\\3.webp",
+      "originalKB": "149.1",
+      "webpKB": "131.0",
+      "savedPercent": 12
+    },
+    {
+      "original": "stages\\pepper\\4.png",
+      "webp": "stages\\pepper\\4.webp",
+      "originalKB": "149.9",
+      "webpKB": "130.2",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\pepper\\5.png",
+      "webp": "stages\\pepper\\5.webp",
+      "originalKB": "133.0",
+      "webpKB": "119.2",
+      "savedPercent": 10
+    },
+    {
+      "original": "stages\\pepper-0.png",
+      "webp": "stages\\pepper-0.webp",
+      "originalKB": "128.3",
+      "webpKB": "110.4",
+      "savedPercent": 14
+    },
+    {
+      "original": "stages\\pepper-1.png",
+      "webp": "stages\\pepper-1.webp",
+      "originalKB": "96.4",
+      "webpKB": "75.8",
+      "savedPercent": 21
+    },
+    {
+      "original": "stages\\pepper-2.png",
+      "webp": "stages\\pepper-2.webp",
+      "originalKB": "124.5",
+      "webpKB": "108.7",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\pepper-3.png",
+      "webp": "stages\\pepper-3.webp",
+      "originalKB": "149.1",
+      "webpKB": "131.0",
+      "savedPercent": 12
+    },
+    {
+      "original": "stages\\pepper-4.png",
+      "webp": "stages\\pepper-4.webp",
+      "originalKB": "149.9",
+      "webpKB": "130.2",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\pepper-5.png",
+      "webp": "stages\\pepper-5.webp",
+      "originalKB": "133.0",
+      "webpKB": "119.2",
+      "savedPercent": 10
+    },
+    {
+      "original": "stages\\strawberry\\0.png",
+      "webp": "stages\\strawberry\\0.webp",
+      "originalKB": "141.2",
+      "webpKB": "121.6",
+      "savedPercent": 14
+    },
+    {
+      "original": "stages\\strawberry\\1.png",
+      "webp": "stages\\strawberry\\1.webp",
+      "originalKB": "132.9",
+      "webpKB": "122.1",
+      "savedPercent": 8
+    },
+    {
+      "original": "stages\\strawberry\\2.png",
+      "webp": "stages\\strawberry\\2.webp",
+      "originalKB": "115.1",
+      "webpKB": "93.0",
+      "savedPercent": 19
+    },
+    {
+      "original": "stages\\strawberry\\3.png",
+      "webp": "stages\\strawberry\\3.webp",
+      "originalKB": "133.0",
+      "webpKB": "118.2",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\strawberry\\4.png",
+      "webp": "stages\\strawberry\\4.webp",
+      "originalKB": "151.4",
+      "webpKB": "139.7",
+      "savedPercent": 8
+    },
+    {
+      "original": "stages\\strawberry\\5.png",
+      "webp": "stages\\strawberry\\5.webp",
+      "originalKB": "126.1",
+      "webpKB": "109.6",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\strawberry-0.png",
+      "webp": "stages\\strawberry-0.webp",
+      "originalKB": "141.2",
+      "webpKB": "121.6",
+      "savedPercent": 14
+    },
+    {
+      "original": "stages\\strawberry-1.png",
+      "webp": "stages\\strawberry-1.webp",
+      "originalKB": "132.9",
+      "webpKB": "122.1",
+      "savedPercent": 8
+    },
+    {
+      "original": "stages\\strawberry-2.png",
+      "webp": "stages\\strawberry-2.webp",
+      "originalKB": "115.1",
+      "webpKB": "93.0",
+      "savedPercent": 19
+    },
+    {
+      "original": "stages\\strawberry-3.png",
+      "webp": "stages\\strawberry-3.webp",
+      "originalKB": "133.0",
+      "webpKB": "118.2",
+      "savedPercent": 11
+    },
+    {
+      "original": "stages\\strawberry-4.png",
+      "webp": "stages\\strawberry-4.webp",
+      "originalKB": "151.4",
+      "webpKB": "139.7",
+      "savedPercent": 8
+    },
+    {
+      "original": "stages\\strawberry-5.png",
+      "webp": "stages\\strawberry-5.webp",
+      "originalKB": "126.1",
+      "webpKB": "109.6",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato\\0.png",
+      "webp": "stages\\tomato\\0.webp",
+      "originalKB": "103.2",
+      "webpKB": "80.1",
+      "savedPercent": 22
+    },
+    {
+      "original": "stages\\tomato\\1.png",
+      "webp": "stages\\tomato\\1.webp",
+      "originalKB": "123.3",
+      "webpKB": "107.2",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato\\2.png",
+      "webp": "stages\\tomato\\2.webp",
+      "originalKB": "131.3",
+      "webpKB": "112.2",
+      "savedPercent": 15
+    },
+    {
+      "original": "stages\\tomato\\3.png",
+      "webp": "stages\\tomato\\3.webp",
+      "originalKB": "131.9",
+      "webpKB": "114.4",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato\\4.png",
+      "webp": "stages\\tomato\\4.webp",
+      "originalKB": "140.8",
+      "webpKB": "122.2",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato\\5.png",
+      "webp": "stages\\tomato\\5.webp",
+      "originalKB": "158.8",
+      "webpKB": "144.0",
+      "savedPercent": 9
+    },
+    {
+      "original": "stages\\tomato-0.png",
+      "webp": "stages\\tomato-0.webp",
+      "originalKB": "103.2",
+      "webpKB": "80.1",
+      "savedPercent": 22
+    },
+    {
+      "original": "stages\\tomato-1.png",
+      "webp": "stages\\tomato-1.webp",
+      "originalKB": "123.3",
+      "webpKB": "107.2",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato-2.png",
+      "webp": "stages\\tomato-2.webp",
+      "originalKB": "131.3",
+      "webpKB": "112.2",
+      "savedPercent": 15
+    },
+    {
+      "original": "stages\\tomato-3.png",
+      "webp": "stages\\tomato-3.webp",
+      "originalKB": "131.9",
+      "webpKB": "114.4",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato-4.png",
+      "webp": "stages\\tomato-4.webp",
+      "originalKB": "140.8",
+      "webpKB": "122.2",
+      "savedPercent": 13
+    },
+    {
+      "original": "stages\\tomato-5.png",
+      "webp": "stages\\tomato-5.webp",
+      "originalKB": "158.8",
+      "webpKB": "144.0",
+      "savedPercent": 9
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-belle-fleur-stage-1.png",
+      "webp": "trees\\arbres-tissot\\apple-belle-fleur-stage-1.webp",
+      "originalKB": "1761.0",
+      "webpKB": "38.1",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-belle-fleur-stage-2.png",
+      "webp": "trees\\arbres-tissot\\apple-belle-fleur-stage-2.webp",
+      "originalKB": "1828.5",
+      "webpKB": "59.5",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-belle-fleur-stage-3.png",
+      "webp": "trees\\arbres-tissot\\apple-belle-fleur-stage-3.webp",
+      "originalKB": "2128.2",
+      "webpKB": "113.7",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-belle-fleur-stage-4.png",
+      "webp": "trees\\arbres-tissot\\apple-belle-fleur-stage-4.webp",
+      "originalKB": "2061.9",
+      "webpKB": "107.9",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-belle-fleur-stage-5.png",
+      "webp": "trees\\arbres-tissot\\apple-belle-fleur-stage-5.webp",
+      "originalKB": "2247.9",
+      "webpKB": "139.5",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-reine-reinettes-stage-1.png",
+      "webp": "trees\\arbres-tissot\\apple-reine-reinettes-stage-1.webp",
+      "originalKB": "1891.9",
+      "webpKB": "44.0",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-reine-reinettes-stage-2.png",
+      "webp": "trees\\arbres-tissot\\apple-reine-reinettes-stage-2.webp",
+      "originalKB": "1949.0",
+      "webpKB": "61.5",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-reine-reinettes-stage-3.png",
+      "webp": "trees\\arbres-tissot\\apple-reine-reinettes-stage-3.webp",
+      "originalKB": "2052.4",
+      "webpKB": "89.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-reine-reinettes-stage-4.png",
+      "webp": "trees\\arbres-tissot\\apple-reine-reinettes-stage-4.webp",
+      "originalKB": "2187.5",
+      "webpKB": "116.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\arbres-tissot\\apple-reine-reinettes-stage-5.png",
+      "webp": "trees\\arbres-tissot\\apple-reine-reinettes-stage-5.webp",
+      "originalKB": "2206.9",
+      "webpKB": "125.1",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-conference-stage-1.png",
+      "webp": "trees\\arbres-tissot\\pear-conference-stage-1.webp",
+      "originalKB": "1894.5",
+      "webpKB": "67.9",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-conference-stage-2.png",
+      "webp": "trees\\arbres-tissot\\pear-conference-stage-2.webp",
+      "originalKB": "1848.6",
+      "webpKB": "60.3",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-conference-stage-3.png",
+      "webp": "trees\\arbres-tissot\\pear-conference-stage-3.webp",
+      "originalKB": "1948.1",
+      "webpKB": "89.2",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-conference-stage-4.png",
+      "webp": "trees\\arbres-tissot\\pear-conference-stage-4.webp",
+      "originalKB": "2070.9",
+      "webpKB": "113.0",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-conference-stage-5.png",
+      "webp": "trees\\arbres-tissot\\pear-conference-stage-5.webp",
+      "originalKB": "2289.5",
+      "webpKB": "156.0",
+      "savedPercent": 93
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-louise-bonne-stage-1.png",
+      "webp": "trees\\arbres-tissot\\pear-louise-bonne-stage-1.webp",
+      "originalKB": "2089.9",
+      "webpKB": "92.7",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-louise-bonne-stage-2.png",
+      "webp": "trees\\arbres-tissot\\pear-louise-bonne-stage-2.webp",
+      "originalKB": "2190.6",
+      "webpKB": "125.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-louise-bonne-stage-3.png",
+      "webp": "trees\\arbres-tissot\\pear-louise-bonne-stage-3.webp",
+      "originalKB": "2208.9",
+      "webpKB": "121.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-louise-bonne-stage-4.png",
+      "webp": "trees\\arbres-tissot\\pear-louise-bonne-stage-4.webp",
+      "originalKB": "2101.4",
+      "webpKB": "103.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\arbres-tissot\\pear-louise-bonne-stage-5.png",
+      "webp": "trees\\arbres-tissot\\pear-louise-bonne-stage-5.webp",
+      "originalKB": "1784.4",
+      "webpKB": "39.7",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\guignard\\apple-gala-stage-1.png",
+      "webp": "trees\\guignard\\apple-gala-stage-1.webp",
+      "originalKB": "1784.4",
+      "webpKB": "39.7",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\guignard\\apple-gala-stage-2.png",
+      "webp": "trees\\guignard\\apple-gala-stage-2.webp",
+      "originalKB": "2022.3",
+      "webpKB": "91.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\guignard\\apple-gala-stage-3.png",
+      "webp": "trees\\guignard\\apple-gala-stage-3.webp",
+      "originalKB": "2117.1",
+      "webpKB": "96.2",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\guignard\\apple-gala-stage-4.png",
+      "webp": "trees\\guignard\\apple-gala-stage-4.webp",
+      "originalKB": "2070.9",
+      "webpKB": "102.1",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\guignard\\apple-gala-stage-5.png",
+      "webp": "trees\\guignard\\apple-gala-stage-5.webp",
+      "originalKB": "2230.0",
+      "webpKB": "134.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\guignard\\apple-golden-stage-1.png",
+      "webp": "trees\\guignard\\apple-golden-stage-1.webp",
+      "originalKB": "1891.9",
+      "webpKB": "44.0",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\guignard\\apple-golden-stage-2.png",
+      "webp": "trees\\guignard\\apple-golden-stage-2.webp",
+      "originalKB": "1949.0",
+      "webpKB": "61.5",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\guignard\\apple-golden-stage-3.png",
+      "webp": "trees\\guignard\\apple-golden-stage-3.webp",
+      "originalKB": "2052.4",
+      "webpKB": "89.2",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\guignard\\apple-golden-stage-4.png",
+      "webp": "trees\\guignard\\apple-golden-stage-4.webp",
+      "originalKB": "2187.5",
+      "webpKB": "116.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\guignard\\apple-golden-stage-5.png",
+      "webp": "trees\\guignard\\apple-golden-stage-5.webp",
+      "originalKB": "2081.9",
+      "webpKB": "92.6",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\guignard\\pear-williams-stage-1.png",
+      "webp": "trees\\guignard\\pear-williams-stage-1.webp",
+      "originalKB": "2089.9",
+      "webpKB": "92.7",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\guignard\\pear-williams-stage-2.png",
+      "webp": "trees\\guignard\\pear-williams-stage-2.webp",
+      "originalKB": "2190.6",
+      "webpKB": "125.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\guignard\\pear-williams-stage-3.png",
+      "webp": "trees\\guignard\\pear-williams-stage-3.webp",
+      "originalKB": "2208.9",
+      "webpKB": "121.9",
+      "savedPercent": 94
+    },
+    {
+      "original": "trees\\guignard\\pear-williams-stage-4.png",
+      "webp": "trees\\guignard\\pear-williams-stage-4.webp",
+      "originalKB": "2101.4",
+      "webpKB": "103.6",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\guignard\\pear-williams-stage-5.png",
+      "webp": "trees\\guignard\\pear-williams-stage-5.webp",
+      "originalKB": "1784.4",
+      "webpKB": "39.7",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\inrae\\cherry-bing-stage-1.png",
+      "webp": "trees\\inrae\\cherry-bing-stage-1.webp",
+      "originalKB": "1837.2",
+      "webpKB": "49.8",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\inrae\\cherry-bing-stage-2.png",
+      "webp": "trees\\inrae\\cherry-bing-stage-2.webp",
+      "originalKB": "2107.3",
+      "webpKB": "100.5",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\inrae\\cherry-bing-stage-3.png",
+      "webp": "trees\\inrae\\cherry-bing-stage-3.webp",
+      "originalKB": "2151.5",
+      "webpKB": "111.1",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\inrae\\cherry-bing-stage-4.png",
+      "webp": "trees\\inrae\\cherry-bing-stage-4.webp",
+      "originalKB": "2180.8",
+      "webpKB": "116.1",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\inrae\\cherry-bing-stage-5.png",
+      "webp": "trees\\inrae\\cherry-bing-stage-5.webp",
+      "originalKB": "1784.4",
+      "webpKB": "39.7",
+      "savedPercent": 98
+    },
+    {
+      "original": "trees\\reserve\\lemon-stage-1.png",
+      "webp": "trees\\reserve\\lemon-stage-1.webp",
+      "originalKB": "2002.9",
+      "webpKB": "80.1",
+      "savedPercent": 96
+    },
+    {
+      "original": "trees\\reserve\\lemon-stage-2.png",
+      "webp": "trees\\reserve\\lemon-stage-2.webp",
+      "originalKB": "1866.6",
+      "webpKB": "64.1",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\reserve\\lemon-stage-3.png",
+      "webp": "trees\\reserve\\lemon-stage-3.webp",
+      "originalKB": "2131.6",
+      "webpKB": "109.0",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\reserve\\lemon-stage-4.png",
+      "webp": "trees\\reserve\\lemon-stage-4.webp",
+      "originalKB": "1958.1",
+      "webpKB": "64.6",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\reserve\\lemon-stage-5.png",
+      "webp": "trees\\reserve\\lemon-stage-5.webp",
+      "originalKB": "2212.0",
+      "webpKB": "116.7",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\reserve\\orange-stage-1.png",
+      "webp": "trees\\reserve\\orange-stage-1.webp",
+      "originalKB": "1912.5",
+      "webpKB": "51.6",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\reserve\\orange-stage-2.png",
+      "webp": "trees\\reserve\\orange-stage-2.webp",
+      "originalKB": "1859.8",
+      "webpKB": "49.9",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\reserve\\orange-stage-3.png",
+      "webp": "trees\\reserve\\orange-stage-3.webp",
+      "originalKB": "1961.6",
+      "webpKB": "64.2",
+      "savedPercent": 97
+    },
+    {
+      "original": "trees\\reserve\\orange-stage-4.png",
+      "webp": "trees\\reserve\\orange-stage-4.webp",
+      "originalKB": "2134.1",
+      "webpKB": "105.8",
+      "savedPercent": 95
+    },
+    {
+      "original": "trees\\reserve\\orange-stage-5.png",
+      "webp": "trees\\reserve\\orange-stage-5.webp",
+      "originalKB": "2182.2",
+      "webpKB": "120.4",
+      "savedPercent": 94
+    }
+  ]
+}

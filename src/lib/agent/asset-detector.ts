@@ -36,7 +36,7 @@ export interface PlantCard {
 
 // ─── Stage image paths ────────────────────────────────────────────────────────
 
-const STAGE_COUNT = 6; // stages 0-5
+const STAGE_COUNT = 5; // stages 0-4 (5 stages for jardin)
 
 /**
  * Get all sprite paths that should exist for a plantDefId

@@ -1114,6 +1114,18 @@ export const SEED_VARIETIES: SeedVariety[] = [
     optimalTemp: [20, 32], waterNeed: 5.5, lightNeed: 9,
   },
   {
+    id: "melon",
+    plantDefId: "melon",
+    shopId: "vilmorin",
+    name: "Melon",
+    emoji: "🍈",
+    price: 45, grams: 1.0,
+    description: "Variété classique, chairsucrée et parfumée. À cultiver en pleine terre bien amendée.",
+    image: "/packets/vilmorin/packet-melon.jpg", unlocked: true,
+    stageDurations: [6, 15, 14, 20], realDaysToHarvest: 70,
+    optimalTemp: [20, 32], waterNeed: 3.5, lightNeed: 7,
+  },
+  {
     id: "spinach-soyuz",
     plantDefId: "spinach",
     shopId: "vilmorin",
@@ -1224,7 +1236,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
   },
   {
     id: "thuya-smaragd",
-    plantDefId: "photinia",
+    plantDefId: "thuya",
     shopId: "leaderplant",
     name: "Thuya Smaragd",
     emoji: "🌲",
@@ -1236,7 +1248,7 @@ export const SEED_VARIETIES: SeedVariety[] = [
   },
   {
     id: "escallonia-iveyi",
-    plantDefId: "photinia",
+    plantDefId: "escallonia",
     shopId: "leaderplant",
     name: "Escallonia Iveyi",
     emoji: "🌸",

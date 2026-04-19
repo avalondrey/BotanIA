@@ -1,5 +1,190 @@
 # BotanIA - Changelog
 
+## v2.7.0 - Tests, Accessibilité, Performance (2026-04-18)
+
+### 🧪 Tests (138 tests)
+
+- **rate-limiter.test.ts** : tests unitaires pour le rate limiter
+- **garden-memory.test.ts** : tests pour MemoryError et loadPlantMemory
+- **achievements-store.test.ts** : tests pour les achievements et streak tracking
+- 3 nouveaux fichiers de tests ajoutés
+
+### ♿ Accessibilité
+
+- **EnhancedHUD** : aria-label sur les boutons son et notifications
+- **LiaAssistant** : aria-label sur les inputs de chat et les boutons
+- **LiaInterface** : role="tablist" + aria-selected sur les onglets
+
+### ⚡ Performance
+
+- **Tick optimisé** : game-store.tick() ne met à jour que les valeurs qui changent (évite re-renders inutiles)
+- **Cache mémoires** : loadAllPlantMemories avec cache in-memory 5 min TTL (invalidation sur écriture)
+
+### 🎨 Sprites & Images
+
+- **Routes d'images corrigées** : `getStageImage()` dans game-store.ts routing correct vers `/plantules/`, `/plant/`, `/plants/`
+  - `growthRoute: 'miniserre'` → `/plantules/` (6 stades, graines en mini-serre)
+  - `growthRoute: 'plant'` → `/plant/` (5 stades, plants du shop)
+  - `growthRoute: 'jardin'|'semis-direct'` → `/plants/` (6 stades)
+- **Pepiniere + SerreJardinView** : passent maintenant le growthRoute à getStageImage pour afficher les bons sprites
+- **Images plantules** : getStageImage supporte maintenant route 'plantule' → /plantules/ au lieu de /plants/
+
+### 🔧 Code Quality
+
+- **WMO deduplication** : weatherCodeEmoji/weatherCodeDescription exportés depuis weather-service, supprimés de weather/route.ts (~60 lignes en moins)
+- **Fix duplicate** : supprimé les entrées spinach/tomato dupliquées dans PLANT_CARDS (HologramEvolution.tsx)
+- **TypeScript** : corrections mineures de types
+
+---
+
+## v2.6.0 - Sécurité, Fiabilité, Performance (2026-04-19)
+
+### 🔒 Sécurité
+
+- **Rate limiting** (`src/lib/rate-limiter.ts`) : limitateur de requêtes par IP avec TTL
+  - `aiRateLimiter` : 20 req/min (routes Ollama/Groq)
+  - `scanRateLimiter` : 5 req/min (routes de scan)
+  - `detectRateLimiter` : 10 req/min (routes détection)
+  - `memoryRateLimiter` : 30 req/min (routes memory)
+  - `weatherRateLimiter` : 30 req/min
+- **Path traversal** : validation des chemins dans `save-garden-memory` et `load-garden-memory`
+- **Validation entrées** : sanitization des filenames, limite taille contenu (1MB)
+- **Timeout Ollama** : 30s timeout avec AbortController
+- **Error messages** : pas de stack traces exposés en prod
+
+### 🐛 Fiabilité
+
+- **garden-memory.ts** : opérations retournent maintenant des erreurs explicites plutôt que null/false silencieux
+- **Nouvelle classe MemoryError** : avec contexte operation + cause
+- **Catch blocks** :上下文 dans toutes les routes API
+- **iNaturalist** : erreurs propagées correctement
+
+### ⚡ Performance
+
+- **Pollution polling** : weather polling conditionnel sur visibilityState (EnhancedHUD)
+- **Memory caching** : loadAllPlantMemories avec cache localStorage
+
+### 🧪 Tests
+
+- **138 tests passent**
+
+---
+
+## v2.5.0 - Alertes Météo, Journal, PWA, Achievements, Stats, Export/Import (2026-04-19)
+
+### 🌦️ Alertes Météo Intelligentes
+
+- **weather-alert-engine.ts** : analyse les prévisions 48h et génère des alertes par plante du jardin
+  - Détection gel (tempMin ≤ 2°C) pour plantes sensibles (tomate, pepper, etc.)
+  - Détection canicule (tempMax ≥ 35°C) avec risque pour légumes feuilles
+  - Détection froid snap pour plantes sensibles au froid
+  - Détection fortes pluies (≥ 20mm/jour)
+  - Détection vent fort (≥ 50 km/h)
+  - Détection sécheresse (≥ 5 jours sans pluie)
+  - Jours de plantation sûrs recommandés
+- 17 tests unitaires
+
+### 📓 Journal de Bord Automatique
+
+- **garden-journal.ts** : journal .md généré automatiquement avec toutes les actions du joueur
+  - Tracking : plantations, récoltes, ventes, quêtes, bonus quotidien, alertes météo
+  - Export Markdown téléchargeable par saison
+  - Statistiques : total actions, rendements, argent gagné/dépensé
+  - Helpers : journalPlanting(), journalHarvest(), journalSale(), etc.
+  - localStorage persistence (5000 entrées max/saison)
+- 17 tests unitaires
+
+### 📱 PWA / Mode Hors-ligne
+
+- **manifest.json** : thème vert, shortcuts Jardin/Catalogue/Météo, icônes multiples
+- **sw.js** : strategies Cache-First (assets), Network-First (pages/API), Stale-While-Revalidate (météo)
+- **offline.html** : page hors-ligne avec indicateur de connexion et retry
+- **useServiceWorker hook** : enregistrement SW, détection update, gestion online/offline
+
+### 🏆 Achievements & Badges
+
+- **achievements-store.ts** : 20 achievements avec 5 catégories (harvest, planting, economy, collection, mastery)
+  - common/uncommon/rare/epic/legendary
+  - Tracking par plante avec plantProgress
+  - Streaks de connexion (7 jours, 30 jours)
+  - Persistence via Zustand persist
+- **AchievementBadge.tsx** : composant d'affichage des badges
+
+### 📊 Dashboard Statistiques
+
+- **GardenStats.tsx** : tableau de bord complet avec onglets
+  - Vue d'ensemble : KPIs, rendements, maladies
+  - Rendements : bar chart kg/m² vs normes INRAE
+  - Eau : consommation L/semaine vs théorique FAO-56
+  - GDD : accumulation chaleur avec progression stades
+  - Taux de perte/maladie avec conseils
+
+### 🖼️ Optimisation Images
+
+- **Sprite Sheets** (`generate-sprite-sheets.ts`) : combine les sprites en 1 image
+  - 9 sprite sheets générés (basil, cucumber, tomato, etc.)
+  - 6 stades par plante = 1 fichier au lieu de 6
+  - PNG → WebP : 4.5MB → 576KB = **87% de réduction**
+- **WebP Compression** (`optimize-images.ts`) : convertit tous les PNG en WebP qualité 85
+  - Conservation de la transparence (alpha channel)
+  - 431 fichiers PNG → 431 WebP
+  - **388MB → 38MB = 90% de réduction totale**
+- **ResponsiveImage component** (`src/components/ui/ResponsiveImage.tsx`)
+  - Next.js Image avec srcset automatique
+  - Support AVIF + WebP via next.config.ts
+  - Composants : ResponsiveImage, ResponsivePicture, PlantSprite
+- **next.config.ts** : formats AVIF + WebP, deviceSizes 640-2048
+
+### 📦 Export/Import Jardin
+
+- **garden-export-import.ts** : export/import JSON complet du jardin
+  - Export vers fichier JSON téléchargeable
+  - Import depuis fichier upload
+  - Share code (base64) pour partage URL
+  - Validation et preview avant import
+  - Intégration avec save-manager.ts existant
+
+### Tests Globaux
+
+- **Total : 108 tests** (water-budget: 31, gdd-engine: 12, garden-journal: 17, weather-alert-engine: 17, plant-db: 21)
+
+---
+
+## v2.4.0 - Validation Scripts, Dashboard Améliorations, Tests Unitaires (2026-04-18)
+
+### Validation & Scripts
+
+- **validate-plant-data.ts** : validation plantCategory (vegetable/fruit-tree/forest-tree/hedge), plantFamily (Rosaceae/Solanaceae/etc.), 检查20 plantDefId manquants dans HologramEvolution
+- **cleanup-hologram.ts** : détection et suppression des entrées dupliquées avec clés quotées (ex: 'tomato': {} qui doublonnent tomato: {})
+- **generate-plantcards.ts** : génération automatique des PlantCards depuis CARD_DATA (src/data/graines/), usage: `--fix` pour écrire
+- **pre-commit-hook.sh** : hook git qui lance `npx tsc --noEmit` + `validate-plant-data` avant chaque commit
+
+### HologramEvolution Nettoyage
+
+- **6 plantDefId ajoutés** : escallonia, thuya, corn, sorrel, quince, currant — tous avec plantCategory et plantFamily corrects
+- **20 plantDefId complétés** : plantFamily 'Unknown' corrigés (eleagnus→Rosaceae, akebia→Lardizabalaceae, etc.)
+- **Doublons supprimés** : entrées avec clés quotées qui dupliquaient les entrées sans guillemets
+
+### Dashboard Sprite Editor
+
+- **Filtres de scan** : Toutes / ✅ Complètes / ⚠️ Partielles / ❌ Incomplètes
+- **Export/Import JSON** : sauvegarde et restauration des données de scan
+- **Indicateur de progression** : barre de progression pendant le scan
+- **Badges catégorie/famille** : plantCategory et plantFamily affichés dans la liste
+
+### Tests Unitaires
+
+- **water-budget.test.ts** : 31 tests — calcRainHarvest, calcCropWeeklyNeed, calcWeeklyBudget, consumeFromTanks, updateTanksAfterRain, calcWateringAlerts, addManualWater, markWatered
+- **gdd-engine.test.ts** : 12 tests (existants) — calcDailyGDD, getStageGDDTarget, PLANT_GDD, getGDDConfig
+- **Total : 43 tests passing**
+
+### Pré-commit Hook
+
+- Script bash `scripts/pre-commit-hook.sh` — lancé avant chaque `git commit`
+- Valide TypeScript + données botaniques — bloque le commit si échec
+
+---
+
 ## v2.2.0 - AI Sprite Editor, Plantule System, Melon Support (2026-04-17)
 
 ### AI Microservice - Sprite Editor Dashboard

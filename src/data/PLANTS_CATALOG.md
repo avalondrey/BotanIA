@@ -1,7 +1,21 @@
 # BotanIA — Catalogue des Plantes
 
 > Reference visual des PlantCards disponibles dans le cerveau botanique (HologramEvolution.tsx).
-> Mis à jour : 2026-04-07
+> Mis à jour : 2026-04-19
+
+---
+
+## Chemins des sprites par route de croissance
+
+| Route | growthRoute | Dossier | Stades | Fichiers |
+|---|---|---|---|---|
+| Mini-serre (graines) | `miniserre` | `/plantules/` | 6 | `plantules/{plantDefId}-stage-{1-6}.png` |
+| Plants du shop | `plant` | `/plant/` | 5 | `plant/{plantDefId}-stage-{1-5}.png` |
+| Jardin / semis-direct | `jardin` / `semis-direct` | `/plants/` | 6 | `plants/{plantDefId}-stage-{1-6}.png` |
+| Arbres | `tree` | `/trees/` | 5 | `trees/{treeDefId}-stage-{1-5}.png` |
+
+> ⚠️ Ne pas confondre : mini-serre utilise `/plantules/` (6 stades), plants du shop utilisent `/plant/` (5 stades).
+> La fonction `getStageImage(plantDefId, stage, route)` dans `game-store.ts` gère ce mapping.
 
 ---
 

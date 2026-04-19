@@ -2,7 +2,7 @@
 
 > Application de jardinage botanique **scientifique** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-0.22.0-green)
+![Version](https://img.shields.io/badge/version-2.7.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)
@@ -159,6 +159,31 @@ npm run dev
 ```
 
 Ouvrir **http://localhost:3000**
+
+### Scripts & Validation
+
+```bash
+npm run validate-plant-data  # Valide plantCategory, plantFamily, entrées manquantes
+npm run cleanup-hologram    # --dry-run: apercu | --fix: applique
+npm run generate-plantcards # Génère PlantCards depuis CARD_DATA
+npm run generate-cards      # Génère les cartes de jeu
+npm run test                # Lance les tests unitaires (vitest)
+npm run test:watch          # Mode watch
+```
+
+### Pre-commit Hook
+
+Pour installer le hook de validation automatique :
+
+```bash
+# Linux/Mac
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# Windows (Git Bash / WSL)
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
+```
+
+Le hook lance `npx tsc --noEmit` + `validate-plant-data` avant chaque commit.
 
 ### Variables d'environnement
 

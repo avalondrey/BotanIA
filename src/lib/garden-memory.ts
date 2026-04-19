@@ -1,9 +1,19 @@
 /**
  * GARDEN MEMORY — Système de mémoire agronomique multi-saisons
  * Stocke l'historique dans des fichiers MD locaux pour que Lia apprenne de ton jardin
+ *
+ * ERRORS: Toutes les opérations lancent des erreurs plutôt que de retourner null/false
+ * Use try/catch dans le code appelant pour gérer.
  */
 
 import path from 'path';
+
+export class MemoryError extends Error {
+  constructor(message: string, public readonly operation: string, public readonly cause?: unknown) {
+    super(message);
+    this.name = 'MemoryError';
+  }
+}
 
 export interface PlantMemory {
   plantId: string;
@@ -69,45 +79,84 @@ export interface CalculatedAverages {
 
 const MEMORY_DIR = path.join(process.cwd(), 'data/garden-memory');
 
+// ── Simple in-memory cache (5 min TTL) ─────────────────────────
+
+let _memoriesCache: { data: PlantMemory[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+function invalidateMemoriesCache(): void {
+  _memoriesCache = null;
+}
+
 // ── Memory operations ──────────────────────────────────────────
 
-export async function savePlantMemory(memory: PlantMemory): Promise<boolean> {
-  try {
-    const content = formatPlantMemory(memory);
-    await fetch('/api/save-garden-memory', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filePath: `${MEMORY_DIR}/${memory.plantId}.md`,
-        content,
-      }),
-    });
-    return true;
-  } catch {
-    return false;
+/**
+ * Sauvegarde la mémoire d'une plante.
+ * @throws MemoryError si l'opération échoue
+ */
+export async function savePlantMemory(memory: PlantMemory): Promise<void> {
+  const content = formatPlantMemory(memory);
+  const response = await fetch('/api/save-garden-memory', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filePath: `${MEMORY_DIR}/${memory.plantId}.md`,
+      content,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new MemoryError(
+      `Échec sauvegarde mémoire: ${error.error || response.statusText}`,
+      'save',
+      error
+    );
   }
 }
 
+/**
+ * Charge la mémoire d'une plante.
+ * @throws MemoryError si l'opération échoue (réseau, parsing)
+ */
 export async function loadPlantMemory(plantId: string): Promise<PlantMemory | null> {
-  try {
-    const res = await fetch(`/api/load-garden-memory?plantId=${plantId}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return parsePlantMemory(data.content, plantId);
-  } catch {
-    return null;
+  const res = await fetch(`/api/load-garden-memory?plantId=${encodeURIComponent(plantId)}`);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new MemoryError(
+      `Échec chargement mémoire (${res.status}): ${res.statusText}`,
+      'load',
+      { plantId, status: res.status }
+    );
   }
+  const data = await res.json().catch(() => ({ content: null }));
+  if (!data.content) return null;
+  return parsePlantMemory(data.content, plantId);
 }
 
+/**
+ * Charge TOUTES les mémoires de plantes.
+ * @throws MemoryError si l'opération échoue
+ */
 export async function loadAllPlantMemories(): Promise<PlantMemory[]> {
-  try {
-    const res = await fetch('/api/load-all-garden-memories');
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.files || []).map((f: any) => parsePlantMemory(f.content, f.plantId));
-  } catch {
-    return [];
+  // Return cached data if still fresh
+  if (_memoriesCache && Date.now() - _memoriesCache.timestamp < CACHE_TTL_MS) {
+    return _memoriesCache.data;
   }
+  const res = await fetch('/api/load-all-garden-memories');
+  if (!res.ok) {
+    throw new MemoryError(
+      `Échec chargement toutes les mémoires (${res.status}): ${res.statusText}`,
+      'loadAll',
+      { status: res.status }
+    );
+  }
+  const data = await res.json().catch(() => ({ files: [] }));
+  const memories = (data.files || []).map((f: { content: string; plantId: string }) =>
+    parsePlantMemory(f.content, f.plantId)
+  );
+  _memoriesCache = { data: memories, timestamp: Date.now() };
+  return memories;
 }
 
 export async function addHarvestRecord(plantId: string, record: HarvestRecord): Promise<void> {
@@ -116,6 +165,7 @@ export async function addHarvestRecord(plantId: string, record: HarvestRecord): 
   memory.harvests.push(record);
   memory.averages = calculateAverages(memory);
   await savePlantMemory(memory);
+  invalidateMemoriesCache();
 }
 
 export async function addDiseaseRecord(plantId: string, record: DiseaseRecord): Promise<void> {
@@ -123,6 +173,7 @@ export async function addDiseaseRecord(plantId: string, record: DiseaseRecord): 
   const memory = existing || createEmptyMemory(plantId, plantId);
   memory.diseases.push(record);
   await savePlantMemory(memory);
+  invalidateMemoriesCache();
 }
 
 export async function addObservationRecord(plantId: string, record: ObservationRecord): Promise<void> {
@@ -130,6 +181,7 @@ export async function addObservationRecord(plantId: string, record: ObservationR
   const memory = existing || createEmptyMemory(plantId, plantId);
   memory.observations.push(record);
   await savePlantMemory(memory);
+  invalidateMemoriesCache();
 }
 
 export async function addPhenologicalEvent(plantId: string, event: Omit<PhenologicalEvent, 'id'>): Promise<void> {
@@ -137,6 +189,7 @@ export async function addPhenologicalEvent(plantId: string, event: Omit<Phenolog
   const memory = existing || createEmptyMemory(plantId, plantId);
   memory.events.push({ ...event, id: 'evt-' + Date.now() });
   await savePlantMemory(memory);
+  invalidateMemoriesCache();
 }
 
 // ── Phenological helpers ────────────────────────────────────────

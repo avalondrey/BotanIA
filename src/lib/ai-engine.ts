@@ -102,32 +102,32 @@ export interface ComboInfo {
 export { PLANTS } from './plant-db';
 
 
-export const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Plantule 5 feuilles", "Floraison"];
-export const STAGE_EMOJIS = ["", "", "", "", "", ""];
+export const STAGE_NAMES = ["Monticule de terre", "Petite plantule", "Plantule 2 feuilles", "Plantule 4 feuilles", "Floraison"];
+export const STAGE_EMOJIS = ["", "", "", "", ""];
 
 // Stage images per plant — manga cel-shaded cross-hatching illustrations (6 stades pepiniere)
 export const STAGE_IMAGES: Record<string, string[]> = {
-  tomato:      ["/plants/tomato-stage-1.png",  "/plants/tomato-stage-2.png",  "/plants/tomato-stage-3.png",  "/plants/tomato-stage-4.png",  "/plants/tomato-stage-5.png",  "/plants/tomato-stage-6.png"],
-  carrot:      ["/plants/carrot-stage-1.png",  "/plants/carrot-stage-2.png",  "/plants/carrot-stage-3.png",  "/plants/carrot-stage-4.png",  "/plants/carrot-stage-5.png",  "/plants/carrot-stage-6.png"],
-  strawberry:  ["/plants/strawberry-stage-1.png",  "/plants/strawberry-stage-2.png",  "/plants/strawberry-stage-3.png",  "/plants/strawberry-stage-4.png",  "/plants/strawberry-stage-5.png",  "/plants/strawberry-stage-6.png"],
-  lettuce:     ["/plants/lettuce-stage-1.png", "/plants/lettuce-stage-2.png", "/plants/lettuce-stage-3.png", "/plants/lettuce-stage-4.png", "/plants/lettuce-stage-5.png", "/plants/lettuce-stage-6.png"],
-  basil:       ["/plants/basil-stage-1.png",   "/plants/basil-stage-2.png",   "/plants/basil-stage-3.png",   "/plants/basil-stage-4.png",   "/plants/basil-stage-5.png",   "/plants/basil-stage-6.png"],
-  pepper:      ["/plants/pepper-stage-1.png",  "/plants/pepper-stage-2.png",  "/plants/pepper-stage-3.png",  "/plants/pepper-stage-4.png",  "/plants/pepper-stage-5.png",  "/plants/pepper-stage-6.png"],
-  goji:        ["/plants/goji-stage-1.png",    "/plants/goji-stage-2.png",    "/plants/goji-stage-3.png",    "/plants/goji-stage-4.png",    "/plants/goji-stage-5.png",    "/plants/goji-stage-6.png"],
-  lycium:      ["/plants/lycium-stage-1.png",  "/plants/lycium-stage-2.png",  "/plants/lycium-stage-3.png",  "/plants/lycium-stage-4.png",  "/plants/lycium-stage-5.png",  "/plants/lycium-stage-6.png"],
-  mirabellier: ["/plants/mirabellier-stage-1.png", "/plants/mirabellier-stage-2.png", "/plants/mirabellier-stage-3.png", "/plants/mirabellier-stage-4.png", "/plants/mirabellier-stage-5.png", "/plants/mirabellier-stage-6.png"],
-  photinia:    ["/plants/photinia-stage-1.png", "/plants/photinia-stage-2.png", "/plants/photinia-stage-3.png", "/plants/photinia-stage-4.png", "/plants/photinia-stage-5.png", "/plants/photinia-stage-6.png"],
-  eleagnus:    ["/plants/eleagnus-stage-1.png", "/plants/eleagnus-stage-2.png", "/plants/eleagnus-stage-3.png", "/plants/eleagnus-stage-4.png", "/plants/eleagnus-stage-5.png", "/plants/eleagnus-stage-6.png"],
-  laurus:      ["/plants/laurus-stage-1.png",   "/plants/laurus-stage-2.png",   "/plants/laurus-stage-3.png",   "/plants/laurus-stage-4.png",   "/plants/laurus-stage-5.png",   "/plants/laurus-stage-6.png"],
-  cornus:      ["/plants/cornus-stage-1.png",   "/plants/cornus-stage-2.png",   "/plants/cornus-stage-3.png",   "/plants/cornus-stage-4.png",   "/plants/cornus-stage-5.png",   "/plants/cornus-stage-6.png"],
-  casseille:   ["/plants/casseille-stage-1.png", "/plants/casseille-stage-2.png", "/plants/casseille-stage-3.png", "/plants/casseille-stage-4.png", "/plants/casseille-stage-5.png", "/plants/casseille-stage-6.png"],
-  bean:        ["/plants/bean-stage-1.png", "/plants/bean-stage-2.png", "/plants/bean-stage-3.png", "/plants/bean-stage-4.png", "/plants/bean-stage-5.png", "/plants/bean-stage-6.png"],
-  squash:      ["/plants/squash-stage-1.png", "/plants/squash-stage-2.png", "/plants/squash-stage-3.png", "/plants/squash-stage-4.png", "/plants/squash-stage-5.png", "/plants/squash-stage-6.png"],
-  sunflower:   ["/plants/sunflower-stage-1.png", "/plants/sunflower-stage-2.png", "/plants/sunflower-stage-3.png", "/plants/sunflower-stage-4.png", "/plants/sunflower-stage-5.png", "/plants/sunflower-stage-6.png"],
-  quinoa:      ["/plants/quinoa-stage-1.png", "/plants/quinoa-stage-2.png", "/plants/quinoa-stage-3.png", "/plants/quinoa-stage-4.png", "/plants/quinoa-stage-5.png", "/plants/quinoa-stage-6.png"],
-  amaranth:    ["/plants/amaranth-stage-1.png", "/plants/amaranth-stage-2.png", "/plants/amaranth-stage-3.png", "/plants/amaranth-stage-4.png", "/plants/amaranth-stage-5.png", "/plants/amaranth-stage-6.png"],
-  sorrel:      ["/plants/sorrel-stage-1.png", "/plants/sorrel-stage-2.png", "/plants/sorrel-stage-3.png", "/plants/sorrel-stage-4.png", "/plants/sorrel-stage-5.png", "/plants/sorrel-stage-6.png"],
-  corn:        ["/plants/corn-stage-1.png", "/plants/corn-stage-2.png", "/plants/corn-stage-3.png", "/plants/corn-stage-4.png", "/plants/corn-stage-5.png", "/plants/corn-stage-6.png"],
+  tomato:      ["/plants/tomato-stage-1.png",  "/plants/tomato-stage-2.png",  "/plants/tomato-stage-3.png",  "/plants/tomato-stage-4.png",  "/plants/tomato-stage-5.png"],
+  carrot:      ["/plants/carrot-stage-1.png",  "/plants/carrot-stage-2.png",  "/plants/carrot-stage-3.png",  "/plants/carrot-stage-4.png",  "/plants/carrot-stage-5.png"],
+  strawberry:  ["/plants/strawberry-stage-1.png",  "/plants/strawberry-stage-2.png",  "/plants/strawberry-stage-3.png",  "/plants/strawberry-stage-4.png",  "/plants/strawberry-stage-5.png"],
+  lettuce:     ["/plants/lettuce-stage-1.png", "/plants/lettuce-stage-2.png", "/plants/lettuce-stage-3.png", "/plants/lettuce-stage-4.png", "/plants/lettuce-stage-5.png"],
+  basil:       ["/plants/basil-stage-1.png",   "/plants/basil-stage-2.png",   "/plants/basil-stage-3.png",   "/plants/basil-stage-4.png",   "/plants/basil-stage-5.png"],
+  pepper:      ["/plants/pepper-stage-1.png",  "/plants/pepper-stage-2.png",  "/plants/pepper-stage-3.png",  "/plants/pepper-stage-4.png",  "/plants/pepper-stage-5.png"],
+  goji:        ["/plants/goji-stage-1.png",    "/plants/goji-stage-2.png",    "/plants/goji-stage-3.png",    "/plants/goji-stage-4.png",    "/plants/goji-stage-5.png"],
+  lycium:      ["/plants/lycium-stage-1.png",  "/plants/lycium-stage-2.png",  "/plants/lycium-stage-3.png",  "/plants/lycium-stage-4.png",  "/plants/lycium-stage-5.png"],
+  mirabellier: ["/plants/mirabellier-stage-1.png", "/plants/mirabellier-stage-2.png", "/plants/mirabellier-stage-3.png", "/plants/mirabellier-stage-4.png", "/plants/mirabellier-stage-5.png"],
+  photinia:    ["/plants/photinia-stage-1.png", "/plants/photinia-stage-2.png", "/plants/photinia-stage-3.png", "/plants/photinia-stage-4.png", "/plants/photinia-stage-5.png"],
+  eleagnus:    ["/plants/eleagnus-stage-1.png", "/plants/eleagnus-stage-2.png", "/plants/eleagnus-stage-3.png", "/plants/eleagnus-stage-4.png", "/plants/eleagnus-stage-5.png"],
+  laurus:      ["/plants/laurus-stage-1.png",   "/plants/laurus-stage-2.png",   "/plants/laurus-stage-3.png",   "/plants/laurus-stage-4.png",   "/plants/laurus-stage-5.png"],
+  cornus:      ["/plants/cornus-stage-1.png",   "/plants/cornus-stage-2.png",   "/plants/cornus-stage-3.png",   "/plants/cornus-stage-4.png",   "/plants/cornus-stage-5.png"],
+  casseille:   ["/plants/casseille-stage-1.png", "/plants/casseille-stage-2.png", "/plants/casseille-stage-3.png", "/plants/casseille-stage-4.png", "/plants/casseille-stage-5.png"],
+  bean:        ["/plants/bean-stage-1.png", "/plants/bean-stage-2.png", "/plants/bean-stage-3.png", "/plants/bean-stage-4.png", "/plants/bean-stage-5.png"],
+  squash:      ["/plants/squash-stage-1.png", "/plants/squash-stage-2.png", "/plants/squash-stage-3.png", "/plants/squash-stage-4.png", "/plants/squash-stage-5.png"],
+  sunflower:   ["/plants/sunflower-stage-1.png", "/plants/sunflower-stage-2.png", "/plants/sunflower-stage-3.png", "/plants/sunflower-stage-4.png", "/plants/sunflower-stage-5.png"],
+  quinoa:      ["/plants/quinoa-stage-1.png", "/plants/quinoa-stage-2.png", "/plants/quinoa-stage-3.png", "/plants/quinoa-stage-4.png", "/plants/quinoa-stage-5.png"],
+  amaranth:    ["/plants/amaranth-stage-1.png", "/plants/amaranth-stage-2.png", "/plants/amaranth-stage-3.png", "/plants/amaranth-stage-4.png", "/plants/amaranth-stage-5.png"],
+  sorrel:      ["/plants/sorrel-stage-1.png", "/plants/sorrel-stage-2.png", "/plants/sorrel-stage-3.png", "/plants/sorrel-stage-4.png", "/plants/sorrel-stage-5.png"],
+  corn:        ["/plants/corn-stage-1.png", "/plants/corn-stage-2.png", "/plants/corn-stage-3.png", "/plants/corn-stage-4.png", "/plants/corn-stage-5.png"],
 };
 
 export const ENVIRONMENTS: Record<

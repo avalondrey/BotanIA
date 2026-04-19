@@ -21,7 +21,7 @@ export type CheckStatus = '✅' | '❌' | '⚠️' | '❓';
 
 /** Types d'assets images disponibles */
 export type ImageAssetType =
-  | 'plant-stage'      // /plants/{plantDefId}-stage-{n}.png (6 stages for vegetables)
+  | 'plant-stage'      // /plants/{plantDefId}-stage-{n}.png (5 stages for jardin vegetables)
   | 'packet'           // /packets/{shopId}/packet-{plantDefId}-{varietyId}.png
   | 'card'             // /cards/seeds/{shopId}/{plantDefId}-{varietyId}.png
   | 'pot'              // /pots/{shopId}/pot-{varietyId}.png (tree in pot for shop)
@@ -37,7 +37,7 @@ export interface ImageAsset {
   prompt: string;             // prompt manga détaillé pour génération
   foundPath?: string;         // chemin trouvé si existants
   status: CheckStatus;
-  stageNumber?: number;       // 1-6 pour plant-stage, 1-5 pour tree-stage, 1-5 pour plantule
+  stageNumber?: number;       // 1-5 pour plant-stage, 1-5 pour tree-stage, 1-5 pour plantule
   shopId?: string;            // pour packet/card/pot/tree-stage
   varietyId?: string;         // ID de la variété (ex: "tomato-brandywine")
   stageGroup?: 'stage' | 'mature'; // pour plantule-stage et plantule-mature
@@ -47,7 +47,7 @@ export interface CardDataInfo {
   id: string;
   plantDefId: string;
   shopId: string;
-  category: 'vegetable' | 'fruit-tree';
+  category: 'vegetable' | 'fruit-tree' | 'hedge' | 'forest-tree';
   name: string;
   emoji: string;
   packetImage?: string;
@@ -124,6 +124,10 @@ const DATA_GRAINES_PATH = path.join(BOTANIA_SRC, 'data/graines');
 const DATA_ARBRES_PATH = path.join(BOTANIA_SRC, 'data/arbres');
 const PUBLIC_ROOT = path.join(process.cwd(), 'public');
 
+// ─── Plant type constants ─────────────────────────────────────────────────────
+
+const COLUMNAR_TREES = ['apple-colonnaire-amboise', 'plum-colonnaire-atlanta', 'pear-colonnaire-londres'];
+
 // ─── Read files ─────────────────────────────────────────────────────────────
 
 export async function readFileIfExists(filePath: string): Promise<string | null> {
@@ -148,7 +152,8 @@ async function directoryExists(dirPath: string): Promise<boolean> {
 async function checkPlantCard(plantDefId: string, content: string): Promise<{ status: CheckStatus; details: string; filePath?: string; cardData?: PlantCardDetails }> {
   // Chercher "id: 'zucchini'" ou 'zucchini' dans PLANT_CARDS
   const plantCardPatterns = [
-    new RegExp(`['"]${plantDefId}['"]\\s*:\\s*{`, 'i'),
+    new RegExp(`${plantDefId}\\s*:\\s*{`, 'i'),  // unquoted key: photinia: {
+    new RegExp(`['"]${plantDefId}['"]\\s*:\\s*{`, 'i'),  // quoted key: 'photinia': {
     new RegExp(`id:\\s*['"]${plantDefId}['"]`, 'i'),
   ];
 
@@ -174,12 +179,26 @@ async function checkPlantCard(plantDefId: string, content: string): Promise<{ st
  */
 function extractPlantCardData(content: string, plantDefId: string): PlantCardDetails | undefined {
   try {
-    // Trouver le bloc PlantCard complet (depuis l'id jusqu'à la fermeture de l'objet)
-    const idPattern = new RegExp(`['"]${plantDefId}['"]\\s*:\\s*{([\\s\\S]*?)(?=\\n\\s{2}['"][a-z][a-z0-9-]+['"]:|\\n\\s{2}};)`, 'i');
-    const match = idPattern.exec(content);
-    if (!match) return undefined;
+    // Trouver le bloc PlantCard complet - cherche la clé puis compte les accolades
+    const keyPattern = `${plantDefId}\\s*:\\s*\\{`;
+    const keyMatch = new RegExp(keyPattern, 'i').exec(content);
+    if (!keyMatch) return undefined;
 
-    const block = match[1];
+    const blockStart = keyMatch.index + keyMatch[0].length;
+    let braceCount = 0;
+    let blockEnd = blockStart;
+
+    for (let i = blockStart; i < Math.min(content.length, blockStart + 50000); i++) {
+      if (content[i] === '{') braceCount++;
+      else if (content[i] === '}') {
+        braceCount--;
+        if (braceCount === 0) { blockEnd = i + 1; break; }
+      }
+    }
+
+    if (braceCount !== 0) return undefined;
+
+    const block = content.substring(blockStart, blockEnd);
     const data: PlantCardDetails = {};
 
     const extract = (key: string): string | undefined => {
@@ -222,10 +241,10 @@ function extractPlantCardData(content: string, plantDefId: string): PlantCardDet
 // ─── Check 2: Sprite images (plant stages) ──────────────────────────────────
 
 async function checkSprites(plantDefId: string, isTree: boolean = false): Promise<{ status: CheckStatus; details: string; missing: number; total: number; presentFiles?: string[] }> {
-  // Check public/plants/{plantDefId}-stage-{n}.png for n=1-6 (vegetables)
+  // Check public/plants/{plantDefId}-stage-{n}.png for n=1-5 (vegetables)
   // Or public/trees/{shopId}/{varietyId}-stage-{n}.png for n=1-5 (trees)
   const presentFiles: string[] = [];
-  const total = isTree ? 5 : 6;
+  const total = isTree ? 5 : 5;
 
   if (isTree) {
     // For trees, we check the trees folder - but we need to know the shopId/varietyId
@@ -411,7 +430,21 @@ export async function readCardDataForPlant(plantDefId: string): Promise<CardData
           const name = get('name') || plantDefId;
           const emoji = get('emoji') || '🌱';
           const shopId = get('shopId') || entry.name;
-          const category = content.includes('fruit-tree') ? 'fruit-tree' as const : 'vegetable' as const;
+          // Map CARD_DATA categories to plant category
+          let category: 'vegetable' | 'fruit-tree' | 'hedge' | 'forest-tree';
+          if (content.includes('category:')) {
+            if (content.includes('hedge') || content.includes('ornamental-hedge')) {
+              category = 'hedge';
+            } else if (content.includes('forest-tree') || content.includes('ornamental-tree')) {
+              category = 'forest-tree';
+            } else if (content.includes('fruit-tree')) {
+              category = 'fruit-tree';
+            } else {
+              category = 'vegetable';
+            }
+          } else {
+            category = content.includes('fruit-tree') ? 'fruit-tree' as const : 'vegetable' as const;
+          }
 
           const stages: string[] = [];
           const stagesMatch = content.match(/stages:\s*\[([\s\S]*?)\]/);
@@ -448,10 +481,9 @@ export function buildImagePrompt(type: ImageAssetType, cardData: CardDataInfo, s
       2: 'small sprout with 2 cotyledon leaves breaking soil, pale green, 2-3cm tall',
       3: '4-6 true leaves, delicate stem, more established, 5-8cm tall',
       4: 'full foliage, 8-10 leaves, stronger stem, bushy appearance, 15-20cm tall',
-      5: 'mature plant with first flowers or fruits visible, full structure',
-      6: 'full production — abundant fruits visible, harvest ready, lush plant',
+      5: 'mature plant with first flowers or fruits visible, full structure, harvest ready',
     };
-    return `manga-style plant growth stage ${stageNumber} of 6,
+    return `manga-style plant growth stage ${stageNumber} of 5,
 ${plantName} ${emoji} in terracotta pot, ${descs[stageNumber || 1]},
 cel-shaded, thick black manga borders, beige background,
 kawaii aesthetic, 512x512px, BotanIA game style`;
@@ -465,8 +497,10 @@ kawaii aesthetic, 512x512px, BotanIA game style`;
       4: '~150cm tree in pot, flowers or small fruits appearing, full canopy',
       5: '~200cm mature tree in pot, full production with visible fruits, majestic',
     };
+    const isColumnar = COLUMNAR_TREES.includes(cardData.plantDefId || '');
+    const formModifier = isColumnar ? ', columnar compact form, narrow vertical silhouette, no lateral branches' : '';
     return `manga-style ${plantName} fruit tree growth stage ${stageNumber} of 5,
-in 20cm terracotta pot, ${descs[stageNumber || 1]},
+in 20cm terracotta pot, ${descs[stageNumber || 1]}${formModifier},
 cel-shaded, thick black manga borders, beige background,
 kawaii aesthetic, 512x512px, BotanIA game style`;
   }
@@ -543,8 +577,8 @@ async function checkImageAssets(cardData: CardDataInfo | null): Promise<ImageAss
   const { plantDefId, id, shopId, category } = cardData;
   const isTree = category === 'fruit-tree';
 
-  // Plant/tree stages
-  const stageCount = isTree ? 5 : 6;
+  // Plant/tree stages (5 for all - vegetables/jardin)
+  const stageCount = 5;
   for (let n = 1; n <= stageCount; n++) {
     const expected = isTree
       ? `/trees/${shopId}/${id}-stage-${n}.png`
@@ -910,11 +944,18 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
   magnolia: "Magnoliaceae", fig: "Moraceae", eleagnus: "Elaeagnaceae", laurus: "Lauraceae", cornus: "Cornaceae",
   blackcurrant: "Grossulariaceae", redcurrant: "Grossulariaceae", gooseberry: "Grossulariaceae", casseille: "Grossulariaceae", josta: "Grossulariaceae",
   olive: "Oleaceae", arbousier: "Ericaceae", blueberry: "Ericaceae", grape: "Vitaceae", akebia: "Lardizabalaceae", pomegranate: "Lythraceae",
+  escallonia: "Escalloniaceae", cupressus: "Cupressaceae", cortland: "Rosaceae", thuya: "Cupressaceae",
+  corn: "Poaceae", sorrel: "Polygonaceae",
   rhubarb: "Polygonaceae", asparagus: "Asparagaceae", onion: "Amaryllidaceae", garlic: "Amaryllidaceae", leek: "Amaryllidaceae",
 };
   function guessFamily(id: string): string {
     return FAMILY_MAP[id] ?? 'Unknown';
   }
+
+  // Déterminer la catégorie et les valeurs par défaut selon le type de plante
+  let plantCategory = 'vegetable';
+  const HEDGE_SHRUBS = ['photinia', 'eleagnus', 'laurus', 'cypress', 'thuya', 'ivy', 'escallonia', 'cortland', 'cupressus'];
+  const FRUIT_TREES = ['apple', 'pear', 'cherry', 'plum', 'peach', 'apricot', 'orange', 'lemon', 'olive', 'fig', 'pomegranate', 'walnut', 'hazelnut'];
 
   if (cardDataContent) {
     // Extraire les données du CARD_DATA
@@ -924,6 +965,7 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
     const waterMatch = cardDataContent.match(/waterNeed:\s*([\d.]+)/);
     const daysMatch = cardDataContent.match(/cycleDays:\s*(\d+)/);
     const familyMatch = cardDataContent.match(/plantFamily:\s*['"]([^'"]+)['"]/);
+    const categoryMatch = cardDataContent.match(/category:\s*["']([^"']+)["']/);
 
     if (tbaseMatch) tBase = parseInt(tbaseMatch[1]);
     if (tcapMatch) tCap = parseInt(tcapMatch[1]);
@@ -931,6 +973,17 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
     if (waterMatch) waterNeed = parseFloat(waterMatch[1]);
     if (daysMatch) totalDays = parseInt(daysMatch[1]);
     if (familyMatch) plantFamily = familyMatch[1];
+    if (categoryMatch) {
+      const cat = categoryMatch[1];
+      if (cat === 'hedge' || cat === 'ornamental-hedge') plantCategory = 'hedge';
+      else if (cat === 'forest-tree' || cat === 'ornamental-tree') plantCategory = 'forest-tree';
+      else if (cat === 'fruit-tree') plantCategory = 'fruit-tree';
+      else plantCategory = 'vegetable';
+    }
+  } else {
+    if (HEDGE_SHRUBS.includes(plantDefId)) plantCategory = 'hedge';
+    else if (FRUIT_TREES.includes(plantDefId)) plantCategory = 'fruit-tree';
+    else plantCategory = 'vegetable';
   }
 
   if (plantFamily === 'Cucurbitaceae' && plantDefId && guessFamily(plantDefId) !== 'Cucurbitaceae') {
@@ -950,6 +1003,7 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
   const code = `  // ─── ${plantDefId.toUpperCase()} ───
   '${plantDefId}': {
     id: '${plantDefId}',
+    plantCategory: '${plantCategory}',
     tBase: ${tBase},
     tCap: ${tCap},
     stageGDD: [${stageGDD.join(', ')}],

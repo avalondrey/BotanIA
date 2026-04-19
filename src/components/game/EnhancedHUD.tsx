@@ -71,6 +71,7 @@ function SoundToggle() {
           ? "bg-purple-50 border-purple-300 text-purple-600 hover:bg-purple-100"
           : "bg-stone-100 border-stone-300 text-stone-400 hover:bg-stone-200"
       }`}
+      aria-label={config.enabled ? "Désactiver le son" : "Activer le son"}
       title={config.enabled ? "Son activé" : "Son désactivé"}
     >
       {config.enabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -112,6 +113,7 @@ function NotificationToggle() {
           ? "bg-orange-50 border-orange-300 text-orange-600 hover:bg-orange-100"
           : "bg-stone-100 border-stone-300 text-stone-400 hover:bg-stone-200"
       }`}
+      aria-label={config.enabled ? "Désactiver les notifications" : "Activer les notifications"}
       title={config.enabled ? "Notifications activées" : "Notifications désactivées"}
     >
       {config.enabled ? "🔔" : "🔕"}

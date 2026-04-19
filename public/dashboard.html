@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BotanIA — Agent IA Dashboard v2</title>
+  <title>BotanIA — Agent IA Dashboard v2.5</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -285,11 +285,20 @@
   <!-- Toolbar -->
   <div class="toolbar">
     <button class="btn btn-primary" id="btnScan" onclick="runScan()">🔍 Scanner 8 pts</button>
+    <button class="btn btn-secondary" onclick="runScan(true)" title="Force le re-scan même avec cache">🔄 Force Rescan</button>
     <button class="btn btn-secondary" onclick="runProactive()">🔔 Analyse Proactive</button>
     <button class="btn btn-secondary" onclick="openSpriteEditor()">🖼️ Éditeur Sprites</button>
     <button class="btn btn-secondary" onclick="toggleLiaPanel()">💬 Lia</button>
     <button class="btn btn-secondary" onclick="runRAG()">📚 RAG Query</button>
     <button class="btn btn-secondary" onclick="runStatus()">📡 Status</button>
+    <span style="margin-left:8px;color:#6e7681;font-size:11px;display:flex;align-items:center">Filtrer:</span>
+    <button class="btn btn-secondary btn-filter" id="filterAll" onclick="setFilter('all')">Toutes</button>
+    <button class="btn btn-secondary btn-filter" id="filterComplete" onclick="setFilter('complete')">✅ Complètes</button>
+    <button class="btn btn-secondary btn-filter" id="filterPartial" onclick="setFilter('partial')">⚠️ Partielles</button>
+    <button class="btn btn-secondary btn-filter" id="filterIncomplete" onclick="setFilter('incomplete')">❌ Incomplètes</button>
+    <button class="btn btn-secondary" onclick="exportScanData()" title="Exporter résultats JSON">💾 Exporter</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()" title="Importer JSON">📂 Importer</button>
+    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importScanData(this.files[0])">
     <button class="btn btn-danger" onclick="clearAll()" style="margin-left:auto">✕ Reset</button>
   </div>
 
@@ -463,11 +472,20 @@ function setDot(id, ok) {
 }
 
 // ─── Scan ─────────────────────────────────────────────────────────────────────
-async function runScan() {
-  showLoading('Lancement du scan 8 points...');
+async function runScan(force = false) {
+  showLoading(force ? 'Force scan en cours...' : 'Lancement du scan 8 points...');
+
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress = (progress + 10) % 100;
+    document.getElementById('loadingText').textContent =
+      (force ? 'Force scan en cours' : 'Lancement du scan 8 points') + `... ${progress}%`;
+  }, 500);
 
   try {
-    const r = await fetch(`${MICRO_API}/scan/plants`, {
+    // Add cache busting if force
+    const url = force ? `${MICRO_API}/scan/plants?t=${Date.now()}` : `${MICRO_API}/scan/plants`;
+    const r = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limit: 50, offset: 0 })
@@ -499,7 +517,13 @@ async function runScan() {
       return (o[a.overallStatus]??3)-(o[b.overallStatus]??3);
     });
 
-    document.getElementById('plantsList').innerHTML = sorted.map(p => {
+    // Apply filter
+    const filtered = currentFilter === 'all' ? sorted
+      : currentFilter === 'complete' ? sorted.filter(p => p.overallStatus === '✅ COMPLET')
+      : currentFilter === 'partial' ? sorted.filter(p => p.overallStatus === '⚠️ PARTIEL')
+      : sorted.filter(p => p.overallStatus === '❌ INCOMPLET');
+
+    document.getElementById('plantsList').innerHTML = filtered.map(p => {
       const cls = p.overallStatus === '✅ COMPLET' ? 'ok'
                 : p.overallStatus === '⚠️ PARTIEL' ? 'warn' : 'err';
       const checks = [
@@ -536,6 +560,7 @@ async function runScan() {
   } catch (e) {
     alert('Erreur scan: ' + e.message);
   } finally {
+    clearInterval(progressInterval);
     hideLoading();
   }
 }
@@ -740,10 +765,120 @@ async function runStatus() {
 }
 
 function clearAll() {
+  // Clear scan data
+  scanData = null;
+  liaContext = null;
+
+  // Clear UI panels
   document.getElementById('summary').style.display = 'none';
   document.getElementById('plantsSection').style.display = 'none';
   document.getElementById('empty').style.display = 'block';
   document.getElementById('spriteEditorPanel').style.display = 'none';
+  document.getElementById('liaPanel').style.display = 'none';
+  liaOpen = false;
+}
+
+let currentFilter = 'all';
+
+function setFilter(filter) {
+  currentFilter = filter;
+  // Update button styles
+  document.querySelectorAll('.btn-filter').forEach(btn => {
+    btn.style.background = '#21262d';
+    btn.style.color = '#c9d1d9';
+  });
+  document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).style.background = '#16a34a';
+  document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).style.color = '#fff';
+  // Re-render if scan data exists
+  if (scanData) {
+    renderPlantsList(scanData);
+  }
+}
+
+// ─── Export / Import Scan Data ────────────────────────────────────────────────
+
+function exportScanData() {
+  if (!scanData) { alert('Aucun scan à exporter'); return; }
+  const blob = new Blob([JSON.stringify(scanData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `botania-scan-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importScanData(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.results || !data.summary) {
+      alert('Format JSON invalide');
+      return;
+    }
+    scanData = data;
+    renderScanResults(data);
+    alert('✅ Import réussi: ' + data.results.length + ' plantes');
+  } catch(e) {
+    alert('Erreur import: ' + e.message);
+  }
+}
+
+function renderScanResults(d) {
+  const s = d.summary;
+  document.getElementById('summary').innerHTML = `
+    <div class="summary-card ok"><div class="summary-num">${s.complete}</div><div class="summary-label">Complètes</div></div>
+    <div class="summary-card warn"><div class="summary-num">${s.partial}</div><div class="summary-label">Partielles</div></div>
+    <div class="summary-card err"><div class="summary-num">${s.incomplete}</div><div class="summary-label">Incomplètes</div></div>
+  `;
+  document.getElementById('summary').style.display = 'grid';
+
+  const sorted = [...d.results].sort((a,b) => {
+    const o = {'❌ INCOMPLET':0,'⚠️ PARTIEL':1,'✅ COMPLET':2};
+    return (o[a.overallStatus]??3)-(o[b.overallStatus]??3);
+  });
+
+  const filtered = currentFilter === 'all' ? sorted
+    : currentFilter === 'complete' ? sorted.filter(p => p.overallStatus === '✅ COMPLET')
+    : currentFilter === 'partial' ? sorted.filter(p => p.overallStatus === '⚠️ PARTIEL')
+    : sorted.filter(p => p.overallStatus === '❌ INCOMPLET');
+
+  document.getElementById('plantsList').innerHTML = filtered.map(p => {
+    const cls = p.overallStatus === '✅ COMPLET' ? 'ok'
+              : p.overallStatus === '⚠️ PARTIEL' ? 'warn' : 'err';
+    const checks = [
+      {key:'PlantCard', s:p.checks.plantCard.status, action:'plantcard'},
+      {key:'Sprites', s:p.checks.sprites.status, v:`${p.checks.sprites.missing}/6`, action:'sprites'},
+      {key:'CARD_DATA', s:p.checks.cardData.status, action:'carddata'},
+      {key:'SEED', s:p.checks.seedVariety.status, action:null},
+      {key:'Plantule', s:p.checks.plantule.status, action:null},
+      {key:'Packet', s:p.checks.packetImage.status, action:null},
+      {key:'PLANTS', s:p.checks.plantsEntry.status, action:'plants'},
+      {key:'Companion', s:p.checks.companionData.status, action:null},
+    ];
+    const chips = checks.map(c => {
+      const cc = c.s === '✅' ? 'ok' : c.s === '⚠️' ? 'warn' : c.s === '❌' ? 'err' : 'opt';
+      if (c.key === 'Sprites') {
+        return `<span class="check-chip ${cc}" onclick="openSpriteModal('${p.plantDefId}')" style="cursor:pointer">${c.s} ${c.key}${c.v?' '+c.v:''}</span>`;
+      }
+      const clickable = c.action && c.s === '❌' ? `onclick="openCheck('${p.plantDefId}','${c.action}')" style="cursor:pointer"` : '';
+      return `<span class="check-chip ${cc}" ${clickable}>${c.s} ${c.key}${c.v?' '+c.v:''}</span>`;
+    }).join('');
+    return `<div class="plant-item ${cls}">
+      <div class="plant-header">
+        <span class="plant-name">${p.displayName}</span>
+        <span class="plant-id">${p.plantDefId}</span>
+        ${p.plantCategory ? `<span style="font-size:9px;background:#22c55e22;color:#22c55e;padding:1px 5px;border-radius:3px;margin-left:4px">${p.plantCategory}</span>` : ''}
+        ${p.cardDataInfo?.plantFamily ? `<span style="font-size:9px;background:#16a34a22;color:#16a34a;padding:1px 5px;border-radius:3px;margin-left:2px">${p.cardDataInfo.plantFamily}</span>` : ''}
+        <span class="plant-badge badge-${cls}">${p.overallStatus}</span>
+      </div>
+      <div class="check-grid">${chips}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('plantsSection').style.display = '';
+  document.getElementById('empty').style.display = 'none';
 }
 
 // ─── Lia Chat Panel ──────────────────────────────────────────────────────────
@@ -859,9 +994,13 @@ function openSpriteModal(plantDefId) {
   if (!plant) return;
   currentSpritePlant = plant;
 
-  // Detect tree vs vegetable (tree paths go to /trees/ shop folder, plants go to /plants/)
-  const isTree = plant.imageAssets.some(a => a.type === 'tree-stage');
-  const stageCount = isTree ? 5 : 6;
+  // Detect tree vs vegetable vs hedge (tree paths go to /trees/ shop folder, plants go to /plants/)
+  // Use plantCategory from scan data if available, fallback to imageAssets check
+  const plantCategory = plant.plantCategory || '';
+  const hedgeList = ['photinia','eleagnus','casseille','thuya','escallonia','cornus'];
+  const isHedge = plantCategory === 'hedge' || hedgeList.includes(plantDefId);
+  const isTree = !isHedge && (plantCategory === 'fruit-tree' || plantCategory === 'forest-tree' || plant.imageAssets.some(a => a.type === 'tree-stage'));
+  const stageCount = (isTree || isHedge) ? 5 : 6;
   const isPlantule = plant.catalogSource === 'PLANTULES_LOCALES';
 
   const stageNames = isTree ? STAGE_NAMES_TREE : (isPlantule ? STAGE_NAMES_PEPINIERE : STAGE_NAMES_VEG);
@@ -871,7 +1010,7 @@ function openSpriteModal(plantDefId) {
   const shopId = plant.shopId || plant.catalogSource || 'unknown';
   const displayName = plant.displayName || plantDefId;
   const botanicalName = plant.botanicalName || '';
-  const categoryLabel = isTree ? 'arbre fruitier' : (isPlantule ? 'plantule' : 'légume');
+  const categoryLabel = isTree ? 'arbre fruitier' : (isPlantule ? 'plantule' : (isHedge ? 'haie' : 'légume'));
 
   // Card data info
   const cardData = plant.checks?.cardData?.details?.replace('CARD_DATA trouvé: ', '') || '';
@@ -888,8 +1027,8 @@ function openSpriteModal(plantDefId) {
       <div><span style="color:#8b949e">Style:</span> <span style="color:#c9d1d9">Manga cel-shaded</span></div>
       <div><span style="color:#8b949e">Bordures:</span> <span style="color:#c9d1d9">Noires épaisses</span></div>
       <div><span style="color:#8b949e">Esthétique:</span> <span style="color:#c9d1d9">Kawaii</span></div>
-      <div><span style="color:#8b949e">Fond:</span> <span style="color:#c9d1d9">${isTree ? 'Beige kraft' : 'Beige uni ou transparent'}</span></div>
-      <div><span style="color:#8b949e">Catégorie:</span> <span style="color:#c9d1d9">${isTree ? '🌳 Arbre fruitier' : (isPlantule ? '🌱 Plantule' : '🌱 Légume')}</span></div>
+      <div><span style="color:#8b949e">Fond:</span> <span style="color:#c9d1d9">${isTree ? 'Beige kraft' : (isHedge ? 'Vert uni' : 'Beige uni ou transparent')}</span></div>
+      <div><span style="color:#8b949e">Catégorie:</span> <span style="color:#c9d1d9">${isTree ? '🌳 Arbre fruitier' : (isPlantule ? '🌱 Plantule' : (isHedge ? '🌿 Haie' : '🌱 Légume'))}</span></div>
       <div><span style="color:#8b949e">Boutique:</span> <span style="color:#c9d1d9">${shopId}</span></div>
       <div><span style="color:#8b949e">Stades:</span> <span style="color:#c9d1d9">${stageCount}</span></div>
       ${botanicalName ? `<div style="grid-column:1/-1"><span style="color:#8b949e">Nom botanique:</span> <span style="color:#c9d1d9;font-style:italic">${botanicalName}</span></div>` : ''}
@@ -916,6 +1055,8 @@ function openSpriteModal(plantDefId) {
       ? `manga-style ${displayName} fruit tree growth stage ${n} of ${stageCount}, in terracotta pot, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, `
         + (n === 1 ? 'mini scion 20cm' : n === 2 ? 'young tree 40cm' : n === 3 ? 'medium tree 80cm' : n === 4 ? 'tall tree 150cm' : 'mature tree 200cm')
         + `, 512x512px, BotanIA game style`
+      : isHedge
+      ? `manga-style ${displayName} hedge plant growth stage ${n} of ${stageCount}, decorative shrub in terracotta pot, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, ${stageDesc}, 512x512px, BotanIA game style`
       : isPlantule
       ? `manga-style ${displayName} seedling stage ${n} of ${stageCount}, in small pot or module, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, ${stageDesc}, 512x512px, BotanIA game style`
       : `manga-style ${displayName} growth stage ${n} of ${stageCount}, vegetable in terracotta pot, cel-shaded, thick black manga borders, transparent background, kawaii aesthetic, ${stageDesc}, 512x512px, BotanIA game style`;
@@ -1222,8 +1363,11 @@ function renderSpriteEditor(data) {
     const sprites = p.checks?.sprites || {};
     const missing = sprites.missing || 0;
     const total = sprites.total || (p.imageAssets?.filter(a => a.type === 'plant-stage' || a.type === 'tree-stage').length || 6);
-    const isTree = p.imageAssets?.some(a => a.type === 'tree-stage');
-    const stageCount = isTree ? 5 : 6;
+    const plantCategory = p.plantCategory || '';
+    const hedgeList = ['photinia','eleagnus','casseille','thuya','escallonia','cornus'];
+    const isHedge = plantCategory === 'hedge' || hedgeList.includes(p.plantDefId);
+    const isTree = !isHedge && (plantCategory === 'fruit-tree' || plantCategory === 'forest-tree' || p.imageAssets?.some(a => a.type === 'tree-stage'));
+    const stageCount = (isTree || isHedge) ? 5 : 6;
     const stages = [];
     for (let n = 1; n <= stageCount; n++) {
       const asset = p.imageAssets?.find(a => (a.type === 'plant-stage' || a.type === 'tree-stage') && a.stageNumber === n);
@@ -1246,6 +1390,8 @@ function renderSpriteEditor(data) {
         <div>
           <span style="font-size:13px;font-weight:700;color:#c9d1d9">${p.displayName || p.plantDefId}</span>
           <span style="font-size:10px;color:#484f58;margin-left:6px">${p.plantDefId}</span>
+          ${p.plantCategory ? `<span style="font-size:9px;background:${p.plantCategory === 'hedge' ? '#22c55e22' : '#8b949e22'};color:${p.plantCategory === 'hedge' ? '#22c55e' : '#8b949e'};padding:1px 5px;border-radius:3px;margin-left:4px">${p.plantCategory}</span>` : ''}
+          ${p.cardDataInfo?.plantFamily ? `<span style="font-size:9px;background:#16a34a22;color:#16a34a;padding:1px 5px;border-radius:3px;margin-left:2px">${p.cardDataInfo.plantFamily}</span>` : ''}
         </div>
         <span style="font-size:10px;color:#f0883e">🖼️ Gérer</span>
       </div>

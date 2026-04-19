@@ -8,7 +8,7 @@ export const CARD_DATA = {
   id: "photinia-louise",
   plantDefId: "photinia",
   shopId: "leaderplant",
-  category: "vegetable" as const,
+  category: "hedge" as const,
   name: "Photinia panaché ",
   emoji: "🌿",
 
@@ -21,7 +21,6 @@ export const CARD_DATA = {
     "/plants/photinia-stage-3.png",
     "/plants/photinia-stage-4.png",
     "/plants/photinia-stage-5.png",
-    "/plants/photinia-stage-6.png",
   ],
 
   // === PRIX & QUANTITE ===

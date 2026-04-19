@@ -119,11 +119,11 @@ export function LiaPanel({ compact = false }: LiaPanelProps) {
     setImagePath('');
     setRegisterMessage('');
 
-    // If clicking on a plant-stage asset, open the full sprite editor for all 6 stages
+    // If clicking on a plant-stage asset, open the full sprite editor for all 5 stages
     if (asset.type === 'plant-stage' && plant.imageAssets) {
       const isTree = plant.cardDataInfo?.category === 'fruit-tree';
-      const stageCount = isTree ? 5 : 6;
-      const stageNamesVeg = ['Graine', 'Levée', 'Plantule', 'Croissance', 'Floraison', 'Récolte'];
+      const stageCount = isTree ? 5 : 5;
+      const stageNamesVeg = ['Graine', 'Levée', 'Plantule', 'Croissance', 'Récolte'];
       const stageNamesTree = ['Scion', 'Jeune arbre', 'Arbre moyen', 'Arbre établi', 'Arbre mature'];
       const stageNames = isTree ? stageNamesTree : stageNamesVeg;
       const stageDescs = isTree
@@ -139,8 +139,7 @@ export function LiaPanel({ compact = false }: LiaPanelProps) {
             'small sprout with 2 cotyledon leaves breaking soil, pale green, 2-3cm tall',
             '4-6 true leaves, delicate stem, more established, 5-8cm tall',
             'full foliage, 8-10 leaves, stronger stem, bushy appearance, 15-20cm tall',
-            'mature plant with first flowers or fruits visible, full structure',
-            'full production — abundant fruits visible, harvest ready, lush plant',
+            'mature plant with first flowers or fruits visible, full structure, harvest ready',
           ];
 
       const stages: SpriteStageEntry[] = [];
@@ -398,7 +397,7 @@ export function LiaPanel({ compact = false }: LiaPanelProps) {
         ))}
       </div>
 
-      {/* Sprite Editor Dialog — all 6 stages at once */}
+      {/* Sprite Editor Dialog — all 5 stages at once */}
       <Dialog open={!!spriteEditor} onOpenChange={(open) => !open && setSpriteEditor(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {spriteEditor && (

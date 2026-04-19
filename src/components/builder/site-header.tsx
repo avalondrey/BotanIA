@@ -60,7 +60,7 @@ export function SiteHeader({ className }: SiteHeaderProps) {
             >
               🌱 Jardin Culture
             </motion.h1>
-            <span className="px-2 py-0.5 bg-black text-white text-[8px] font-black uppercase rounded">v2.2.0</span>
+            <span className="px-2 py-0.5 bg-black text-white text-[8px] font-black uppercase rounded">v2.3</span>
             <span className="hidden md:inline-block px-2 py-0.5 bg-amber-100 text-amber-800 text-[7px] font-bold uppercase rounded border border-amber-300">alpha</span>
             <span className="hidden sm:inline-block px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black uppercase rounded border border-green-300">
               🌤️ Météo Réelle

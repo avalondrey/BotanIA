@@ -264,7 +264,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                     <>
                       <div className="absolute inset-0">
                         <Image
-                          src={getStageImage(plant.plantDefId, Math.min(pepStage, 5))}
+                          src={getStageImage(plant.plantDefId, Math.min(pepStage, 5), plant.growthRoute)}
                           alt={getRouteStageName(plant)}
                           fill
                           sizes="(max-width: 768px) 12vw, 8vw"
