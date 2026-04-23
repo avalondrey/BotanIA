@@ -219,6 +219,7 @@ export const PLANT_VARIETY_MAP: Record<string, string> = {
   'zucchini-black-beauty': 'zucchini',
   'zucchini-verte-italie': 'zucchini',
   'zucchini-verte-milan-black-beauty': 'zucchini',
+  'tomato-cocktail': 'tomato',
 };
 
 /**
