@@ -25,6 +25,7 @@ export interface PlantDefinition {
   droughtResistance: number; // 0.0-1.0 — higher = loses water slower (deep roots)
   // Description botanique réelle
   realDaysToHarvest: number; // durée totale moyenne graine→récolte
+  plantFamily?: string;
 }
 
 export type GrowthRoute = 'jardin' | 'miniserre' | 'plantule' | 'semis-direct';
@@ -55,6 +56,8 @@ export interface PlantState {
   // Growth route (v0.20.0)
   growthRoute: GrowthRoute;
   containerType: ContainerType;
+  // GDD tracking (v0.21.0)
+  gddAccumulated: number;
 }
 
 export interface EnvironmentState {
@@ -128,6 +131,8 @@ export const STAGE_IMAGES: Record<string, string[]> = {
   amaranth:    ["/plants/amaranth-stage-1.png", "/plants/amaranth-stage-2.png", "/plants/amaranth-stage-3.png", "/plants/amaranth-stage-4.png", "/plants/amaranth-stage-5.png"],
   sorrel:      ["/plants/sorrel-stage-1.png", "/plants/sorrel-stage-2.png", "/plants/sorrel-stage-3.png", "/plants/sorrel-stage-4.png", "/plants/sorrel-stage-5.png"],
   corn:        ["/plants/corn-stage-1.png", "/plants/corn-stage-2.png", "/plants/corn-stage-3.png", "/plants/corn-stage-4.png", "/plants/corn-stage-5.png"],
+  thuya:       ["/plants/thuya-stage-1.png", "/plants/thuya-stage-2.png", "/plants/thuya-stage-3.png", "/plants/thuya-stage-4.png", "/plants/thuya-stage-5.png"],
+  escallonia:  ["/plants/escallonia-stage-1.png", "/plants/escallonia-stage-2.png", "/plants/escallonia-stage-3.png", "/plants/escallonia-stage-4.png", "/plants/escallonia-stage-5.png"],
 };
 
 export const ENVIRONMENTS: Record<
@@ -769,6 +774,7 @@ export function createInitialPlantState(plantDefId: string): PlantState {
     diseasePressureHours: 0,
     growthRoute: 'jardin',
     containerType: 'sachet',
+    gddAccumulated: 0,
   };
 }
 

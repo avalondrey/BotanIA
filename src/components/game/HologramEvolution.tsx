@@ -336,7 +336,9 @@ const PLANT_FAMILY_MAP: Record<string, string> = {
 };
 
 function getPlantFamily(id: string): string {
-  return PLANT_FAMILY_MAP[id] ?? 'Unknown';
+  if (PLANT_FAMILY_MAP[id]) return PLANT_FAMILY_MAP[id];
+  const baseId = id.split('-')[0];
+  return PLANT_FAMILY_MAP[baseId] ?? 'Unknown';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2275,8 +2277,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     treeLifespan: 30,
     firstHarvestYears: 3,
     annualYield: '4-8 kg/arbre',
-  },
-};
+  }};
 
 // ═══ Vérifier les plantFamily incorrects dans PLANT_DATA (safety net) ═══
 const _plantDataKeys = Object.keys(PLANT_DATA) as Array<keyof typeof PLANT_DATA>;
@@ -3112,9 +3113,7 @@ export const TREE_CARDS: Record<string, PlantCard> = {
       pruningNotes: 'Taille minime après fleurisso, pas de taille sévère',
       fruitEdible: false,
     },
-  },
-
-};
+  }};
 
 // ═══ FIN TREE_CARDS ═══
 

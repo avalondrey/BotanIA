@@ -14,6 +14,7 @@
 
 import { readFile, readdir } from 'fs/promises';
 import path from 'path';
+import { getPlantCategory } from '@/data/plant-categories';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -278,29 +279,32 @@ async function checkSprites(plantDefId: string, isTree: boolean = false): Promis
 
 async function checkCardData(plantDefId: string): Promise<{ status: CheckStatus; details: string; filePath?: string }> {
   try {
-    const baseDir = path.join(DATA_GRAINES_PATH);
-    const entries = await readdir(baseDir, { withFileTypes: true });
+    const searchDirs = [DATA_GRAINES_PATH, DATA_ARBRES_PATH];
 
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const subDir = path.join(baseDir, entry.name);
-        const files = await readdir(subDir);
+    for (const baseDir of searchDirs) {
+      const entries = await readdir(baseDir, { withFileTypes: true });
 
-        for (const file of files) {
-          if (file.endsWith('.ts')) {
-            const filePath = path.join(subDir, file);
-            const content = await readFile(filePath, 'utf-8');
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const subDir = path.join(baseDir, entry.name);
+          const files = await readdir(subDir);
 
-            // Chercher plantDefId dans le fichier
-            if (content.includes(`plantDefId: "${plantDefId}"`) || content.includes(`plantDefId: '${plantDefId}'`)) {
-              return { status: '✅', details: `CARD_DATA trouvé: ${file}`, filePath };
+          for (const file of files) {
+            if (file.endsWith('.ts')) {
+              const filePath = path.join(subDir, file);
+              const content = await readFile(filePath, 'utf-8');
+
+              // Chercher plantDefId dans le fichier
+              if (content.includes(`plantDefId: "${plantDefId}"`) || content.includes(`plantDefId: '${plantDefId}'`)) {
+                return { status: '✅', details: `CARD_DATA trouvé: ${file}`, filePath };
+              }
             }
           }
         }
       }
     }
 
-    return { status: '❌', details: `CARD_DATA MANQUANT pour "${plantDefId}" dans src/data/graines/` };
+    return { status: '❌', details: `CARD_DATA MANQUANT pour "${plantDefId}" dans src/data/graines/ et src/data/arbres/` };
   } catch {
     return { status: '❌', details: `Erreur lecture CARD_DATA` };
   }
@@ -575,7 +579,7 @@ async function checkImageAssets(cardData: CardDataInfo | null): Promise<ImageAss
   if (!cardData) return assets;
 
   const { plantDefId, id, shopId, category } = cardData;
-  const isTree = category === 'fruit-tree';
+  const isTree = category === 'fruit-tree' || category === 'forest-tree';
 
   // Plant/tree stages (5 for all - vegetables/jardin)
   const stageCount = 5;
@@ -949,13 +953,13 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
   rhubarb: "Polygonaceae", asparagus: "Asparagaceae", onion: "Amaryllidaceae", garlic: "Amaryllidaceae", leek: "Amaryllidaceae",
 };
   function guessFamily(id: string): string {
-    return FAMILY_MAP[id] ?? 'Unknown';
+    if (FAMILY_MAP[id]) return FAMILY_MAP[id];
+    const baseId = id.split('-')[0];
+    return FAMILY_MAP[baseId] ?? 'Unknown';
   }
 
   // Déterminer la catégorie et les valeurs par défaut selon le type de plante
-  let plantCategory = 'vegetable';
-  const HEDGE_SHRUBS = ['photinia', 'eleagnus', 'laurus', 'cypress', 'thuya', 'ivy', 'escallonia', 'cortland', 'cupressus'];
-  const FRUIT_TREES = ['apple', 'pear', 'cherry', 'plum', 'peach', 'apricot', 'orange', 'lemon', 'olive', 'fig', 'pomegranate', 'walnut', 'hazelnut'];
+  let plantCategory = getPlantCategory(plantDefId);
 
   if (cardDataContent) {
     // Extraire les données du CARD_DATA
@@ -978,12 +982,9 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
       if (cat === 'hedge' || cat === 'ornamental-hedge') plantCategory = 'hedge';
       else if (cat === 'forest-tree' || cat === 'ornamental-tree') plantCategory = 'forest-tree';
       else if (cat === 'fruit-tree') plantCategory = 'fruit-tree';
+      else if (cat === 'aromatic') plantCategory = 'aromatic';
       else plantCategory = 'vegetable';
     }
-  } else {
-    if (HEDGE_SHRUBS.includes(plantDefId)) plantCategory = 'hedge';
-    else if (FRUIT_TREES.includes(plantDefId)) plantCategory = 'fruit-tree';
-    else plantCategory = 'vegetable';
   }
 
   if (plantFamily === 'Cucurbitaceae' && plantDefId && guessFamily(plantDefId) !== 'Cucurbitaceae') {

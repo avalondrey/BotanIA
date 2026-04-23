@@ -50,6 +50,8 @@ const DISPLAY_INFO: Record<string, { name: string; emoji: string; harvestEmoji: 
   laurus:     { name: 'Laurier Sauce',    emoji: '🌿', harvestEmoji: '🌿' },
   cornus:     { name: 'Cornouillier',     emoji: '🌸', harvestEmoji: '🌸' },
   casseille:  { name: 'Casseille',        emoji: '🫐', harvestEmoji: '🫐' },
+  escallonia: { name: 'Escallonia',       emoji: '🌸', harvestEmoji: '🌸' },
+  thuya:      { name: 'Thuya',            emoji: '🌲', harvestEmoji: '🌲' },
   akebia:     { name: 'Akébie',            emoji: '🌸', harvestEmoji: '🌸' },
   josta:      { name: 'Josta',             emoji: '🫐', harvestEmoji: '🫐' },
   'baco-noir':{ name: 'Baco Noir',         emoji: '🍇', harvestEmoji: '🍇' },
@@ -58,6 +60,8 @@ const DISPLAY_INFO: Record<string, { name: string; emoji: string; harvestEmoji: 
   amelanchier:{ name: 'Amélanchier',       emoji: '🫐', harvestEmoji: '🫐' },
   blackcurrant:{ name: 'Cassis',           emoji: '🫐', harvestEmoji: '🫐' },
   blackberry: { name: 'Mûrier',            emoji: '🫐', harvestEmoji: '🫐' },
+  quince:     { name: 'Cognassier',        emoji: '🍐', harvestEmoji: '🍐' },
+  currant:    { name: 'Groseillier',       emoji: '🫐', harvestEmoji: '🫐' },
   // Arbres
   apple:      { name: 'Pommier Reinette', emoji: '🍎', harvestEmoji: '🍎' },
   'apple-golden': { name: 'Pommier Golden', emoji: '🍎', harvestEmoji: '🍎' },
@@ -273,6 +277,7 @@ function plantCardToDefinition(id: string, card: PlantCard): PlantDefinition {
     pestResistance: card.pestResistance <= 1 ? Math.round(card.pestResistance * 100) : card.pestResistance,
     droughtResistance: card.droughtResistance,
     realDaysToHarvest: card.totalDaysToHarvest,
+    plantFamily: card.plantFamily,
   };
 }
 
