@@ -15,6 +15,7 @@
 import { readFile, readdir } from 'fs/promises';
 import path from 'path';
 import { getPlantCategory } from '@/data/plant-categories';
+import { getPlantFamily } from '@/lib/botany-constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -913,50 +914,6 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
   let totalDays = 60;
   let plantFamily = 'Cucurbitaceae';
 
-  const FAMILY_MAP: Record<string, string> = {
-  // Solanaceae
-  tomato: "Solanaceae", pepper: "Solanaceae", eggplant: "Solanaceae", potato: "Solanaceae", goji: "Solanaceae", lycium: "Solanaceae",
-  // Cucurbitaceae
-  cucumber: "Cucurbitaceae", zucchini: "Cucurbitaceae", squash: "Cucurbitaceae", pumpkin: "Cucurbitaceae", melon: "Cucurbitaceae", watermelon: "Cucurbitaceae",
-  // Fabaceae
-  bean: "Fabaceae", pea: "Fabaceae", lentil: "Fabaceae", chickpea: "Fabaceae", faba: "Fabaceae",
-  // Brassicaceae
-  radish: "Brassicaceae", cabbage: "Brassicaceae", kale: "Brassicaceae", turnip: "Brassicaceae", broccoli: "Brassicaceae", cauliflower: "Brassicaceae",
-  // Asteraceae
-  lettuce: "Asteraceae", sunflower: "Asteraceae", artichoke: "Asteraceae", endive: "Asteraceae", chicory: "Asteraceae",
-  // Apiaceae
-  carrot: "Apiaceae", parsley: "Apiaceae", celery: "Apiaceae", dill: "Apiaceae", fennel: "Apiaceae", coriander: "Apiaceae",
-  // Amaranthaceae
-  spinach: "Amaranthaceae", chard: "Amaranthaceae", quinoa: "Amaranthaceae", amaranth: "Amaranthaceae", beet: "Amaranthaceae",
-  // Lamiaceae
-  basil: "Lamiaceae", mint: "Lamiaceae", thyme: "Lamiaceae", sage: "Lamiaceae", oregano: "Lamiaceae", rosemary: "Lamiaceae", lavender: "Lamiaceae",
-  // Rosaceae fruits
-  strawberry: "Rosaceae", apple: "Rosaceae", pear: "Rosaceae", cherry: "Rosaceae", apricot: "Rosaceae", plum: "Rosaceae", peach: "Rosaceae", quince: "Rosaceae", almond: "Rosaceae", blackberry: "Rosaceae", raspberry: "Rosaceae", hawthorn: "Rosaceae", sorbus: "Rosaceae", amelanchier: "Rosaceae",
-  // Rutaceae
-  orange: "Rutaceae", lemon: "Rutaceae", grapefruit: "Rutaceae", lime: "Rutaceae", mandarin: "Rutaceae", kumquat: "Rutaceae",
-  // Juglandaceae
-  walnut: "Juglandaceae", hazelnut: "Juglandaceae", pecan: "Juglandaceae", chestnut: "Juglandaceae",
-  // Fagaceae
-  oak: "Fagaceae", beech: "Fagaceae",
-  // Betulaceae
-  birch: "Betulaceae", alder: "Betulaceae", hornbeam: "Betulaceae",
-  // Sapindaceae
-  maple: "Sapindaceae",
-  // Pinaceae
-  pine: "Pinaceae", spruce: "Pinaceae", fir: "Pinaceae", cedar: "Pinaceae", larch: "Pinaceae",
-  // Autres
-  magnolia: "Magnoliaceae", fig: "Moraceae", eleagnus: "Elaeagnaceae", laurus: "Lauraceae", cornus: "Cornaceae",
-  blackcurrant: "Grossulariaceae", redcurrant: "Grossulariaceae", gooseberry: "Grossulariaceae", casseille: "Grossulariaceae", josta: "Grossulariaceae",
-  olive: "Oleaceae", arbousier: "Ericaceae", blueberry: "Ericaceae", grape: "Vitaceae", akebia: "Lardizabalaceae", pomegranate: "Lythraceae",
-  escallonia: "Escalloniaceae", cupressus: "Cupressaceae", cortland: "Rosaceae", thuya: "Cupressaceae",
-  corn: "Poaceae", sorrel: "Polygonaceae",
-  rhubarb: "Polygonaceae", asparagus: "Asparagaceae", onion: "Amaryllidaceae", garlic: "Amaryllidaceae", leek: "Amaryllidaceae",
-};
-  function guessFamily(id: string): string {
-    if (FAMILY_MAP[id]) return FAMILY_MAP[id];
-    const baseId = id.split('-')[0];
-    return FAMILY_MAP[baseId] ?? 'Unknown';
-  }
 
   // Déterminer la catégorie et les valeurs par défaut selon le type de plante
   let plantCategory = getPlantCategory(plantDefId);
@@ -987,11 +944,11 @@ export function generatePlantCardCode(plantDefId: string, cardDataContent?: stri
     }
   }
 
-  if (plantFamily === 'Cucurbitaceae' && plantDefId && guessFamily(plantDefId) !== 'Cucurbitaceae') {
-    plantFamily = guessFamily(plantDefId);
+  if (plantFamily === 'Cucurbitaceae' && plantDefId && getPlantFamily(plantDefId) !== 'Cucurbitaceae') {
+    plantFamily = getPlantFamily(plantDefId);
   }
   if (plantFamily === 'Unknown') {
-    plantFamily = guessFamily(plantDefId);
+    plantFamily = getPlantFamily(plantDefId);
   }
 
   const stageGDD = [
