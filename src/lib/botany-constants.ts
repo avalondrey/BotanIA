@@ -76,6 +76,7 @@ export const PLANT_FAMILY_MAP: Record<string, string> = {
 
   // ─── ROSACÉES ───
   strawberry: 'Rosaceae',
+  photinia: 'Rosaceae',
   apple: 'Rosaceae',
   pear: 'Rosaceae',
   cherry: 'Rosaceae',
@@ -196,12 +197,44 @@ export const PLANT_FAMILY_MAP: Record<string, string> = {
   thuya: 'Cupressaceae',
 };
 
+// ═══════════════════════════════════════════════════════════════
+//  PLANT_VARIETY_MAP — variétés connues et leur plante de base
+//  Remplace le fragile split('-')[0]
+// ═══════════════════════════════════════════════════════════════
+
+export const PLANT_VARIETY_MAP: Record<string, string> = {
+  // Arbres fruitiers
+  'apple-gala': 'apple',
+  'apple-golden': 'apple',
+  'cassis-blanc-ojeblanc': 'blackcurrant',
+
+  // Haies
+  'escallonia-iveyi': 'escallonia',
+  'photinia-red-robin': 'photinia',
+  'eleagnus-gilt-edge': 'eleagnus',
+  'laurus-nobilis': 'laurus',
+  'cornus-alba': 'cornus',
+
+  // Légumes
+  'zucchini-black-beauty': 'zucchini',
+  'zucchini-verte-italie': 'zucchini',
+  'zucchini-verte-milan-black-beauty': 'zucchini',
+};
+
+/**
+ * Resolve a plantDefId to its base plant ID.
+ * If the ID is a known variety, returns the base plant.
+ * Otherwise returns the original ID.
+ */
+export function resolveBasePlantId(id: string): string {
+  return PLANT_VARIETY_MAP[id] ?? id;
+}
+
 /**
  * Get the botanical family for a plantDefId.
- * Supports variety IDs (e.g. "escallonia-iveyi" → "escallonia" → "Escalloniaceae")
+ * Supports variety IDs via PLANT_VARIETY_MAP.
  */
 export function getPlantFamily(id: string): string {
-  if (PLANT_FAMILY_MAP[id]) return PLANT_FAMILY_MAP[id];
-  const baseId = id.split('-')[0];
+  const baseId = resolveBasePlantId(id);
   return PLANT_FAMILY_MAP[baseId] ?? 'Unknown';
 }

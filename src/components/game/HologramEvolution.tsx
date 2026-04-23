@@ -1928,7 +1928,7 @@ export const PLANT_CARDS: Record<string, PlantCard> = {
     harvestSeason: ['summer'],
     totalDaysToHarvest: 90,
     plantFamily: 'Escalloniaceae',
-    droughtResistance: 0.6,
+    droughtResistance: 0.65,
     diseaseResistance: 0.5,
     pestResistance: 0.5,
   },
