@@ -147,7 +147,7 @@ export function useAgroData(): GlobalAgroSummary {
       const gddCfg     = getGDDConfig(gp.plantDefId);
       const gddToday   = calcDailyGDD(tMean, tMin, tMax, gddCfg);
       const stageTarget = getStageGDDTarget(gp.plantDefId, plant.stage);
-      const gddAccum   = (plant as any).gddAccumulated ?? 0;
+      const gddAccum   = plant.gddAccumulated ?? 0;
       const gddPct     = stageTarget > 0 ? Math.min(100, (gddAccum / stageTarget) * 100) : 0;
       const gddRemain  = Math.max(0, stageTarget - gddAccum);
       const daysToNext = gddToday > 0 ? Math.ceil(gddRemain / gddToday) : 99;

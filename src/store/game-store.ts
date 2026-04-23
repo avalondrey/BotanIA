@@ -765,7 +765,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   placePlantInGarden: (plantDefId: string, x: number, y: number, pepIndex?: number) => {
     const state = get();
-    const result = useGardenStore.getState().placePlantInGarden(plantDefId, x, y, pepIndex, state.adminMode, state.realWeather);
+    const result = useGardenStore.getState().placePlantInGarden(plantDefId, x, y, pepIndex, state.adminMode, state.realWeather, state.weather?.type);
     if (result) {
       const garden = useGardenStore.getState();
       const nursery = useNurseryStore.getState();
@@ -800,13 +800,27 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   waterPlantGarden: (plantId: string) => {
-    useGardenStore.getState().waterPlantGarden(plantId);
+    useGardenStore.getState().waterPlantGarden(plantId, get().weather?.type);
     set({ gardenPlants: useGardenStore.getState().gardenPlants });
+    // Watering during frost counts as frost protection
+    if (get().weather?.type === 'frost') {
+      try {
+        const { useEconomyStore } = require('@/store/economy-store');
+        useEconomyStore.getState().trackFrostProtection();
+      } catch {}
+    }
   },
 
   treatPlantGarden: (plantId: string) => {
     useGardenStore.getState().treatPlantGarden(plantId);
     set({ gardenPlants: useGardenStore.getState().gardenPlants });
+    // Track frost protection quest
+    if (get().weather?.type === 'frost') {
+      try {
+        const { useEconomyStore } = require('@/store/economy-store');
+        useEconomyStore.getState().trackFrostProtection();
+      } catch {}
+    }
   },
 
   fertilizePlantGarden: (plantId: string) => {
@@ -833,7 +847,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const { useEconomyStore } = require('@/store/economy-store');
       useEconomyStore.getState().addHarvestInventory(gp.plantDefId);
-      useEconomyStore.getState().trackHarvest();
+      useEconomyStore.getState().trackHarvest(get().weather?.type);
     } catch {}
 
     const totalHarvested = get().harvested + 1;
@@ -864,7 +878,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   waterAllGarden: () => {
-    useGardenStore.getState().waterAllGarden();
+    useGardenStore.getState().waterAllGarden(get().weather?.type);
     set({ gardenPlants: useGardenStore.getState().gardenPlants });
   },
 

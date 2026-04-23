@@ -61,14 +61,14 @@ export interface GardenState {
   gardenZones: GardenZone[];
 
   // Actions — Plant placement
-  placePlantInGarden: (plantDefId: string, x: number, y: number, pepIndex?: number, adminMode?: boolean, realWeather?: RealWeatherData | null) => boolean;
+  placePlantInGarden: (plantDefId: string, x: number, y: number, pepIndex?: number, adminMode?: boolean, realWeather?: RealWeatherData | null, weatherType?: string) => boolean;
   placeRowInGarden: (plantDefId: string, startX: number, startY: number, endX: number, endY: number, pepIndices?: number[]) => number;
   removePlantFromGarden: (plantId: string) => void;
-  waterPlantGarden: (plantId: string) => void;
+  waterPlantGarden: (plantId: string, weatherType?: string) => void;
   treatPlantGarden: (plantId: string) => void;
   fertilizePlantGarden: (plantId: string) => void;
   harvestPlantGarden: (plantId: string) => void;
-  waterAllGarden: () => void;
+  waterAllGarden: (weatherType?: string) => void;
   moveGardenPlant: (plantId: string, newX: number, newY: number) => void;
 
   // Actions — Serre zones
@@ -129,7 +129,7 @@ export const useGardenStore = create<GardenState>()(
 
       // ── Plant Placement ──
 
-      placePlantInGarden: (plantDefId, x, y, pepIndex, adminMode, realWeather) => {
+      placePlantInGarden: (plantDefId, x, y, pepIndex, adminMode, realWeather, weatherType) => {
         const state = get();
         const spacing = PLANT_SPACING[plantDefId];
         if (!spacing) return false;
@@ -192,7 +192,7 @@ export const useGardenStore = create<GardenState>()(
         // Track planting for daily quest
         try {
           const { useEconomyStore } = require('@/store/economy-store');
-          useEconomyStore.getState().trackPlantSeed();
+          useEconomyStore.getState().trackPlantSeed(weatherType);
         } catch {}
 
         // Événement métier
@@ -289,7 +289,7 @@ export const useGardenStore = create<GardenState>()(
         set((s) => ({ gardenPlants: s.gardenPlants.filter((gp) => gp.id !== plantId) }));
       },
 
-      waterPlantGarden: (plantId: string) => {
+      waterPlantGarden: (plantId: string, weatherType?: string) => {
         set((s) => {
           const newGardenPlants = s.gardenPlants.map((gp) =>
             gp.id === plantId ? { ...gp, plant: applyWatering(gp.plant) } : gp
@@ -299,7 +299,7 @@ export const useGardenStore = create<GardenState>()(
         // Track watering for daily quest
         try {
           const { useEconomyStore } = require('@/store/economy-store');
-          useEconomyStore.getState().trackWaterPlant();
+          useEconomyStore.getState().trackWaterPlant(weatherType);
         } catch {}
       },
 
@@ -339,7 +339,7 @@ export const useGardenStore = create<GardenState>()(
         eventBus.emit({ type: 'plant:harvested', plantDefId: plant.plantDefId, coins });
       },
 
-      waterAllGarden: () => {
+      waterAllGarden: (weatherType?: string) => {
         const state = get();
         const plantCount = state.gardenPlants.length;
         set((s) => ({
@@ -352,7 +352,7 @@ export const useGardenStore = create<GardenState>()(
         try {
           const { useEconomyStore } = require('@/store/economy-store');
           for (let i = 0; i < plantCount; i++) {
-            useEconomyStore.getState().trackWaterPlant();
+            useEconomyStore.getState().trackWaterPlant(weatherType);
           }
         } catch {}
         // Événement métier

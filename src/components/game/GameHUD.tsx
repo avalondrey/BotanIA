@@ -8,6 +8,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useBiodiversityScore } from "@/hooks/useBiodiversityScore";
 import {
   getRealDateDisplay,
   getRealDateFull,
@@ -80,6 +81,28 @@ function AnalogClock() {
   );
 }
 
+function BioScoreBadge() {
+  const { score, grade } = useBiodiversityScore();
+  const gradeColor: Record<string, string> = {
+    A: 'text-emerald-600 border-emerald-400 bg-emerald-50',
+    B: 'text-green-600 border-green-400 bg-green-50',
+    C: 'text-yellow-600 border-yellow-400 bg-yellow-50',
+    D: 'text-orange-600 border-orange-400 bg-orange-50',
+    F: 'text-red-600 border-red-400 bg-red-50',
+  };
+  const color = gradeColor[grade] || gradeColor.F;
+
+  return (
+    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 ${color}`}>
+      <span className="text-sm">🦋</span>
+      <div>
+        <p className="text-[10px] font-black leading-none">BIO</p>
+        <p className="text-sm font-black leading-tight">{score} <span className="text-[10px]">{grade}</span></p>
+      </div>
+    </div>
+  );
+}
+
 export function GameHUD() {
   const day = useGameStore((s) => s.day);
   const [mounted, setMounted] = useState(false);
@@ -136,7 +159,7 @@ export function GameHUD() {
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-amber-300">
           <Trophy className="w-3.5 h-3.5 text-amber-500" />
           <div>
-            <p className="text-[8px] text-amber-500 font-black leading-none">POINTS</p>
+            <p className="text-[10px] text-amber-500 font-black leading-none">POINTS</p>
             <motion.p
               key={score}
               initial={{ scale: 1.3, color: "#f59e0b" }}
@@ -149,11 +172,14 @@ export function GameHUD() {
           </div>
         </div>
 
+        {/* Biodiversité */}
+        <BioScoreBadge />
+
         {/* Coins */}
         <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg border-2 border-amber-300">
           <Coins className="w-3.5 h-3.5 text-amber-600" />
           <div>
-            <p className="text-[8px] text-amber-500 font-black leading-none">PIÈCES</p>
+            <p className="text-[10px] text-amber-500 font-black leading-none">PIÈCES</p>
             <motion.p
               key={coins}
               initial={{ scale: 1.2 }}
@@ -169,7 +195,7 @@ export function GameHUD() {
         <div className="flex items-center gap-2 px-2 py-1 bg-stone-50 rounded-lg border border-stone-200">
           <AnalogClock />
           <div>
-            <p className="text-[8px] text-stone-400 font-bold leading-none">DATE</p>
+            <p className="text-[10px] text-stone-400 font-bold leading-none">DATE</p>
             <p className="text-xs font-black leading-tight" suppressHydrationWarning>
               {mounted ? getRealDateDisplay(day) : "—"}
             </p>
@@ -180,7 +206,7 @@ export function GameHUD() {
         <div className="flex items-center gap-1 px-2 py-1 bg-stone-50 rounded-lg border border-stone-200">
           <span className="text-base">{getSeasonEmoji(season)}</span>
           <div>
-            <p className="text-[8px] text-stone-400 font-bold leading-none">SAISON</p>
+            <p className="text-[10px] text-stone-400 font-bold leading-none">SAISON</p>
             <p className="text-[10px] font-black leading-tight">{getSeasonLabel(season)}</p>
           </div>
         </div>
@@ -202,20 +228,20 @@ export function GameHUD() {
             </span>
           )}
           <div>
-            <p className={`text-[8px] font-bold leading-none ${hasFrostRisk ? "text-blue-400" : "text-sky-400"}`}>MÉTÉO</p>
+            <p className={`text-[10px] font-bold leading-none ${hasFrostRisk ? "text-blue-400" : "text-sky-400"}`}>MÉTÉO</p>
             {realWeather ? (
               <p className={`text-[10px] font-black leading-tight ${hasFrostRisk ? "text-blue-800" : ""}`}>
                 {realWeather?.current?.temperature != null ? `${realWeather.current?.weatherDescription || "—"}` : "Météo indisponible"}
                 {hasFrostRisk && " 🥶"}
               </p>
             ) : weatherError ? (
-              <p className="text-[9px] text-red-500">Indisponible</p>
+              <p className="text-[10px] text-red-500">Indisponible</p>
             ) : (
               <p className="text-[10px] font-black leading-tight">Chargement...</p>
             )}
           </div>
           {realWeather && (
-            <span className="text-[7px] px-1 py-0.5 bg-sky-100 text-sky-700 rounded font-black border border-sky-200 ml-1">
+            <span className="text-[10px] px-1 py-0.5 bg-sky-100 text-sky-700 rounded font-black border border-sky-200 ml-1">
               Réelle
             </span>
           )}
@@ -225,7 +251,7 @@ export function GameHUD() {
         {gpsCoords && (
           <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-stone-50 rounded-lg border border-stone-200 flex-shrink-0">
             <MapPin className="w-3.5 h-3.5 text-stone-400" />
-            <p className="text-[8px] font-bold text-stone-500">
+            <p className="text-[10px] font-bold text-stone-500">
               {gpsCoords?.lat != null && gpsCoords?.lon != null ? `${gpsCoords.lat.toFixed(2)}°, ${gpsCoords.lon.toFixed(2)}°` : "Localisation..."}
             </p>
           </div>
@@ -235,10 +261,10 @@ export function GameHUD() {
         <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg border border-green-200 flex-shrink-0 whitespace-nowrap">
           <Sprout className="w-3.5 h-3.5 text-green-600" />
           <div>
-            <p className="text-[8px] text-green-400 font-bold leading-none">PLANTES</p>
+            <p className="text-[10px] text-green-400 font-bold leading-none">PLANTES</p>
             <p className="text-xs font-black leading-tight text-green-700">
               {totalPlants}
-              <span className="text-[8px] text-green-400 ml-0.5">
+              <span className="text-[10px] text-green-400 ml-0.5">
                 ({jardinPlants}🌳 {pepiniere.length}🏠)
               </span>
             </p>
@@ -246,13 +272,13 @@ export function GameHUD() {
         </div>
 
         <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg border border-green-200 flex-shrink-0">
-          <span className="text-[9px]">✂️</span>
+          <span className="text-[10px]">✂️</span>
           <p className="text-xs font-black text-green-700">{harvested}</p>
         </div>
 
         {/* Serre tiles */}
         <div className="flex items-center gap-1 px-2 py-1 bg-cyan-50 rounded-lg border border-cyan-200 flex-shrink-0">
-          <span className="text-[9px]">🏡</span>
+          <span className="text-[10px]">🏡</span>
           <p className="text-xs font-black text-cyan-700">{serreTiles}</p>
         </div>
 
@@ -267,7 +293,7 @@ export function GameHUD() {
           className="flex items-center gap-3 p-2 bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 rounded-xl flex-wrap"
         >
           <div className="flex items-center gap-1">
-            <Thermometer className="w-3.5 h-3.5 text-red-500" />
+            <MapPin className="w-3.5 h-3.5 text-red-500" />
             <span className="text-[10px] font-bold">
               {gpsCoords?.lat != null && gpsCoords?.lon != null ? `${gpsCoords.lat.toFixed(2)}°, ${gpsCoords.lon.toFixed(2)}°` : "Localisation..."}
             </span>
@@ -303,7 +329,7 @@ export function GameHUD() {
               <span className="text-[10px] font-black text-blue-700">🥶 Risque de gel !</span>
             </div>
           )}
-          <p className="text-[8px] text-sky-400 ml-auto">
+          <p className="text-[10px] text-sky-400 ml-auto">
             Maj: {new Date(realWeather?.current?.timestamp ?? Date.now()).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </motion.div>
@@ -318,10 +344,10 @@ export function GameHUD() {
             className="p-2.5 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000] max-h-52 overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-1.5">
-              <h3 className="text-[9px] font-black uppercase flex items-center gap-1">
+              <h3 className="text-[10px] font-black uppercase flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5" /> Journal IA
               </h3>
-              <button onClick={toggleConsole} className="text-[8px] text-stone-400 font-bold hover:text-black">
+              <button onClick={toggleConsole} className="text-[10px] text-stone-400 font-bold hover:text-black">
                 {showConsole ? "Masquer" : "Voir"}
               </button>
             </div>
@@ -329,7 +355,7 @@ export function GameHUD() {
               <div className="space-y-0.5">
                 {recentAlerts.map((alert) => (
                   <motion.div key={alert.id} initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }}
-                    className={`px-2 py-1 rounded-lg text-[9px] font-medium border ${
+                    className={`px-2 py-1 rounded-lg text-[10px] font-medium border ${
                       alert.type === "water" ? "bg-blue-50 border-blue-200 text-blue-800" :
                       alert.type === "health" || alert.type === "death" ? "bg-red-50 border-red-200 text-red-800" :
                       alert.type === "harvest" ? "bg-green-50 border-green-200 text-green-800" :

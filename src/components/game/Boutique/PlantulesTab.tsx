@@ -95,7 +95,7 @@ export function PlantulesTab({
               <div className="relative h-28 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
                 {plantDef && (
                   <Image
-                    src={`/plants/${item.plantDefId}-stage-1.png`}
+                    src={`/plantules/${item.plantDefId}-stage-1.png`}
                     alt={item.name}
                     width={105}
                     height={80}

@@ -1,10 +1,13 @@
 /**
  * IA JARDINIER - Backend avec Groq (fallback Gemini)
  * Agent expert en jardinage biologique
+ *
+ * SECURITY: Uses server-side env vars GROQ_API_KEY / GEMINI_API_KEY.
+ * Fallback on NEXT_PUBLIC_* retained for backward compatibility during transition.
  */
 
-const GROQ_API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export interface JardinContext {
@@ -151,7 +154,7 @@ export async function getConseilQuotidien(context: JardinContext): Promise<IARes
 
   return {
     conseil: "Configure ta clé API (Groq ou Gemini) pour activer l'IA jardinier !",
-    actions: ["Ajoute NEXT_PUBLIC_GROQ_API_KEY ou NEXT_PUBLIC_GEMINI_API_KEY dans .env.local"],
+    actions: ["Ajoute GROQ_API_KEY ou GEMINI_API_KEY dans .env.local"],
     priorite: 'haute',
   };
 }
@@ -167,64 +170,48 @@ export async function diagnostiquerPlante(
   if (!GROQ_API_KEY) {
     return {
       diagnostic: "IA non configurée",
-      traitement: ["Configure GROQ_API_KEY"],
+      traitement: ["Ajoute GROQ_API_KEY dans .env.local"],
       urgence: false,
     };
   }
 
-  const prompt = `Diagnostic plante : ${planteName}
+  const prompt = `Tu es BotanIA, expert phytopathologie. Plante : ${planteName}. Symptômes : ${symptoms.join(', ')}.
+Contexte : ${context.meteo?.temperature}°C, ${context.meteo?.conditions}.
+Réponds en JSON strict : { "diagnostic": "...", "traitement": ["..."], "urgence": true/false }`;
 
-SYMPTÔMES OBSERVÉS :
-${symptoms.map(s => `- ${s}`).join('\n')}
+  const response = await fetch(GROQ_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: 'Tu es BotanIA, expert phytopathologie. Réponds UNIQUEMENT en JSON valide.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
+    }),
+  });
 
-CONTEXTE :
-- Saison : ${context.saison || 'inconnue'}
-- Météo : ${context.meteo?.temperature || '?'}°C
-
-Analyse et donne un diagnostic + traitement bio.
-Réponds en JSON :
-{
-  "diagnostic": "...",
-  "traitement": ["...", "..."],
-  "urgence": true|false
-}`;
-
-  try {
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: 'Expert en diagnostic jardinage bio. JSON uniquement.' },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.2,
-        max_tokens: 400,
-      }),
-    });
-
-    if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content || '{}';
-    const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed = JSON.parse(cleanContent);
-
+  if (!response.ok) {
     return {
-      diagnostic: parsed.diagnostic || 'Diagnostic indisponible',
-      traitement: parsed.traitement || [],
-      urgence: parsed.urgence || false,
-    };
-  } catch (error) {
-    console.error('Erreur diagnostic:', error);
-    return {
-      diagnostic: "Erreur lors du diagnostic",
-      traitement: ["Réessaye plus tard"],
+      diagnostic: `Erreur API: ${response.status}`,
+      traitement: ["Réessaie plus tard"],
       urgence: false,
     };
   }
+
+  const data = await response.json();
+  const content = data.choices[0]?.message?.content || '{}';
+  const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const parsed = JSON.parse(cleanContent);
+
+  return {
+    diagnostic: parsed.diagnostic || 'Aucun diagnostic',
+    traitement: parsed.traitement || [],
+    urgence: parsed.urgence || false,
+  };
 }

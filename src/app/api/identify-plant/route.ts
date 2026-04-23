@@ -98,8 +98,8 @@ async function identifyWithMulti(imageBase64: string, mediaType: string) {
 }
 
 function autoSelectEngine(): string {
-  if (process.env.NEXT_PUBLIC_GROQ_API_KEY) return 'groq';
-  if (process.env.GEMINI_API_KEY) return 'gemini';
+  if (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY) return 'groq';
+  if (process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY) return 'gemini';
   if (process.env.ENABLE_OLLAMA === 'true') return 'ollama';
   return 'groq';
 }
@@ -177,7 +177,7 @@ RÈGLES STRICTES :
 
 // ─── Groq (llama-3.3-70b) ─────────────────────────────────────────────────────
 async function identifyWithGroq(imageBase64: string, mediaType = 'image/jpeg') {
-  const key = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  const key = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
   if (!key) throw new Error('GROQ key manquante');
 
   // Groq Llama 4 Scout (vision multimodal, remplace llama-3.2-11b décommissionné)

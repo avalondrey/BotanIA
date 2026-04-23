@@ -13,6 +13,7 @@ import { search, searchMulti } from './qdrant';
 import { LIA_PERSONA, buildGameStateContext, SYSTEM_PARTS, type GameStateSnapshot } from './persona';
 import { simpleChat } from './ollama';
 import { useAgentStore, type AgentSuggestion } from '@/store/agent-store';
+import { searchLocalKnowledge, formatLocalKnowledge } from './local-knowledge';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -144,6 +145,13 @@ export async function ragQuery(
     contextText = formatResultsAsContext(results);
   } catch (embedErr) {
     console.warn('[RAG] Embeddings unavailable, falling back to simple chat:', embedErr);
+  }
+
+  // 3b. Always enrich with local knowledge base (supplements Qdrant or replaces it when offline)
+  const localEntries = searchLocalKnowledge(userMessage);
+  const localContext = formatLocalKnowledge(localEntries);
+  if (localContext) {
+    contextText += '\n' + localContext;
   }
 
   // 4. Build game state context

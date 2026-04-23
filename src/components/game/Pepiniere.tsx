@@ -238,9 +238,6 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
               const isSelected = selectedMiniSerreId === serre.id && selectedSlot?.row === rowIdx && selectedSlot?.col === colIdx;
               const plantDef = plant ? PLANTS[plant.plantDefId] : null;
               const pepStage = plant ? getVisualStage(plant) : -1;
-              if (plant && plant.growthRoute !== 'miniserre') {
-                console.log('[DEBUG] mini-serre plant bad route:', plant.plantDefId, 'growthRoute=', plant.growthRoute, 'containerType=', plant.containerType);
-              }
               const isReady = plant ? canTransplantToGarden(plant) : false;
               const needsRepot = plant ? needsRepotting(plant) : false;
               const isStunted = plant?.health !== undefined && plant.health <= 20;
@@ -267,7 +264,7 @@ function MiniSerreCard({ serre, serreIndex }: { serre: MiniSerre; serreIndex: nu
                     <>
                       <div className="absolute inset-0">
                         <Image
-                          src={`/plantules/${plant.plantDefId}-stage-${Math.min(pepStage, 5) + 1}.png`}
+                          src={getStageImage(plant.plantDefId, Math.min(pepStage, 5), 'miniserre')}
                           alt={getRouteStageName(plant)}
                           fill
                           sizes="(max-width: 768px) 12vw, 8vw"

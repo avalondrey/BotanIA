@@ -53,10 +53,10 @@ type EventHandler<T extends EventTypeName> = (payload: EventPayload<T>) => void;
 //  BUS — Implementation
 // ═══════════════════════════════════════════════════
 
-type AnyHandler = (payload: any) => void;
+type AnyHandler = (payload: BotanIAEvent) => void;
 
 class EventBus {
-  private listeners: Map<string, Set<AnyHandler>> = new Map();
+  private listeners: Map<EventTypeName, Set<AnyHandler>> = new Map();
 
   /**
    * S'abonner à un type d'événement.

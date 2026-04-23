@@ -35,6 +35,7 @@ interface QuestDef {
 }
 
 const QUEST_POOL: QuestDef[] = [
+  // ── Quêtes classiques ──
   { id: 'q-water-3', title: 'Arroser 3 plantes', emoji: '💧', statKey: 'plantsWatered', target: 3, reward: 5 },
   { id: 'q-water-5', title: 'Arroser 5 plantes', emoji: '💧', statKey: 'plantsWatered', target: 5, reward: 8 },
   { id: 'q-plant-2', title: 'Planter 2 graines', emoji: '🌱', statKey: 'seedsPlanted', target: 2, reward: 10 },
@@ -43,6 +44,12 @@ const QUEST_POOL: QuestDef[] = [
   { id: 'q-harvest-3', title: 'Récolter 3 plantes', emoji: '🌾', statKey: 'plantsHarvested', target: 3, reward: 15 },
   { id: 'q-harvest-5', title: 'Récolter 5 plantes', emoji: '🌾', statKey: 'plantsHarvested', target: 5, reward: 20 },
   { id: 'q-tree-1', title: 'Planter 1 arbre', emoji: '🌳', statKey: 'treesPlanted', target: 1, reward: 20 },
+  // ── Quêtes météo-dépendantes ──
+  { id: 'q-heatwave-water', title: 'Arroser pendant une canicule', emoji: '🔥💧', statKey: 'waterDuringHeatwave', target: 2, reward: 15 },
+  { id: 'q-sunny-harvest', title: 'Récolter par beau temps', emoji: '☀️🌾', statKey: 'harvestInSun', target: 3, reward: 12 },
+  { id: 'q-frost-protect', title: 'Protéger du gel', emoji: '❄️🛡️', statKey: 'protectFromFrost', target: 2, reward: 15 },
+  { id: 'q-rain-plant', title: 'Planter avant la pluie', emoji: '🌧️🌱', statKey: 'plantBeforeRain', target: 2, reward: 12 },
+  { id: 'q-storm-harvest', title: 'Récolter avant l\'orage', emoji: '⛈️🌾', statKey: 'harvestBeforeStorm', target: 2, reward: 18 },
 ];
 
 interface SessionStats {
@@ -51,6 +58,12 @@ interface SessionStats {
   plantsHarvested: number;
   plantsIdentified: number;
   treesPlanted: number;
+  // Météo-dépendantes
+  waterDuringHeatwave: number;
+  harvestInSun: number;
+  protectFromFrost: number;
+  plantBeforeRain: number;
+  harvestBeforeStorm: number;
 }
 
 export interface QuestInstance {
@@ -85,11 +98,12 @@ interface EconomyState {
   claimDailyBonus: () => { coins: number; streak: number; alreadyClaimed: boolean };
   checkAndResetDaily: () => void;
 
-  trackWaterPlant: () => void;
-  trackPlantSeed: () => void;
-  trackHarvest: () => void;
+  trackWaterPlant: (weatherType?: string) => void;
+  trackPlantSeed: (weatherType?: string) => void;
+  trackHarvest: (weatherType?: string) => void;
   trackIdentify: () => void;
   trackTreePlanted: () => void;
+  trackFrostProtection: () => void;
 
   checkQuestCompletion: () => QuestInstance[];
   claimQuestReward: (questId: string) => number;
@@ -137,6 +151,11 @@ export const useEconomyStore = create<EconomyState>()(
         plantsHarvested: 0,
         plantsIdentified: 0,
         treesPlanted: 0,
+        waterDuringHeatwave: 0,
+        harvestInSun: 0,
+        protectFromFrost: 0,
+        plantBeforeRain: 0,
+        harvestBeforeStorm: 0,
       },
 
       // ── Sell harvest ──
@@ -210,24 +229,39 @@ export const useEconomyStore = create<EconomyState>()(
       },
 
       // ── Tracking ──
-      trackWaterPlant: () => {
-        set((s) => ({
-          sessionStats: { ...s.sessionStats, plantsWatered: s.sessionStats.plantsWatered + 1 },
-        }));
+      trackWaterPlant: (weatherType?: string) => {
+        set((s) => {
+          const stats = { ...s.sessionStats, plantsWatered: s.sessionStats.plantsWatered + 1 };
+          if (weatherType === 'heatwave') {
+            stats.waterDuringHeatwave = stats.waterDuringHeatwave + 1;
+          }
+          return { sessionStats: stats };
+        });
         get().checkQuestCompletion();
       },
 
-      trackPlantSeed: () => {
-        set((s) => ({
-          sessionStats: { ...s.sessionStats, seedsPlanted: s.sessionStats.seedsPlanted + 1 },
-        }));
+      trackPlantSeed: (weatherType?: string) => {
+        set((s) => {
+          const stats = { ...s.sessionStats, seedsPlanted: s.sessionStats.seedsPlanted + 1 };
+          if (weatherType === 'rainy' || weatherType === 'stormy') {
+            stats.plantBeforeRain = stats.plantBeforeRain + 1;
+          }
+          return { sessionStats: stats };
+        });
         get().checkQuestCompletion();
       },
 
-      trackHarvest: () => {
-        set((s) => ({
-          sessionStats: { ...s.sessionStats, plantsHarvested: s.sessionStats.plantsHarvested + 1 },
-        }));
+      trackHarvest: (weatherType?: string) => {
+        set((s) => {
+          const stats = { ...s.sessionStats, plantsHarvested: s.sessionStats.plantsHarvested + 1 };
+          if (weatherType === 'sunny') {
+            stats.harvestInSun = stats.harvestInSun + 1;
+          }
+          if (weatherType === 'stormy') {
+            stats.harvestBeforeStorm = stats.harvestBeforeStorm + 1;
+          }
+          return { sessionStats: stats };
+        });
         get().checkQuestCompletion();
       },
 
@@ -241,6 +275,13 @@ export const useEconomyStore = create<EconomyState>()(
       trackTreePlanted: () => {
         set((s) => ({
           sessionStats: { ...s.sessionStats, treesPlanted: s.sessionStats.treesPlanted + 1 },
+        }));
+        get().checkQuestCompletion();
+      },
+
+      trackFrostProtection: () => {
+        set((s) => ({
+          sessionStats: { ...s.sessionStats, protectFromFrost: s.sessionStats.protectFromFrost + 1 },
         }));
         get().checkQuestCompletion();
       },
@@ -300,6 +341,11 @@ export const useEconomyStore = create<EconomyState>()(
             plantsHarvested: 0,
             plantsIdentified: 0,
             treesPlanted: 0,
+            waterDuringHeatwave: 0,
+            harvestInSun: 0,
+            protectFromFrost: 0,
+            plantBeforeRain: 0,
+            harvestBeforeStorm: 0,
           },
         });
       },

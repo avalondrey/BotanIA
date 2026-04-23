@@ -8,7 +8,7 @@
  * - Stale-While-Revalidate pour données météo
  */
 
-const CACHE_NAME = 'botania-v2';
+const CACHE_NAME = 'botania-v4';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_URLS = [
@@ -20,7 +20,7 @@ const PRECACHE_URLS = [
 
 const STATIC_EXTENSIONS = /\.(js|css|png|jpg|jpeg|svg|webp|woff2?|ttf|eot|ico)$/;
 const NEXT_ASSETS = /\/_next\//;
-const IMAGE_ASSETS = /\/images\/|\/cards\/|\/plants\/|\/trees\//;
+const IMAGE_ASSETS = /\/images\/|\/cards\/|\/plants\/|\/plantules\/|\/trees\//;
 
 // ─── Installation ───
 self.addEventListener('install', (event) => {

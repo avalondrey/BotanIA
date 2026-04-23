@@ -3,7 +3,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGameStore, DEFAULT_GARDEN_WIDTH_CM, DEFAULT_GARDEN_HEIGHT_CM } from '@/store/game-store';
+import { useGameStore, DEFAULT_GARDEN_WIDTH_CM, DEFAULT_GARDEN_HEIGHT_CM, getStageImage } from '@/store/game-store';
 import { PLANTS } from '@/lib/ai-engine';
 import { useAgroData, type PlantAgroData } from '@/hooks/useAgroData';
 import { useMissingSprites } from '@/hooks/useMissingSprites';

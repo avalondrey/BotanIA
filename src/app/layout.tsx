@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   keywords: ["jardin", "botanique", "culture", "plantes", "maraichage", "agronomie", "GDD", "FAO"],
   authors: [{ name: "avalondrey" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
     title: "🌱 BotanIA — Application de Jardinage Botanique",

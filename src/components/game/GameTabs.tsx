@@ -50,113 +50,128 @@ export function GameTabs() {
     <>
       <DailyBonusPopup />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
-      <TabsList className="bg-white border-black rounded-xl p-1 h-auto flex-wrap" style={{ borderWidth: 'var(--ui-border-width)', boxShadow: `var(--ui-shadow-offset) var(--ui-shadow-offset) 0 0 #000`, gap: 'var(--ui-tab-gap)' }}>
-        {/* Ligne 1 : principaux */}
+      <TabsList className="bg-white border-black rounded-xl p-1 h-auto flex-wrap gap-[3px]" style={{ borderWidth: 'var(--ui-border-width)', boxShadow: `var(--ui-shadow-offset) var(--ui-shadow-offset) 0 0 #000` }}>
+        {/* Principaux */}
         <TabsTrigger
           value="jardin" style={tabStyle}
           className="data-[state=active]:bg-green-100 data-[state=active]:border-green-300 border-transparent rounded-lg font-black uppercase"
         >
           <TreePine style={tabIconStyle} />
-          🌿 Jardin
+          <span className="hidden sm:inline ml-1">🌿 Jardin</span>
+          <span className="sm:hidden">🌿</span>
         </TabsTrigger>
         <TabsTrigger
           value="serre" style={tabStyle}
           className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-transparent rounded-lg font-black uppercase"
         >
           <Home style={tabIconStyle} />
-          🏡 Serre
+          <span className="hidden sm:inline ml-1">🏡 Serre</span>
+          <span className="sm:hidden">🏡</span>
         </TabsTrigger>
         <TabsTrigger
           value="pepiniere" style={tabStyle}
           className="data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 border-transparent rounded-lg font-black uppercase"
         >
           <Warehouse style={tabIconStyle} />
-          🏠 Culture
+          <span className="hidden sm:inline ml-1">🏠 Culture</span>
+          <span className="sm:hidden">🏠</span>
         </TabsTrigger>
         <TabsTrigger
           value="boutique" style={tabStyle}
           className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-transparent rounded-lg font-black uppercase"
         >
           <ShoppingBag style={tabIconStyle} />
-          🏪 Boutique
+          <span className="hidden sm:inline ml-1">🏪 Boutique</span>
+          <span className="sm:hidden">🏪</span>
         </TabsTrigger>
         <TabsTrigger
           value="graines" style={tabStyle}
           className="data-[state=active]:bg-emerald-100 data-[state=active]:border-emerald-300 border-transparent rounded-lg font-black uppercase"
         >
           <Sprout style={tabIconStyle} />
-          🌱 Inventaire
+          <span className="hidden sm:inline ml-1">🌱 Inventaire</span>
+          <span className="sm:hidden">🌱</span>
         </TabsTrigger>
         <TabsTrigger
           value="identificateur" style={tabStyle}
           className="data-[state=active]:bg-violet-100 data-[state=active]:border-violet-300 border-transparent rounded-lg font-black uppercase"
         >
           <ScanSearch style={tabIconStyle} />
-          🔍 ID
+          <span className="hidden sm:inline ml-1">🔍 ID</span>
+          <span className="sm:hidden">🔍</span>
         </TabsTrigger>
-        {/* Ligne 2 : outils */}
+        {/* Outils */}
         <TabsTrigger
           value="journal" style={tabStyle}
           className="data-[state=active]:bg-indigo-100 data-[state=active]:border-indigo-300 border-transparent rounded-lg font-black uppercase"
         >
           <BookOpen style={tabIconStyle} />
-          📔 Journal
+          <span className="hidden sm:inline ml-1">📔 Journal</span>
+          <span className="sm:hidden">📔</span>
         </TabsTrigger>
         <TabsTrigger
           value="recoltes" style={tabStyle}
           className="data-[state=active]:bg-amber-100 data-[state=active]:border-amber-300 border-transparent rounded-lg font-black uppercase"
         >
           <Scale style={tabIconStyle} />
-          ⚖️ Récoltes
+          <span className="hidden sm:inline ml-1">⚖️ Récoltes</span>
+          <span className="sm:hidden">⚖️</span>
         </TabsTrigger>
         <TabsTrigger
           value="maladies" style={tabStyle}
           className="data-[state=active]:bg-red-100 data-[state=active]:border-red-300 border-transparent rounded-lg font-black uppercase"
         >
           <Bug style={tabIconStyle} />
-          🦠 Maladies
+          <span className="hidden sm:inline ml-1">🦠 Maladies</span>
+          <span className="sm:hidden">🦠</span>
         </TabsTrigger>
         <TabsTrigger
           value="sauvegardes" style={tabStyle}
           className="data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300 border-transparent rounded-lg font-black uppercase"
         >
           <Save style={tabIconStyle} />
-          💾 Save
+          <span className="hidden sm:inline ml-1">💾 Save</span>
+          <span className="sm:hidden">💾</span>
         </TabsTrigger>
         <TabsTrigger
           value="eau" style={tabStyle}
           className="data-[state=active]:bg-cyan-100 data-[state=active]:border-cyan-300 border-transparent rounded-lg font-black uppercase"
         >
           <Droplets style={tabIconStyle} />
-          💧 Eau
+          <span className="hidden sm:inline ml-1">💧 Eau</span>
+          <span className="sm:hidden">💧</span>
         </TabsTrigger>
         <TabsTrigger
           value="croissance" style={tabStyle}
           className="data-[state=active]:bg-lime-100 data-[state=active]:border-lime-300 border-transparent rounded-lg font-black uppercase"
         >
           <Leaf style={tabIconStyle} />
-          🌱 Croissance
+          <span className="hidden sm:inline ml-1">🌱 Croissance</span>
+          <span className="sm:hidden">🌱</span>
         </TabsTrigger>
         <TabsTrigger
           value="catalogue" style={tabStyle}
           className="data-[state=active]:bg-emerald-100 data-[state=active]:border-emerald-300 border-transparent rounded-lg font-black uppercase"
         >
           <Flower2 style={tabIconStyle} />
-          📖 Catalogue
+          <span className="hidden sm:inline ml-1">📖 Catalogue</span>
+          <span className="sm:hidden">📖</span>
         </TabsTrigger>
         <TabsTrigger
           value="meteo" style={tabStyle}
           className="data-[state=active]:bg-sky-100 data-[state=active]:border-sky-300 border-transparent rounded-lg font-black uppercase"
         >
           <TrendingUp style={tabIconStyle} />
-          🌦️ Météo
+          <span className="hidden sm:inline ml-1">🌦️ Météo</span>
+          <span className="sm:hidden">🌦️</span>
         </TabsTrigger>
         <TabsTrigger
           value="photos" style={tabStyle}
           className="data-[state=active]:bg-purple-100 data-[state=active]:border-purple-300 border-transparent rounded-lg font-black uppercase"
         >
           <Camera style={tabIconStyle} />
-          📸 Photos
+          <span className="hidden sm:inline ml-1">📸 Photos</span>
+          <span className="sm:hidden">📸</span>
         </TabsTrigger>
       </TabsList>
 

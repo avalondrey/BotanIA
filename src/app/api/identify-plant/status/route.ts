@@ -9,11 +9,11 @@ export async function GET() {
   const status: Record<string, { online: boolean; label: string; detail?: string }> = {};
 
   // Groq — vérifie la clé API
-  const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
   status.groq = {
     online: !!groqKey,
     label: 'Groq IA',
-    detail: groqKey ? 'Clé configurée' : 'NEXT_PUBLIC_GROQ_API_KEY manquante',
+    detail: groqKey ? 'Clé configurée' : 'GROQ_API_KEY manquante',
   };
 
   // Google Gemini — vérifie la clé API

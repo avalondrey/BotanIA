@@ -9,6 +9,8 @@ import { useGameStore } from '@/store/game-store';
 import { PLANTS } from '@/lib/ai-engine';
 import { useAgroData } from '@/hooks/useAgroData';
 import { getGDDConfig } from '@/lib/gdd-engine';
+import { isHedge } from '@/data/plant-categories';
+import { useHarvestPrediction } from '@/hooks/useHarvestPrediction';
 
 interface HologramProps {
   plantId?:   string;
@@ -17,6 +19,7 @@ interface HologramProps {
 
 const STAGE_LABELS = ['🌰 Graine','🌱 Levée','🌿 Plantule','🪴 Croissance','🌸 Floraison','🍅 Récolte'];
 const STAGE_COLORS = ['#94a3b8','#86efac','#4ade80','#22c55e','#f97316','#ef4444'];
+const HEDGE_STAGE_COLORS = ['#64748b','#86efac','#34d399','#059669','#a78bfa','#7c3aed'];
 
 export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramProps) {
   const gardenPlants = useGameStore(s => s.gardenPlants);
@@ -36,6 +39,12 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
   const tMean    = rw?.current?.temperature ?? 18;
   const humidity = rw?.current?.humidity    ?? 65;
 
+  const harvestPrediction = useHarvestPrediction(
+    selectedGp?.plantDefId ?? plantType,
+    plant?.daysSincePlanting ?? 0,
+    plant?.gddAccumulated ?? 0
+  );
+
   if (!plantDef) return (
     <div className="holo-wrap">
       <div style={{ textAlign:'center', padding:40, color:'#888' }}>
@@ -46,10 +55,13 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
   );
 
   const stage      = plant?.stage ?? 0;
-  const stageColor = STAGE_COLORS[Math.min(stage, 5)];
+  const plantIsHedge    = isHedge(selectedGp?.plantDefId ?? plantType);
+  const stageColors = plantIsHedge ? HEDGE_STAGE_COLORS : STAGE_COLORS;
+  const stageColor = stageColors[Math.min(stage, 5)];
   const imgId      = selectedGp?.plantDefId ?? plantType;
   const stageDurs  = ((plantDef as any).stageDurations as number[] | undefined) ?? [];
   const cropKc     = ((plantDef as any).cropCoefficient as number | undefined);
+  const evoCardSrc = `/plants/card-${imgId}-evolution.png`;
 
   return (
     <div className="holo-wrap">
@@ -67,9 +79,9 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
                 onClick={() => setSelectedId(gp.id)}
                 title={`${def?.name ?? gp.plantDefId} — J${gp.plant.daysSincePlanting}`}
               >
-                <img src={`/plants/${gp.plantDefId}-stage-${Math.min(gp.plant.stage, 6)}.png`}
+                <img src={`/plants/${gp.plantDefId}-stage-${Math.min(gp.plant.stage, 5)}.png`}
                   alt={def?.name ?? ''} style={{ width:28, height:28, objectFit:'contain' }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = `/plants/custom-plant-stage-${Math.min(gp.plant.stage, 6)}.png`; }} />
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = `/plants/custom-plant-stage-${Math.min(gp.plant.stage, 5)}.png`; }} />
                 {a && a.waterUrgency !== 'ok' && (
                   <span className="holo-sel-badge">{a.waterUrgency === 'critique' ? '🔴' : '⚠️'}</span>
                 )}
@@ -82,12 +94,15 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
       {/* ── Image centrale + stade ── */}
       <div className="holo-stage-card" style={{ borderColor: stageColor }}>
         <div className="holo-plant-img-wrap" style={{ background: `${stageColor}18` }}>
-          <img src={`/plants/${imgId}-stage-${Math.min(stage, 6)}.png`}
+          <img src={`/plants/${imgId}-stage-${Math.min(stage, 5)}.png`}
             alt={plantDef.name} className="holo-plant-img" />
           <div className="holo-stage-ring"
             style={{ borderColor: stageColor, boxShadow: `0 0 20px ${stageColor}88` }} />
         </div>
-        <div className="holo-plant-name">{plantDef.name}</div>
+        <div className="holo-plant-name">
+          {plantDef.name}
+          {plantIsHedge && <span className="holo-hedge-badge">🌿 HAIE</span>}
+        </div>
         <div className="holo-stage-label" style={{ color: stageColor }}>
           {STAGE_LABELS[Math.min(stage, 5)]} — Stade {stage}/6
         </div>
@@ -141,6 +156,34 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
             <div className="holo-dc-main">+{agroData.gddToday.toFixed(1)}/j</div>
             <div className="holo-dc-sub">Base {gddCfg.tBase}°C · Max {gddCfg.tCap}°C</div>
             <div className="holo-dc-sub">{tMean}°C ambiant</div>
+          </div>
+
+          <div className="holo-data-card">
+            <div className="holo-dc-title">📅 Récolte estimée</div>
+            {harvestPrediction ? (
+              <>
+                <div className="holo-dc-main" style={{ color: harvestPrediction.progressPct >= 80 ? '#ef4444' : harvestPrediction.progressPct >= 50 ? '#f97316' : '#86efac' }}>
+                  {harvestPrediction.label}
+                </div>
+                <div className="holo-dc-sub">
+                  {harvestPrediction.daysRemaining > 0
+                    ? `~${harvestPrediction.daysRemaining}j restants · confiance ±${harvestPrediction.confidenceDays}j`
+                    : 'Récolte imminente !'}
+                </div>
+                <div className="holo-mini-bar" style={{ marginTop: 6 }}>
+                  <div style={{
+                    width: `${harvestPrediction.progressPct}%`,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: harvestPrediction.progressPct >= 80
+                      ? 'linear-gradient(90deg,#ef4444,#f97316)'
+                      : 'linear-gradient(90deg,#fbbf24,#22c55e)',
+                  }} />
+                </div>
+              </>
+            ) : (
+              <div className="holo-dc-sub">Données météo insuffisantes</div>
+            )}
           </div>
 
           <div className="holo-data-card">
@@ -214,6 +257,34 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
         ))}
       </div>
 
+      {/* ── Evolution card ── */}
+      <div className="holo-evo-section">
+        <div className="holo-evo-title">✨ Évolution</div>
+        <div className="holo-evo-card">
+          <img
+            src={evoCardSrc}
+            alt={`Évolution ${plantDef.name}`}
+            className="holo-evo-img"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+              const placeholder = (e.currentTarget as HTMLImageElement).nextElementSibling;
+              if (placeholder) (placeholder as HTMLElement).style.display = 'flex';
+            }}
+          />
+          <div className="holo-evo-placeholder" style={{ display: 'none' }}>
+            {[1,2,3,4,5].map(n => (
+              <div key={n} className="holo-evo-stage-box">
+                <img src={`/plants/${imgId}-stage-${n}.png`} alt={`Stade ${n}`}
+                  className="holo-evo-stage-img"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/plants/custom-plant-stage-1.png'; }} />
+                <span className="holo-evo-stage-num">{n}</span>
+              </div>
+            ))}
+            <div className="holo-evo-gen-label">Card-{imgId}-evolution.png — À générer</div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Pied de carte ── */}
       <div className="holo-gdd-info">
         <span>🌡️ Tbase {gddCfg.tBase}°C</span>
@@ -265,6 +336,16 @@ export function HologramEvolution({ plantId, plantType = 'tomato' }: HologramPro
         .holo-tl-days{font-size:8px;color:#64748b}
         .holo-gdd-info{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:10px;color:#64748b;padding:6px;background:rgba(255,255,255,.03);border-radius:8px}
         .holo-gdd-info span{font-weight:600}
+        .holo-hedge-badge{display:inline-block;margin-left:8px;padding:2px 8px;font-size:9px;font-weight:900;color:#fff;background:linear-gradient(135deg,#8b5cf6,#5b21b6);border-radius:6px;letter-spacing:.5px;vertical-align:middle;border:1px solid rgba(255,255,255,.2)}
+        .holo-evo-section{border-radius:12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+        .holo-evo-title{font-size:11px;font-weight:800;color:#a78bfa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+        .holo-evo-card{position:relative;min-height:80px}
+        .holo-evo-img{width:100%;border-radius:8px;object-fit:contain;background:#1a1a2e}
+        .holo-evo-placeholder{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;border:1px dashed rgba(255,255,255,.15)}
+        .holo-evo-stage-box{display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.06);border-radius:6px;padding:4px;border:1px solid rgba(255,255,255,.1)}
+        .holo-evo-stage-img{width:40px;height:40px;object-fit:contain}
+        .holo-evo-stage-num{font-size:8px;font-weight:700;color:#94a3b8}
+        .holo-evo-gen-label{width:100%;text-align:center;font-size:8px;color:#64748b;margin-top:4px;font-style:italic}
       `}</style>
     </div>
   );

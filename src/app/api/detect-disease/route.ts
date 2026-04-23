@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 }
 
 function autoSelectEngine(): string {
-  if (process.env.NEXT_PUBLIC_GROQ_API_KEY) return 'groq';
+  if (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY) return 'groq';
   if (process.env.ENABLE_OLLAMA === 'true') return 'ollama';
   return 'groq';
 }
@@ -71,7 +71,7 @@ Si la plante semble saine, mets diseaseName "Plante saine" et severity "low" ave
 
 // ─── Groq (llama-3.3-70b) ─────────────────────────────────────────────────────
 async function detectWithGroq(imageBase64: string, mediaType = 'image/jpeg') {
-  const key = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  const key = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
   if (!key) throw new Error('GROQ key manquante');
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -114,7 +114,7 @@ async function detectWithGroq(imageBase64: string, mediaType = 'image/jpeg') {
 async function detectWithOllama(_imageBase64: string) {
   // Ollama ne supporte pas bien la vision dans la plupart des modèles
   // Utilisation de Groq comme fallback
-  if (process.env.NEXT_PUBLIC_GROQ_API_KEY) {
+  if (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY) {
     return await detectWithGroq(_imageBase64);
   }
   throw new Error('Ollama vision non supporté. Utilisez Groq ou Claude.');

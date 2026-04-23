@@ -646,7 +646,7 @@ export const useNurseryStore = create<NurseryState>()(
     }),
     {
       name: 'botania-nursery',
-      version: 6,
+      version: 99,
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
           const state = persistedState as NurseryState;
