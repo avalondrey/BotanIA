@@ -7,7 +7,7 @@ import { GameHUD } from "@/components/game/GameHUD";
 import { VisualEffectManager } from "@/components/game/VisualEffectManager";
 import { EnhancedHUD } from "@/components/game/EnhancedHUD";
 import { AdminPanel } from "@/components/game/AdminPanel";
-import { WeatherEffects } from "@/components/game/WeatherEffects";
+import { WeatherEffects } from "@/components/game/WeatherFX";
 import { GameHeader } from "@/components/game/GameHeader";
 import { GameTabs } from "@/components/game/GameTabs";
 import {
@@ -18,9 +18,10 @@ import {
 } from "@/lib/weather-service";
 import { useNightMode, useAutoSave } from "@/lib/use-effects";
 import { useSlotAutoSave } from "@/hooks/useSlotAutoSave";
+import { useWeatherAlerts } from "@/hooks/useWeatherAlerts";
 import { useUISync } from "@/hooks/useUISync";
 import { loadAutoSave, hasAutoSave, getAllSlots } from "@/lib/save-manager";
-import { subscribeOnboardingEvents, unsubscribeOnboardingEvents } from "@/store/onboarding-store";
+import { subscribeOnboardingEvents, unsubscribeOnboardingEvents, useOnboardingStore } from "@/store/onboarding-store";
 import { subscribeNotificationEvents, unsubscribeNotificationEvents } from "@/store/notification-store";
 import { NotificationContainer } from "@/components/game/NotificationContainer";
 import { CelebrationOverlay } from "@/components/game/CelebrationOverlay";
@@ -44,13 +45,13 @@ export default function GamePage() {
   useAutoSave();
   useSlotAutoSave();
   useUISync();
+  useWeatherAlerts(realWeather?.forecast);
 
   // Onboarding event subscription
   useEffect(() => {
     subscribeOnboardingEvents();
     subscribeNotificationEvents();
     // Auto-complete "welcome" step on first load
-    const { useOnboardingStore } = require('@/store/onboarding-store');
     if (!useOnboardingStore.getState().completedSteps.includes('welcome')) {
       useOnboardingStore.getState().completeStep('welcome');
     }
@@ -166,7 +167,7 @@ export default function GamePage() {
       if (weatherRefreshRef.current) clearInterval(weatherRefreshRef.current);
       if (autoSaveRef.current) clearInterval(autoSaveRef.current);
     };
-  }, [initGame, loadWeather]);
+  }, [loadWeather]);
 
   // Game tick
   useEffect(() => {
