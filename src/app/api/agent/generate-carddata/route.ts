@@ -6,13 +6,20 @@
  */
 
 import { NextResponse } from 'next/server';
-import { readFileIfExists } from '@/lib/agent/plant-integrator';
 import path from 'path';
 import { readdir, readFile } from 'fs/promises';
 
 const BOTANIA_SRC = path.join(process.cwd(), 'src');
 const CATALOG_PATH = path.join(BOTANIA_SRC, 'store/catalog.ts');
 const DATA_GRAINES_PATH = path.join(BOTANIA_SRC, 'data/graines');
+
+async function readFileIfExists(filePath: string): Promise<string | null> {
+  try {
+    return await readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+}
 
 interface SeedInfo {
   id: string;

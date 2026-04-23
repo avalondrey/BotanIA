@@ -117,14 +117,14 @@ export interface PlantCardGeneration {
 
 // ─── Paths ───────────────────────────────────────────────────────────────────
 
-const BOTANIA_SRC = path.join(process.cwd(), 'src');
+const BOTANIA_SRC = path.join(/*turbopackIgnore: true*/ process.cwd(), 'src');
 const HOLOID_PATH = path.join(BOTANIA_SRC, 'components/game/HologramEvolution.tsx');
 const AI_ENGINE_PATH = path.join(BOTANIA_SRC, 'lib/ai-engine.ts');
 const CATALOG_PATH = path.join(BOTANIA_SRC, 'store/catalog.ts');
 const COMPANION_PATH = path.join(BOTANIA_SRC, 'lib/companion-matrix.ts');
 const DATA_GRAINES_PATH = path.join(BOTANIA_SRC, 'data/graines');
 const DATA_ARBRES_PATH = path.join(BOTANIA_SRC, 'data/arbres');
-const PUBLIC_ROOT = path.join(process.cwd(), 'public');
+const PUBLIC_ROOT = path.join(/*turbopackIgnore: true*/ process.cwd(), 'public');
 
 // ─── Plant type constants ─────────────────────────────────────────────────────
 
@@ -366,9 +366,9 @@ async function checkPlantuleImages(plantDefId: string): Promise<{ status: CheckS
 async function checkPacketImage(plantDefId: string): Promise<{ status: CheckStatus; details: string }> {
   // Vérifier plusieurs chemins possibles pour les images packet
   const possiblePaths = [
-    path.join(process.cwd(), 'public/packets', `${plantDefId}.png`),
-    path.join(process.cwd(), 'public/packets/clause', `${plantDefId}.png`),
-    path.join(process.cwd(), 'public/cards', `card-${plantDefId}.png`),
+    path.join(/*turbopackIgnore: true*/ process.cwd(), 'public/packets', `${plantDefId}.png`),
+    path.join(/*turbopackIgnore: true*/ process.cwd(), 'public/packets/clause', `${plantDefId}.png`),
+    path.join(/*turbopackIgnore: true*/ process.cwd(), 'public/cards', `card-${plantDefId}.png`),
   ];
 
   for (const p of possiblePaths) {
