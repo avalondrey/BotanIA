@@ -107,6 +107,7 @@ export async function getAgentResponse(
           diseasePressureHours: 0,
           growthRoute: 'jardin' as const,
           containerType: 'sol-jardin' as const,
+          gddAccumulated: 0,
         },
         daysSincePlanting: 0,
       })),
