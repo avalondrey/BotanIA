@@ -9,8 +9,8 @@ import path from 'path';
 import { buildImagePrompt, type ImageAssetType, type CardDataInfo } from '@/lib/agent/image-prompt-utils';
 
 async function readCardDataForPlant(plantDefId: string): Promise<CardDataInfo | null> {
-  const DATA_GRAINES_PATH = path.join(process.cwd(), 'src', 'data', 'graines');
-  const DATA_ARBRES_PATH = path.join(process.cwd(), 'src', 'data', 'arbres');
+  const DATA_GRAINES_PATH = path.join(/*turbopackIgnore: true*/ process.cwd(), 'src', 'data', 'graines');
+  const DATA_ARBRES_PATH = path.join(/*turbopackIgnore: true*/ process.cwd(), 'src', 'data', 'arbres');
   const searchDirs = [DATA_GRAINES_PATH, DATA_ARBRES_PATH];
 
   for (const baseDir of searchDirs) {
