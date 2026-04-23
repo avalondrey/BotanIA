@@ -41,6 +41,7 @@ export interface LiaMessage {
 
 export interface AgentStatus {
   isLocalAIActive: boolean;    // toggle utilisateur
+  canUseLocalAI: boolean;      // ollama && qdrant disponibles
   isOllamaAvailable: boolean;  // détecté au startup
   isQdrantAvailable: boolean;  // détecté au startup
   ollamaModel: string;
@@ -127,6 +128,7 @@ export const useAgentStore = create<AgentStore>()(
     (set, get) => ({
       status: {
         isLocalAIActive: false, // Defaults to false (passive mode)
+        canUseLocalAI: false,
         isOllamaAvailable: false,
         isQdrantAvailable: false,
         ollamaModel: 'qwen2.5:7b',
@@ -162,17 +164,23 @@ export const useAgentStore = create<AgentStore>()(
       // ─── Notification Actions ───────────────────────────────────────────
 
       addNotification: (n) =>
-        set((s) => ({
-          pendingNotifications: [
-            {
-              ...n,
-              id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-              timestamp: Date.now(),
-              read: false,
-            },
-            ...s.pendingNotifications,
-          ].slice(0, 50), // max 50 notifications
-        })),
+        set((s) => {
+          const alreadyUnread = s.pendingNotifications.find(
+            (p) => p.title === n.title && !p.read
+          );
+          if (alreadyUnread) return s; // skip duplicate
+          return {
+            pendingNotifications: [
+              {
+                ...n,
+                id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                timestamp: Date.now(),
+                read: false,
+              },
+              ...s.pendingNotifications,
+            ].slice(0, 50), // max 50 notifications
+          };
+        }),
 
       dismissNotification: (id) =>
         set((s) => ({
@@ -193,9 +201,12 @@ export const useAgentStore = create<AgentStore>()(
 
       addSuggestion: (s) =>
         set((state) => {
-          // Avoid duplicate suggestions
-          const existing = state.dismissedSuggestions.has(s.title);
-          if (existing) return state;
+          // Avoid duplicate suggestions (dismissed or already pending)
+          if (state.dismissedSuggestions.has(s.title)) return state;
+          const alreadyPending = state.pendingSuggestions.find(
+            (p) => p.title === s.title
+          );
+          if (alreadyPending) return state;
 
           return {
             pendingSuggestions: [

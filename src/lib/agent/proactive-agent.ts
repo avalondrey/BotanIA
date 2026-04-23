@@ -11,6 +11,7 @@ import { upsertPoint } from './qdrant';
 import { generateEmbedding } from './ollama';
 import { useAgentStore, type AgentNotification, type AgentSuggestion } from '@/store/agent-store';
 import { useGameStore } from '@/store/game-store';
+import { PLANTS } from '@/lib/ai-engine';
 import type { GameStateSnapshot } from './persona';
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
@@ -106,6 +107,81 @@ export function analyzeGameState(): {
       title: '🦠 Plante malade détectée!',
       message: `${diseased.length} plante(s) malade(s): ${diseased.map(p => p.plantDefId).join(', ')}. Consulte l'onglet Maladies pour traiter.`,
       priority: 'critical',
+    });
+  }
+
+  // ─── Weather-Dependent Alerts ───────────────────────────────────────────────
+
+  const weatherType = (game.weather as { type?: string }).type;
+  const temperature = (game.realWeather as { current?: { temperature?: number } } | null)?.current?.temperature ?? 20;
+
+  if (weatherType === 'heatwave' || temperature >= 32) {
+    const heatThirsty = (game.gardenPlants || []).filter(p => p.plant && (p.plant.waterLevel || 0) < 40);
+    if (heatThirsty.length > 0) {
+      notifications.push({
+        type: 'alert',
+        title: '🔥 Canicule détectée!',
+        message: `${heatThirsty.length} plante(s) stressée(s) par la chaleur. Arrose immédiatement pour éviter le flétrissement.`,
+        priority: 'critical',
+      });
+    }
+  }
+
+  if (weatherType === 'frost' || temperature <= 0) {
+    const frostSensitive = (game.gardenPlants || []).filter(p => {
+      const plantDef = PLANTS[p.plantDefId];
+      if (!plantDef) return false;
+      const minTemp = plantDef.optimalTemp?.[0] ?? 5;
+      return minTemp > 0 && (p.plant?.waterLevel || 0) < 50;
+    });
+    if (frostSensitive.length > 0) {
+      notifications.push({
+        type: 'alert',
+        title: '❄️ Risque de gel!',
+        message: `${frostSensitive.length} plante(s) sensible(s) au gel. Arrose ou protège-les avant la nuit.`,
+        priority: 'high',
+      });
+    }
+  }
+
+  if (weatherType === 'stormy') {
+    const readyToHarvest = (game.gardenPlants || []).filter(p => p.plant?.isHarvestable);
+    if (readyToHarvest.length > 0) {
+      suggestions.push({
+        category: 'harvest',
+        title: '⛈️ Orage imminent',
+        description: `${readyToHarvest.length} plante(s) prête(s) à récolter. Récolte avant l'orage pour éviter les dégâts!`,
+        reasoning: 'Météo orageuse + récoltes matures = risque de perte',
+        priority: 'high',
+      });
+    }
+  }
+
+  if (weatherType === 'rainy') {
+    suggestions.push({
+      category: 'plant',
+      title: '🌧️ Bon moment pour planter',
+      description: 'La pluie est prévue — c\'est le moment idéal pour semer ou transplanter sans stress hydrique.',
+      reasoning: 'Pluie naturelle = arrosage gratuit et bonne reprise racinaire',
+      priority: 'medium',
+    });
+  }
+
+  // ─── Growth Stage Alerts (GDD-based) ───────────────────────────────────────
+
+  const nearingStage = (game.gardenPlants || []).filter(p => {
+    if (!p.plant) return false;
+    const stage = p.plant.stage ?? 0;
+    const progress = p.plant.growthProgress ?? 0;
+    return stage < 4 && progress >= 0.85;
+  });
+  if (nearingStage.length > 0) {
+    suggestions.push({
+      category: 'plant',
+      title: '📈 Plantes en transition',
+      description: `${nearingStage.length} plante(s) approchent du stade suivant. Vérifie leurs besoins en eau et lumière.`,
+      reasoning: 'growthProgress > 85% — stade suivant imminent',
+      priority: 'low',
     });
   }
 
@@ -285,17 +361,16 @@ export function startProactiveAgent(intervalMs: number = SCAN_INTERVAL_MS): void
 
   scanInterval = setInterval(() => {
     const store = useAgentStore.getState();
-    if (!store.status.isLocalAIActive) return;
 
-    // Run analysis
+    // Local analysis always runs (no AI required — pure game-state inspection)
     const { notifications, suggestions } = analyzeGameState();
-
-    // Add to store
     notifications.forEach(n => store.addNotification(n));
     suggestions.forEach(s => store.addSuggestion(s));
 
-    // Snapshot to Qdrant
-    snapshotGameState().catch(console.warn);
+    // AI snapshot only when local AI is active AND available
+    if (store.status.isLocalAIActive && store.status.canUseLocalAI) {
+      snapshotGameState().catch(console.warn);
+    }
 
   }, intervalMs);
 
@@ -318,13 +393,12 @@ export function stopProactiveAgent(): void {
  */
 export function runProactiveScanNow(): void {
   const store = useAgentStore.getState();
-  if (!store.status.isLocalAIActive) {
-    console.warn('[ProactiveAgent] Cannot run — local AI not active');
-    return;
-  }
 
   const { notifications, suggestions } = analyzeGameState();
   notifications.forEach(n => store.addNotification(n));
   suggestions.forEach(s => store.addSuggestion(s));
-  snapshotGameState().catch(console.warn);
+
+  if (store.status.isLocalAIActive && store.status.canUseLocalAI) {
+    snapshotGameState().catch(console.warn);
+  }
 }

@@ -7,11 +7,21 @@
 
 import { useEffect } from 'react';
 import { useAgentStore } from '@/store/agent-store';
+import { startProactiveAgent, stopProactiveAgent } from '@/lib/agent/proactive-agent';
+
+function abortTimeout(ms: number): AbortSignal {
+  if (typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal) {
+    return AbortSignal.timeout(ms);
+  }
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
 
 async function checkOllama(): Promise<boolean> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://localhost:11434'}/api/tags`, {
-      signal: AbortSignal.timeout(3000),
+      signal: abortTimeout(3000),
     });
     return res.ok;
   } catch {
@@ -22,7 +32,7 @@ async function checkOllama(): Promise<boolean> {
 async function checkQdrant(): Promise<boolean> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_QDRANT_URL || 'http://localhost:6333'}/`, {
-      signal: AbortSignal.timeout(3000),
+      signal: abortTimeout(3000),
     });
     return res.ok;
   } catch {
@@ -44,12 +54,18 @@ export function AgentInitializer() {
       setStatus({
         isOllamaAvailable: ollamaOk,
         isQdrantAvailable: qdrantOk,
-        isLocalAIActive: ollamaOk && qdrantOk,
+        canUseLocalAI: ollamaOk && qdrantOk,
       });
+
+      // Démarrer l'agent proactif (analyse locale toujours active, snapshot IA conditionnel)
+      startProactiveAgent(45_000); // 45s interval
     }
 
     init();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      stopProactiveAgent();
+    };
   }, [setStatus]);
 
   return null;
