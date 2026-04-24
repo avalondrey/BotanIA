@@ -28,4 +28,22 @@ describe('plant-db', () => {
     expect(PLANTS['tomato']).toBeDefined();
     expect(PLANTS['tomato'].plantFamily).toBe('Solanaceae');
   });
+
+  it('all plants have valid stageDurations', () => {
+    for (const [id, def] of Object.entries(PLANTS)) {
+      expect(Array.isArray(def.stageDurations), `${id} stageDurations must be array`).toBe(true);
+      expect(def.stageDurations.length).toBeGreaterThan(0);
+      def.stageDurations.forEach((d, i) => {
+        expect(typeof d, `${id} stage ${i} must be number`).toBe('number');
+        expect(d, `${id} stage ${i} must be positive`).toBeGreaterThan(0);
+      });
+    }
+  });
+
+  it('all plants have valid optimalTemp ranges', () => {
+    for (const [id, def] of Object.entries(PLANTS)) {
+      expect(def.optimalTemp.length).toBe(2);
+      expect(def.optimalTemp[0]).toBeLessThan(def.optimalTemp[1]);
+    }
+  });
 });

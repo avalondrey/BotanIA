@@ -2,6 +2,8 @@
 //  Crop Rotation System — Track and optimize garden plots
 // ═══════════════════════════════════════════════════
 
+import { getPlantFamilyFrench, buildPlantFamiliesByFrench } from '@/lib/botany-constants';
+
 export interface PlotHistory {
   x: number;
   y: number;
@@ -25,25 +27,11 @@ export interface RotationSuggestion {
   emoji: string;
 }
 
-// Plant families for rotation planning
-export const PLANT_FAMILIES: Record<string, string[]> = {
-  "Solanacées": ["tomato", "pepper", "eggplant", "potato"],
-  "Brassicacées": ["cabbage", "lettuce", "broccoli", "cauliflower"],
-  "Fabacées": ["bean", "pea", "lentil", "strawberry"],
-  "Apiacées": ["carrot", "parsley", "celery", "fennel"],
-  "Cucurbitacées": ["cucumber", "zucchini", "squash", "melon", "pumpkin"],
-  "Alliacées": ["onion", "garlic", "leek", "shallot"],
-  "Astéracées": ["sunflower", "artichoke", "lettuce"],
-  "Poacées": ["corn", "wheat", "rice"],
-};
+// Plant families for rotation planning — built from single source of truth
+export const PLANT_FAMILIES: Record<string, string[]> = buildPlantFamiliesByFrench();
 
 export function getPlantFamily(plantDefId: string): string {
-  for (const [family, plants] of Object.entries(PLANT_FAMILIES)) {
-    if (plants.includes(plantDefId)) {
-      return family;
-    }
-  }
-  return "Autres";
+  return getPlantFamilyFrench(plantDefId);
 }
 
 // Storage

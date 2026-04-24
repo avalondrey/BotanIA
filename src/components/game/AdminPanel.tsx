@@ -7,6 +7,7 @@ import { useGameStore, SEED_CATALOG, MINI_SERRE_WIDTH_CM, MINI_SERRE_DEPTH_CM } 
 import { X, Coins, Gauge, Zap, Trash2, Shield, Plus, Copy, Wand2, Code, Image as ImageIcon, LayoutDashboard, RotateCcw } from "lucide-react";
 import { PLANTS, PLANT_SPACING } from "@/lib/ai-engine";
 import { useUISettingsStore, UI_PRESETS, UI_SLIDER_GROUPS, type UIPreset, type UIDimensions } from "@/store/ui-settings-store";
+import { microScan } from "@/lib/micro-client";
 
 // ── Admin button (rendered in place, in the header) ──
 
@@ -689,11 +690,24 @@ ${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.p
                 <button
                   onClick={async () => {
                     try {
-                      const res = await fetch('/api/agent/scan-plants', { method: 'POST' });
-                      const data = await res.json();
-                      if (data.success) {
-                        const r = data.data;
-                        alert(`Scan termine!\n\n✅ Complet: ${r.summary.complete}\n⚠️ Partiel: ${r.summary.partial}\n❌ Incomplet: ${r.summary.incomplete}\n\nPlantes scannees: ${r.scannedCount}`);
+                      const game = useGameStore.getState();
+                      const result = await microScan({
+                        gameContext: {
+                          day: game.day,
+                          season: game.season,
+                          gardenPlants: game.gardenPlants,
+                          pepiniere: game.pepiniere,
+                          gardenTanks: game.gardenTanks,
+                          weather: game.weather,
+                          realWeather: game.realWeather,
+                        },
+                        snapshot: false,
+                      });
+                      if (result.notifications?.length || result.suggestions?.length) {
+                        const r = result;
+                        alert(`Scan termine!\n\nNotifications: ${r.notifications.length}\nSuggestions: ${r.suggestions.length}`);
+                      } else {
+                        alert('Scan termine — aucun probleme detecte.');
                       }
                     } catch (e) {
                       alert('Erreur scan: ' + e);
@@ -701,9 +715,9 @@ ${ceId}: ["/stages/${ceId}/0.png", "/stages/${ceId}/1.png", "/stages/${ceId}/2.p
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded transition-colors"
                 >
-                  🔍 Scanner les Plantes (8 points)
+                  🔍 Scanner les Plantes (via microservice)
                 </button>
-                <p className="text-[8px] text-green-600 mt-1 text-center">Detecte les PlantCards, sprites et entrees manquants</p>
+                <p className="text-[8px] text-green-600 mt-1 text-center">Detecte les PlantCards, sprites et entrees manquants via le microservice IA</p>
               </div>
 
               {/* ═══ MOTEUR DE CARTES ═══ */}

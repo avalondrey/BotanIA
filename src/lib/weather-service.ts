@@ -103,22 +103,22 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
   const now = Date.now();
   if (_cachedWeather && now - _cacheTime < CACHE_MS) return _cachedWeather;
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${typeof lat === 'number' ? lat : (lat as any)?.latitude || 48.8566}&longitude=${typeof lon === 'number' ? lon : (lon as any)?.longitude || 2.3522}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,wind_speed_max,weather_code&hourly=relative_humidity_2m&timezone=auto&forecast_days=7`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${typeof lat === 'number' ? lat : (lat as any)?.latitude || 48.8566}&longitude=${typeof lon === 'number' ? lon : (lon as any)?.longitude || 2.3522}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,wind_speed_10m_max,weather_code&timezone=auto&forecast_days=7`;
     const res = await fetch(url);
     const data = await res.json();
-    const c = data.current_weather;
-    const maxT = data.daily?.temperature_2m_max?.[0] ?? c.temperature;
-    const minT = data.daily?.temperature_2m_min?.[0] ?? c.temperature;
+    const c = data.current;
+    const maxT = data.daily?.temperature_2m_max?.[0] ?? c.temperature_2m;
+    const minT = data.daily?.temperature_2m_min?.[0] ?? c.temperature_2m;
     const uvIndex = data.daily?.uv_index_max?.[0] ?? 5;
-    const precipMm: number = data.daily?.precipitation_sum?.[0] ?? (rainCodes.has(c.weathercode) ? 3 : 0);
-    const isRaining = rainCodes.has(c.weathercode);
+    const precipMm: number = data.daily?.precipitation_sum?.[0] ?? (rainCodes.has(c.weather_code) ? 3 : 0);
+    const isRaining = rainCodes.has(c.weather_code);
     const daily = data.daily || {};
     const forecastDays: WeatherForecastDay[] = [];
     const dates = daily.time || [];
     const tempMaxs = daily.temperature_2m_max || [];
     const tempMins = daily.temperature_2m_min || [];
     const precips = daily.precipitation_sum || [];
-    const windMaxs = daily.wind_speed_max || [];
+    const windMaxs = daily.wind_speed_10m_max || [];
     const weatherCodes = daily.weather_code || [];
     const uvMaxs = daily.uv_index_max || [];
 
@@ -137,14 +137,14 @@ export async function fetchRealWeather(lat = 48.8566, lon = 2.3522): Promise<Rea
 
     _cachedWeather = {
       current: {
-        temperature: c.temperature,
-        weatherCode: c.weathercode,
-        weatherEmoji: weatherCodeEmoji(c.weathercode),
-        weatherDescription: weatherCodeDescription(c.weathercode),
-        gameWeather: codeToGameWeather[c.weathercode] || "sunny",
+        temperature: c.temperature_2m,
+        weatherCode: c.weather_code,
+        weatherEmoji: weatherCodeEmoji(c.weather_code),
+        weatherDescription: weatherCodeDescription(c.weather_code),
+        gameWeather: codeToGameWeather[c.weather_code] || "sunny",
         isRaining,
-        windSpeed: c.windspeed,
-        humidity: data.current?.relative_humidity_2m ?? 60,
+        windSpeed: c.wind_speed_10m,
+        humidity: c.relative_humidity_2m ?? 60,
         timestamp: Date.now(),
       },
       today: { tempMax: maxT, tempMin: minT, uvIndex, date: new Date().toISOString().split("T")[0], precipitationMm: precipMm },

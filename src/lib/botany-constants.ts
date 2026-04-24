@@ -301,3 +301,66 @@ export function getPlantFamily(id: string): string {
   const baseId = resolveBasePlantId(id);
   return PLANT_FAMILY_MAP[baseId] ?? 'Unknown';
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  FAMILY_SCIENTIFIC_TO_FRENCH — traduction vernaculaire
+// ═══════════════════════════════════════════════════════════════
+
+export const FAMILY_SCIENTIFIC_TO_FRENCH: Record<string, string> = {
+  Solanaceae: 'Solanacées',
+  Cucurbitaceae: 'Cucurbitacées',
+  Fabaceae: 'Fabacées',
+  Brassicaceae: 'Brassicacées',
+  Asteraceae: 'Astéracées',
+  Apiaceae: 'Apiacées',
+  Amaranthaceae: 'Amaranthacées',
+  Lamiaceae: 'Lamiacées',
+  Rosaceae: 'Rosacées',
+  Rutaceae: 'Rutacées',
+  Juglandaceae: 'Juglandacées',
+  Fagaceae: 'Fagacées',
+  Betulaceae: 'Bétulacées',
+  Sapindaceae: 'Sapindacées',
+  Pinaceae: 'Pinacées',
+  Magnoliaceae: 'Magnoliacées',
+  Moraceae: 'Moracées',
+  Elaeagnaceae: 'Élaéagnacées',
+  Lauraceae: 'Lauracées',
+  Cornaceae: 'Cornacées',
+  Grossulariaceae: 'Grossulariacées',
+  Oleaceae: 'Oléacées',
+  Ericaceae: 'Éricacées',
+  Vitaceae: 'Vitacées',
+  Lardizabalaceae: 'Lardizabalacées',
+  Lythraceae: 'Lythracées',
+  Polygonaceae: 'Polygonacées',
+  Amaryllidaceae: 'Amaryllidacées',
+  Asparagaceae: 'Asparagacées',
+  Iridaceae: 'Iridacées',
+  Cannabaceae: 'Cannabacées',
+  Poaceae: 'Poacées',
+  Escalloniaceae: 'Éscalloniacées',
+  Cupressaceae: 'Cupressacées',
+};
+
+/**
+ * Get plant family in French (vernacular) for rotation display.
+ */
+export function getPlantFamilyFrench(id: string): string {
+  const scientific = getPlantFamily(id);
+  return FAMILY_SCIENTIFIC_TO_FRENCH[scientific] ?? scientific;
+}
+
+/**
+ * Inverse map: family French name → plant IDs.
+ * Useful for crop rotation UI.
+ */
+export function buildPlantFamiliesByFrench(): Record<string, string[]> {
+  const result: Record<string, string[]> = {};
+  for (const [plantId, scientific] of Object.entries(PLANT_FAMILY_MAP)) {
+    const french = FAMILY_SCIENTIFIC_TO_FRENCH[scientific] ?? scientific;
+    if (!result[french]) result[french] = [];
+    result[french].push(plantId);
+  }
+  return result;
+}

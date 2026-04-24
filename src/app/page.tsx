@@ -25,6 +25,7 @@ import { subscribeOnboardingEvents, unsubscribeOnboardingEvents, useOnboardingSt
 import { subscribeNotificationEvents, unsubscribeNotificationEvents } from "@/store/notification-store";
 import { NotificationContainer } from "@/components/game/NotificationContainer";
 import { CelebrationOverlay } from "@/components/game/CelebrationOverlay";
+import { MicroserviceBanner } from "@/components/game/MicroserviceBanner";
 
 export default function GamePage() {
   const initGame = useGameStore((s) => s.initGame);
@@ -225,6 +226,7 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <MicroserviceBanner />
       <GameHeader
         weatherStatus={weatherStatus}
         gpsCoords={gpsCoords}
