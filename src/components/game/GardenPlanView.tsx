@@ -6,8 +6,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore, DEFAULT_GARDEN_WIDTH_CM, DEFAULT_GARDEN_HEIGHT_CM, getStageImage } from '@/store/game-store';
 import { PLANTS } from '@/lib/ai-engine';
 import { useAgroData, type PlantAgroData } from '@/hooks/useAgroData';
-import { useMissingSprites } from '@/hooks/useMissingSprites';
 import type { SeedRow } from './SeedRowPainter';
+
+/* ── Sprite loader: probes the specific image silently,
+    falls back to custom-plant-stage without ever showing a broken image ── */
+const REPORTED_MISSING = new Set<string>();
+
+interface PlantSpriteImageProps {
+  plantDefId: string;
+  stage: number;
+  alt: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const PlantSpriteImage: React.FC<PlantSpriteImageProps> = ({
+  plantDefId,
+  stage,
+  alt,
+  className,
+  style,
+}) => {
+  const cappedStage = Math.min(stage, 6);
+  const fallback = `/plants/custom-plant-stage-${cappedStage}.png`;
+  const specific = `/plants/${plantDefId}-stage-${cappedStage}.png`;
+  const [src, setSrc] = useState(fallback);
+
+  useEffect(() => {
+    if (specific === fallback) return;
+    const img = new Image();
+    img.onload = () => setSrc(specific);
+    img.onerror = () => {
+      if (!REPORTED_MISSING.has(plantDefId)) {
+        REPORTED_MISSING.add(plantDefId);
+        // De-bounced console warning only once per plantDefId
+        console.warn(`[Sprite] missing sprite for "${plantDefId}", using fallback`);
+      }
+    };
+    img.src = specific;
+  }, [specific, fallback, plantDefId]);
+
+  return <img src={src} alt={alt} className={className} draggable={false} style={style} />;
+};
 
 interface GardenPlanViewProps {
   seedRows?: SeedRow[];
@@ -83,7 +123,6 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
   const addGardenShed    = useGameStore((s) => (s as any).addGardenShed as (x: number, y: number) => void);
   const canvasRef        = useRef<HTMLCanvasElement>(null);
   const agro             = useAgroData();
-  const { reportMissing } = useMissingSprites();
 
   // ── Dynamic zoom: scale grid to fit container width ──
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1187,13 +1226,13 @@ const GardenPlanView: React.FC<GardenPlanViewProps> = ({
                 onMouseLeave={() => { tooltipTimer.current = setTimeout(() => setTooltip(null), 120); }}
               >
                 <div style={{ position:'absolute', inset:-3, borderRadius:'50%', border:`2px solid ${ringColor}`, boxShadow:`0 0 ${isDragging ? 12 : 6}px ${ringColor}88`, pointerEvents:'none', zIndex:1 }} />
-                <img src={`/plants/${gp.plantDefId}-stage-${Math.min(plant.stage, 6)}.png`}
-                  alt={plantDef?.name || 'Plante'} className="plant-sprite-image"
-                  draggable={false} style={{ width:'100%', height:'100%', objectFit:'contain' }}
-                  onError={(e) => {
-                    reportMissing(gp.plantDefId);
-                    (e.currentTarget as HTMLImageElement).src = `/plants/custom-plant-stage-${Math.min(plant.stage, 6)}.png`;
-                  }} />
+                <PlantSpriteImage
+                  plantDefId={gp.plantDefId}
+                  stage={plant.stage}
+                  alt={plantDef?.name || 'Plante'}
+                  className="plant-sprite-image"
+                  style={{ width:'100%', height:'100%', objectFit:'contain' }}
+                />
                 <div className="day-badge-manga" style={{ fontSize:8, width:26, height:26 }}>J{plant.daysSincePlanting}</div>
                 <div className="water-bar-manga">
                   <div className="water-fill-manga" style={{
