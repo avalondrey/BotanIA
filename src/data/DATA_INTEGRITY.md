@@ -133,8 +133,25 @@ photinia: { ... plantCategory: 'hedge', plantFamily: 'Rosaceae' }
 eleagnus: { ... plantFamily: 'Unknown' }
 
 // ✅ Correct
-eleagnus: { ... plantFamily: 'Rosaceae' }
+eleagnus: { ... plantFamily: 'Elaeagnaceae' }
 ```
+
+**Note (v2.8.1)** : `plantFamily: 'Unknown'` est maintenant automatiquement résolu via `getPlantFamily()` dans `plant-db.ts` et `getPlantFamilyFor()` dans le microservice. Les variétés héritent de la famille de leur plante de base via `PLANT_VARIETY_MAP`. Plus aucun plantFamily 'Unknown' ne devrait apparaître.
+
+### Erreur 4 : Variété non résolue dans PLANT_VARIETY_MAP
+
+```typescript
+// ❌ Erreur — la variété n'est pas mappée vers sa plante de base
+// getPlantFamily('zucchini-boldenice') → 'Unknown'
+
+// ✅ Correct — ajouter dans PLANT_VARIETY_MAP (botany-constants.ts)
+'zucchini-boldenice': 'zucchini',
+// getPlantFamily('zucchini-boldenice') → 'Cucurbitaceae'
+```
+
+### Erreur 5 : Companion lookup sans résolution de variété
+
+Le `COMPANION_MATRIX` est indexé par plante de base, pas par variété. Depuis v2.8.1, `companion-matrix.ts` résout automatiquement via `resolveBasePlantId()` avant chaque lookup.
 
 ---
 

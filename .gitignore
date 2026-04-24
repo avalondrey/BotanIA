@@ -85,12 +85,10 @@ test/
 *.backup-*
 test_write.txt
 
-# Microservice
-ai-microservice/start.log
-ai-microservice/start2.ps1
+# Microservice logs
+ai-microservice/*.log
+ai-microservice/*.ps1
 
 # Editor
 .vscode/
 .idea/
-
-.vercel

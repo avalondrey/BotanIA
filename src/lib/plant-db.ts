@@ -10,6 +10,7 @@
  */
 
 import { PLANT_CARDS, TREE_CARDS, type PlantCard } from '@/components/game/HologramEvolution';
+import { getPlantFamily } from '@/lib/botany-constants';
 import type { PlantDefinition } from './ai-engine';
 
 // ═══════════════════════════════════════════════════
@@ -277,7 +278,7 @@ function plantCardToDefinition(id: string, card: PlantCard): PlantDefinition {
     pestResistance: card.pestResistance <= 1 ? Math.round(card.pestResistance * 100) : card.pestResistance,
     droughtResistance: card.droughtResistance,
     realDaysToHarvest: card.totalDaysToHarvest,
-    plantFamily: card.plantFamily,
+    plantFamily: card.plantFamily && card.plantFamily !== 'Unknown' ? card.plantFamily : getPlantFamily(id),
   };
 }
 

@@ -56,6 +56,7 @@ import { useShopStore } from './shop-store';
 import { useNurseryStore } from './nursery-store';
 import { useGardenStore } from './garden-store';
 import { useSimulationStore } from './simulation-store';
+import { getPlantFamily } from '@/lib/botany-constants';
 
 // Catalog re-exports for backward compatibility
 export {
@@ -1389,6 +1390,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         optimalPlantMonths: [3, 4, 5], optimalSeasons: ['summer'],
         diseaseResistance: 0.5, pestResistance: 0.5, droughtResistance: 0.4,
         realDaysToHarvest: 90,
+        plantFamily: getPlantFamily(plantDefId),
       };
       // Enregistrer dans PLANTS pour les prochaines fois
       PLANTS[plantDefId] = plantDef;

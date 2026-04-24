@@ -2,7 +2,7 @@
 
 > Application de jardinage botanique **scientifique** connecté à la météo réelle, aux données INRAE/GNIS, avec identification de plantes par IA et suivi GPS de votre jardin réel.
 
-![Version](https://img.shields.io/badge/version-2.7.0-green)
+![Version](https://img.shields.io/badge/version-2.8.1-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![Zustand](https://img.shields.io/badge/State-Zustand-orange)
@@ -91,6 +91,23 @@ Les données de croissance (GDD, besoins en eau, compagnonnage, risques sanitair
 | 🌴 Arbres Tissot, 🍎 Fruitiers Forest | Vergers |
 | 🌾 Marché | Vendre ses récoltes |
 
+### 🖥️ Dashboard Agent (v2.8.0)
+
+| Feature | Détail |
+|---|---|
+| Vue d'ensemble | Iframe dashboard.html + PokedexPanel |
+| Pokedex | Catalogue de plantes filtrable (complètes/incomplètes) |
+| Status microservice | Indicateur de connexion temps réel |
+
+### 🏗️ Architecture Microservice (v2.8.0)
+
+| Composant | Détail |
+|---|---|
+| Microservice externe | Agent IA déporté (Ollama, Qdrant, RAG) |
+| EventBus | 17 types d'événements pour synchro |
+| Client HTTP | Fetch avec HMAC, retry, timeout |
+| PWA | 561 assets en precache, icônes multi-tailles |
+
 ### 🪙 Économie (v0.20.0)
 | Feature | Détail |
 |---|---|
@@ -129,6 +146,23 @@ Les calculs agronomiques sont basés sur des sources scientifiques :
 | **Températures seuils** | INRAE, filières | Tbase, Tcap, gel, développement optimal |
 | **Companonnage** | Matrice INRAE | Associations favorables/défavorables entre cultures |
 | **Maladies** | Modèles épidémiologiques | Risque mildiou (humidité + pluie), oïdium (humidité + vent) |
+
+### Système de Familles Botaniques (v2.8.1)
+
+Les plantes sont organisées par **famille botanique** (Solanaceae, Cucurbitaceae, Rosaceae...), utilisée pour :
+
+- **Rotation des cultures** : éviter les successions de mêmes familles
+- **Compagnonnage** : détection des associations bénéfiques/néfastes
+- **Prompts d'images** : contexte visuel pour la génération de sprites
+- **Identification** : classification botanique des plantes
+
+**Fonctionnement :**
+- `PLANT_FAMILY_MAP` (`botany-constants.ts`) : table de référence ~100+ entrées
+- `PLANT_VARIETY_MAP` : résolution variété → plante de base (ex: `tomato-aneas` → `tomato`)
+- `getPlantFamily(id)` : API unique — résout automatiquement les variétés
+- Les variétés héritent de la famille de leur plante de base
+
+> **Note** : Si une nouvelle variété est ajoutée dans `catalog.ts`, elle DOIT avoir une entrée correspondante dans `PLANT_VARIETY_MAP` pour que sa famille botanique soit correctement résolue.
 
 ---
 
@@ -249,6 +283,9 @@ BotanIA/
 │   │   │   ├── ollama/           # API Assistant Papy le Jardinier
 │   │   │   ├── weather/           # API météo Open-Meteo
 │   │   │   └── agent/             # API Agent Lia (RAG: status, scan, rag, index-file)
+│   │   ├── dashboard/             # Dashboard Agent (v2.8.0)
+│   │   │   ├── page.tsx           # Iframe + PokedexPanel
+│   │   │   └── PokedexPanel.tsx   # Catalogue plantes microservice
 │   │   └── page.tsx              # Page principale + onglets
 │   ├── components/game/
 │   │   ├── Jardin.tsx            # Onglet Jardin (Plan, Cartes, Rangs)
@@ -264,7 +301,9 @@ BotanIA/
 │   │   └── ...
 │   ├── hooks/
 │   │   ├── useAgroData.ts        # 🌾 Données agronomiques temps réel
-│   │   └── useUndoHistory.ts     # ↩️ Undo/Redo générique (pile 50 actions)
+│   │   ├── useUndoHistory.ts     # ↩️ Undo/Redo générique (pile 50 actions)
+│   │   ├── usePlantCatalog.ts   # 📋 Catalogue Pokedex (React Query)
+│   │   └── useMicroserviceStatus.ts # 🔌 Status microservice (polling)
 │   ├── store/
 │   │   ├── game-store.ts         # État principal (facade)
 │   │   ├── shop-store.ts         # Économie, graines, plantules
@@ -280,7 +319,8 @@ BotanIA/
 │   │   ├── notification-store.ts # Toasts in-app (EventBus)
 │   │   └── ui-settings-store.ts  # Paramètres UI
 │   └── lib/
-│       ├── agent/                 # Agent IA Lia (qdrant, ollama, rag-engine, code-scanner...)
+│       ├── micro-client.ts      # Client HTTP microservice (HMAC, retry)
+│       ├── microservice-bridge.ts # EventBus synchro jardin ↔ microservice
 │       ├── ai-engine.ts          # Moteur botanique
 │       ├── weather-service.ts    # Open-Meteo
 │       ├── gdd-engine.ts         # 🌡️ Calcul GDD (FAO)

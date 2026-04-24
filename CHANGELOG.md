@@ -1,5 +1,82 @@
 # BotanIA - Changelog
 
+## v2.8.1 — PlantFamily, Compagnonnage, Validation (2026-04-24)
+
+### 🐛 PlantFamily 'Unknown' — Correction Structurelle
+
+- **PLANT_FAMILY_MAP complétée** (`botany-constants.ts`) : ajout de `mirabellier`, `currant`, `baco-noir`
+- **PLANT_VARIETY_MAP complétée** : ~40 variétés manquantes ajoutées (tomato-cerisette-brin-muguet, zucchini-boldenice, melon-stellio, etc.)
+- **Fallback universel** : `plant-db.ts` utilise `getPlantFamily(id)` en fallback
+- **game-store.ts** : `createDigitalTwinInGarden()` inclut `plantFamily`
+- **Microservice** : suppression de tout `"Unknown"` — map miroir + `getPlantFamilyFor()`
+- **Scan dashboard** : `missingCount` inclut pot, evolution, plantFamily
+
+### 🌿 Compagnonnage & Rotation
+
+- **companion-matrix.ts** : résolution des variétés via `resolveBasePlantId()`
+- **crop-rotation.ts** : correction "Alliacées" → "Amaryllidacées"
+
+### 🎨 Prompts
+
+- **buildImagePrompt()** : fallback sur `plantDefId` au lieu de "Unknown Plant"
+
+### 📋 Docs
+
+- `DATA_INTEGRITY.md` mis à jour
+- `TECH_DEBT.md` créé (améliorations futures)
+
+---
+
+## v2.8.0 - Migration Microservice, Dashboard Pokedex, PWA (2026-04-24)
+
+### 🏗️ Migration Microservice
+
+- **Suppression du système agent embarqué** (`src/lib/agent/*`, `src/app/api/agent/*`, `src/middleware.ts`)
+  - Migration de l'architecture monolithique vers un microservice externe
+  - Réduction de ~6 500 lignes de code côté frontend
+- **Nouveau bridge microservice** (`src/lib/microservice-bridge.ts`)
+  - Communication via EventBus typé (17 événements)
+  - Synchronisation état jardin ↔ microservice
+- **Nouveau client HTTP** (`src/lib/micro-client.ts`)
+  - Fetch avec timeout, retry, et signature HMAC
+  - Endpoints : health, scan, chat, pokedex
+- **Hook de status** (`src/hooks/useMicroserviceStatus.ts`)
+  - Polling health toutes les 30s
+  - Indicateur visuel de connexion (banner vert/orange/rouge)
+
+### 📊 Dashboard Agent
+
+- **Nouvelle page `/dashboard`** (`src/app/dashboard/page.tsx`)
+  - Layout responsive avec iframe dashboard.html
+  - Pattern `mounted` pour éviter le SSR des composants client-only
+- **PokedexPanel** (`src/app/dashboard/PokedexPanel.tsx`)
+  - Affichage du catalogue de plantes depuis le microservice
+  - Filtres : Toutes / Complètes / Incomplètes
+  - Indicateurs visuels : spritesComplete, plantuleComplete, overallStatus
+- **Hook usePlantCatalog** (`src/hooks/usePlantCatalog.ts`)
+  - Utilise `@tanstack/react-query` avec staleTime 5min
+  - Appel `/api/pokedex/plants` du microservice
+
+### 🎨 PWA & Assets
+
+- **Service Worker** (`public/sw.js`) : 561 URLs en precache
+- **Icônes PWA** (`public/icons/`) : 9 tailles (72×72 à 512×512)
+- **Script de mise à jour** (`scripts/update-sw-precache.ts`) : génération automatique des URLs de precache
+- **Manifest** et badges de notification
+
+### ⚡ Performance
+
+- **`next.config.ts`** : `outputFileTracingExcludes` pour réduire le bundle Vercel
+- **`turbopackIgnore`** : exclusions de fichiers lourds pour Turbopack
+
+### 🔧 Corrections
+
+- **Sprites manquants** : fallback `custom-plant-stage` sans 404 bruyant
+- **Syntaxe** : correction double virgule dans `HologramEvolution.tsx`
+- **Plant varieties** : `PLANT_VARIETY_MAP` étendu avec tous les IDs du catalogue
+
+---
+
 ## v2.7.0 - Tests, Accessibilité, Performance (2026-04-18)
 
 ### 🧪 Tests (138 tests)

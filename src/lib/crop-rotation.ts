@@ -188,11 +188,11 @@ export function checkRotationCompatibility(
   // Good rotations
   const goodRotations: Record<string, string[]> = {
     "Fabacées": ["Solanacées", "Brassicacées", "Cucurbitacées", "Astéracées"],
-    "Solanacées": ["Fabacées", "Apiacées", "Alliacées"],
+    "Solanacées": ["Fabacées", "Apiacées", "Amaryllidacées"],
     "Brassicacées": ["Fabacées", "Cucurbitacées", "Solanacées"],
-    "Cucurbitacées": ["Fabacées", "Solanacées", "Alliacées"],
+    "Cucurbitacées": ["Fabacées", "Solanacées", "Amaryllidacées"],
     "Apiacées": ["Brassicacées", "Cucurbitacées", "Solanacées"],
-    "Alliacées": ["Solanacées", "Cucurbitacées", "Fabacées"],
+    "Amaryllidacées": ["Solanacées", "Cucurbitacées", "Fabacées"],
   };
 
   const goodFor = goodRotations[previousFamily] || [];

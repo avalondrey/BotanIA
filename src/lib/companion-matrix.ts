@@ -7,6 +7,8 @@
 //  Effets : allélopathie, attraction auxiliaires, répulsion ravageurs.
 // ═══════════════════════════════════════════════════════════
 
+import { resolveBasePlantId } from '@/lib/botany-constants';
+
 export type CompanionEffect =
   | 'repels_aphids'
   | 'repels_whitefly'
@@ -141,8 +143,11 @@ export function analyzeCompanions(
       const dist = Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
       if (dist > adjacencyRadiusCm) continue;
 
-      const relAB = COMPANION_MATRIX[a.plantDefId]?.find(r => r.plant === b.plantDefId);
-      const relBA = COMPANION_MATRIX[b.plantDefId]?.find(r => r.plant === a.plantDefId);
+      // Résoudre les variétés vers leur plante de base pour le companion lookup
+      const baseA = resolveBasePlantId(a.plantDefId);
+      const baseB = resolveBasePlantId(b.plantDefId);
+      const relAB = COMPANION_MATRIX[baseA]?.find(r => r.plant === baseB);
+      const relBA = COMPANION_MATRIX[baseB]?.find(r => r.plant === baseA);
       const rel = relAB || relBA;
       if (!rel) continue;
       if (rel.type === 'beneficial') beneficial.push(rel);
@@ -173,10 +178,14 @@ export function checkCompanionForNewPlant(
     const dist = Math.sqrt(Math.pow(newX - existing.x, 2) + Math.pow(newY - existing.y, 2));
     if (dist > adjacencyRadiusCm) continue;
 
+    // Résoudre les variétés vers leur plante de base
+    const newBase = resolveBasePlantId(newPlantDefId);
+    const existingBase = resolveBasePlantId(existing.plantDefId);
+
     // Vérifie si newPlantDefId a une relation avec existing.plantDefId
-    const relFromNew = COMPANION_MATRIX[newPlantDefId]?.find(r => r.plant === existing.plantDefId);
+    const relFromNew = COMPANION_MATRIX[newBase]?.find(r => r.plant === existingBase);
     // Vérifie aussi dans l'autre sens
-    const relFromExisting = COMPANION_MATRIX[existing.plantDefId]?.find(r => r.plant === newPlantDefId);
+    const relFromExisting = COMPANION_MATRIX[existingBase]?.find(r => r.plant === newBase);
     const rel = relFromNew || relFromExisting;
 
     if (!rel) continue;
